@@ -1,0 +1,15 @@
+{
+    "cSpell.words": [
+        "Romualdo",
+        "Romulang"
+    ],
+    "go.liveErrors": {
+        // Live Errors complain about struct tags, which is hell for a project
+        // with a parser implemented with Participle
+        "enabled": false
+    },
+    "go.vetFlags": [
+        // Again, way too many false positives for a Participle project
+        "-structtag=false"
+    ],
+}

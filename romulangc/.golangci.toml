@@ -1,0 +1,50 @@
+[linters]
+    disable-all = true
+    enable = [
+        "govet",
+        "errcheck",
+        "staticcheck",
+        "unused",
+        "gosimple",
+        "structcheck",
+        "varcheck",
+        "ineffassign",
+        "deadcode",
+        "typecheck",
+        "bodyclose",
+        "golint",
+        "stylecheck",
+        "gosec",
+        "interfacer",
+        "unconvert",
+        "dupl",
+        "goconst",
+        "gocyclo",
+        "gocognit",
+        "goimports",
+        "maligned",
+        "unparam",
+        "prealloc",
+        "scopelint",
+        "gocritic",
+        "godox",
+        "funlen",
+        "wsl",
+        "gomnd",
+    ]
+
+[linters-settings]
+
+    [linters-settings.errcheck]
+        check-blank = true
+    [linters-settings.govet]
+        check-shadowing = true
+    [linters-settings.gocyclo]
+        min-complexity = 10
+    [linters-settings.gocognit]
+        min-complexity = 10
+
+[issues]
+    exclude = [
+        "bad syntax for struct tag pair"
+    ]
