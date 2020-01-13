@@ -99,36 +99,24 @@ type Passage struct {
 
 ////////////////////////////////////
 
-func ParseTest() *SourceFile {
+// Parse parses a given string (assumed to be Romualdo source code) and returns
+// the resulting AST and an error.
+func Parse(input string) (*SourceFile, error) {
 	parser, err := participle.Build(
 		&SourceFile{},
 		participle.Lexer(romualdoLexer()),
 		participle.Elide("Comment", "Blank"))
 
 	if err != nil {
-		// TODO: Error handling
-		panic(err)
+		return nil, err
 	}
 
-	sf := &SourceFile{}
-	err = parser.ParseString(`
-# First example
-storyworld
-	meta
-		title = "Downed \"hey!\" ## "  # Many tricky stuff here!
-		author = "Leandro Motta Barros"
-	end
-
-	vars
-		TheVar: string = "abc"
-	end
-end
-`, sf)
+	result := &SourceFile{}
+	err = parser.ParseString(input, result)
 
 	if err != nil {
-		// TODO: Error handling
-		panic(err)
+		return nil, err
 	}
 
-	return sf
+	return result, nil
 }
