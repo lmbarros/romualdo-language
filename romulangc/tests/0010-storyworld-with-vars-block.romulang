@@ -1,0 +1,5 @@
+storyworld
+    vars
+        MyVar: string = ""
+    end
+end

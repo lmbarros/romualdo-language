@@ -1,0 +1,19 @@
+# The sky is blue
+storyworld  meta end   # And this is a messy way to format the code
+
+    vars
+        # Nothing here
+    end
+
+
+
+
+    vars
+    #end
+
+         end
+
+    meta end meta
+end end
+
+# No line break at the end of file
