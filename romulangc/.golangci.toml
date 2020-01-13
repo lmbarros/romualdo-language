@@ -46,5 +46,6 @@
 
 [issues]
     exclude = [
-        "bad syntax for struct tag pair"
+        "bad syntax for struct tag pair",
+        "bad syntax for struct tag key"
     ]
