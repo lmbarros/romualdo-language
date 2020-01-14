@@ -1,4 +1,4 @@
-package parser
+package main
 
 import (
 	"github.com/alecthomas/participle"
@@ -96,8 +96,6 @@ type Function struct {
 
 type Passage struct {
 }
-
-////////////////////////////////////
 
 // Parse parses a given string (assumed to be Romualdo source code) and returns
 // the resulting AST and an error.

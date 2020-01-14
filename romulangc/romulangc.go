@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-
-	"gitlab.com/stackedboxes/romulang/romulangc/parser"
 )
 
 const expectedArgs = 2
@@ -21,7 +19,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error reading '%v': %v\n", os.Args[1], err.Error())
 	}
 
-	_, err = parser.Parse(string(fileContent))
+	_, err = Parse(string(fileContent))
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing: %v\n", err.Error())
