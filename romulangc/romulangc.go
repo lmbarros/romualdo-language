@@ -17,11 +17,13 @@ func main() {
 	fileContent, err := ioutil.ReadFile(os.Args[1])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading '%v': %v\n", os.Args[1], err.Error())
+		return
 	}
 
 	_, err = Parse(string(fileContent))
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing: %v\n", err.Error())
+		return
 	}
 }
