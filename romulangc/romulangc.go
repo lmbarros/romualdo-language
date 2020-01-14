@@ -6,10 +6,8 @@ import (
 	"os"
 )
 
-const expectedArgs = 2
-
 func main() {
-	if len(os.Args) != expectedArgs {
+	if len(os.Args) != 2 {
 		fmt.Fprint(os.Stderr, "Usage: romulangc <file>\n")
 		return
 	}

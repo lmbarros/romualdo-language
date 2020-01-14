@@ -30,7 +30,6 @@
         "godox",
         "funlen",
         "wsl",
-        "gomnd",
     ]
 
 [linters-settings]
