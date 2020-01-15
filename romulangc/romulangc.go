@@ -18,10 +18,12 @@ func main() {
 		return
 	}
 
-	_, err = Parse(string(fileContent))
+	ast, err := Parse(string(fileContent))
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing: %v\n", err.Error())
 		return
 	}
+
+	fmt.Printf("%v", ast.PrintAST())
 }

@@ -32,13 +32,16 @@ type Declaration struct {
 // program, there can be only one of them (but this is checked by the semantic
 // analysis, not by the parser.
 type Storyworld struct {
-	Pos             lexer.Position
-	Storyworld      *string            `"storyworld"`
-	StoryworldBlock []*StoryworldBlock `@@*`
-	End             *string            `"end"`
+	Pos              lexer.Position
+	Storyworld       *string            `"storyworld"`
+	StoryworldBlocks []*StoryworldBlock `@@*`
+	End              *string            `"end"`
 }
 
 // StoryworldBlock is any block that can be inside a `storyworld` block.
+//
+// TODO: Bad name. This could also mean "everthing between `storyworld` and
+// `end`."
 type StoryworldBlock struct {
 	Pos  lexer.Position
 	Meta *Meta `  @@`
@@ -47,10 +50,10 @@ type StoryworldBlock struct {
 
 // Meta represents a `meta` block.
 type Meta struct {
-	Pos       lexer.Position
-	Meta      *string      `"meta"`
-	MetaEntry []*MetaEntry `@@*`
-	End       *string      `"end"`
+	Pos         lexer.Position
+	Meta        *string      `"meta"`
+	MetaEntries []*MetaEntry `@@*`
+	End         *string      `"end"`
 }
 
 // MetaEntry represents one entry in a `meta` block.
@@ -61,17 +64,17 @@ type MetaEntry struct {
 }
 
 type Vars struct {
-	Pos     lexer.Position
-	Meta    *string    `"vars"`
-	VarDecl []*VarDecl `@@*`
-	End     *string    `"end"`
+	Pos      lexer.Position
+	Meta     *string    `"vars"`
+	VarDecls []*VarDecl `@@*`
+	End      *string    `"end"`
 }
 
 type VarDecl struct {
-	Pos   lexer.Position
-	Name  *string `@Ident ":"`
-	Type  *string `@Ident "="`
-	Value *string `@String`
+	Pos          lexer.Position
+	Name         *string `@Ident ":"`
+	Type         *string `@Ident "="`
+	InitialValue *string `@String`
 }
 
 // TypeDecl is a declaration of a user-defined type.
