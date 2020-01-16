@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -21,8 +22,12 @@ func (sf *SourceFile) toString(level int) string {
 func (d *Declaration) toString(level int) string {
 	result := indent(level) + "Declaration\n"
 
-	if d.Storyworld != nil {
+	switch {
+	case d.Storyworld != nil:
 		result += d.Storyworld.toString(level + 1)
+
+	case d.Passage != nil:
+		result += d.Passage.toString(level + 1)
 	}
 
 	return result
@@ -79,6 +84,22 @@ func (v *Vars) toString(level int) string {
 func (vd *VarDecl) toString(level int) string {
 	return indent(level) + "VarDecl (" + *vd.Name + ": " + *vd.Type + " = " +
 		*vd.InitialValue + ")\n"
+}
+
+func (p *Passage) toString(level int) string {
+	ver := strconv.Itoa(*p.Version)
+	result := indent(level) + "Passage (" + *p.Name + "@" + ver + "(): " +
+		*p.ReturnType + "\n"
+
+	for _, s := range p.Body {
+		result += s.toString(level + 1)
+	}
+
+	return result
+}
+
+func (a *Assignment) toString(level int) string {
+	return "Assignment (" + *a.Var + " = " + *a.Value + ")\n"
 }
 
 // indent returns a string good for indenting code level levels deep.

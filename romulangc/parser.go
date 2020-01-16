@@ -25,7 +25,7 @@ type Declaration struct {
 	Storyworld *Storyworld `  @@`
 	// TypeDecl   *TypeDecl   `| @@`
 	// Function   *Function   `| @@`
-	// Passage    *Passage    `| @@`
+	Passage *Passage `| @@`
 }
 
 // Storyworld represents a `storyworld` declaration. In a valid Romualdo
@@ -97,7 +97,19 @@ type Class struct {
 type Function struct {
 }
 
+// A Passage represents a `passage` in a Romualdo program.
 type Passage struct {
+	Pos        lexer.Position
+	Name       *string       `"passage" @Ident`
+	Version    *int          `"@" @Int "(" ")" ":"`
+	ReturnType *string       `@Ident`
+	Body       []*Assignment `@@* "end"`
+}
+
+type Assignment struct {
+	Pos   lexer.Position
+	Var   *string `@Ident "="`
+	Value *string `@String`
 }
 
 // Parse parses a given string (assumed to be Romualdo source code) and returns

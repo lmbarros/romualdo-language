@@ -12,10 +12,13 @@ func romualdoLexer() lexer.Definition {
 		Blank = \s
 		Comment = #[^\n\r]*
 		String = "([^"\\]|\\")*"
+		Int = (\+|-)?[1-9][0-9]*
 		Ident = [a-zA-Z][a-zA-Z0-9_]*
 		Op = =
 		Colon = :
-		Keyword = (end|meta|storyworld|vars)
+		Parens = \(|\)
+		At = @
+		Keyword = end|meta|passage|storyworld|vars
 	`)
 
 	if err != nil {
