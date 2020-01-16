@@ -1,0 +1,21 @@
+storyworld
+    vars
+        MyVar: string = ""
+    end
+end
+
+
+storyworld
+end
+
+
+storyworld
+    vars
+    end
+end
+
+storyworld
+    vars
+        Foo: string = "Another string"
+    end
+end

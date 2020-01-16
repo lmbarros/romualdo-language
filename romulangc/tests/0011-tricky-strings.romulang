@@ -1,0 +1,8 @@
+storyworld
+    vars
+        EmptyString: string = ""
+        EscapedQuote: string = "\""
+        EmbeddedComment: string = "#This is not a comment" # But this is!
+        AllTogetherNow: string = "abcd \"efgh\" #ijkl"
+    end
+end

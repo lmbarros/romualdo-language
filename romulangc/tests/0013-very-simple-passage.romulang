@@ -1,0 +1,9 @@
+storyworld
+    vars
+        MyVar: string = "old"
+    end
+end
+
+passage ChangeMyVar@1(): void
+    MyVar = "new"
+end
