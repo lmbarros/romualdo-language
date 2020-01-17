@@ -25,5 +25,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("%v", ast.PrintAST())
+	printer := &ASTPrinter{}
+	ast.Walk(printer)
+	fmt.Printf("%v", printer.result)
 }
