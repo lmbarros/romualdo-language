@@ -8,14 +8,23 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
+	// Command-line args
+	actionPrintAST := false
+
+	flag.BoolVar(&actionPrintAST, "printAST", false,
+		"Print the AST instead of compiling")
+
+	flag.Parse()
+
+	if len(flag.Args()) < 1 {
 		fmt.Fprint(os.Stderr, "Usage: romulangc [flags] <file>\n")
 		return
 	}
 
-	fileContent, err := ioutil.ReadFile(os.Args[1])
+	// Read input file and parse it
+	fileContent, err := ioutil.ReadFile(flag.Arg(0))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading '%v': %v\n", os.Args[1], err.Error())
+		fmt.Fprintf(os.Stderr, "Error reading '%v': %v\n", flag.Arg(0), err.Error())
 		return
 	}
 
@@ -27,11 +36,6 @@ func main() {
 	}
 
 	// Do work
-	actionPrintAST := false
-
-	flag.BoolVar(&actionPrintAST, "printAST", false,
-		"Print the AST instead of compiling")
-
 	if actionPrintAST {
 		printAST(ast)
 	} else {
