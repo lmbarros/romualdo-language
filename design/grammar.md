@@ -13,7 +13,9 @@ storyworld = declaration* ;
 ```ebnf
 declaration = metaBlock
             | varBlock
-            | typeDecl
+            | aliasDecl
+            | enumDecl
+            | structDecl ;
             | functionDecl
             | passageDecl
             ;
@@ -68,10 +70,6 @@ These are the user-defined types (more on them later):
 * Struct: A type that aggregates various fields of certain types.
 
 ```ebnf
-typeDecl = aliasDecl
-         | enumDecl
-         | structDecl ;
-
 aliasDecl = "alias" IDENTIFIER type ;
 
 enumDecl = "enum" IDENTIFIER IDENTIFIER* "end" ;
