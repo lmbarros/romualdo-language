@@ -245,7 +245,7 @@ exponentiation = unary ( "^" exponentiation )* ;
 unary = ( "not" | "-" | "+" ) unary
       | call ;
 
-call = primary ( "(" arguments? ")" | "." qualifiedIdentifier )* ;
+call = primary ( "(" arguments? ")" | "." qualifiedIdentifier | "[" expression "]" )* ;
 
 primary = "true" | "false"
         | FLOAT
