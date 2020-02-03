@@ -127,7 +127,7 @@ type = "bool"
      | "string"
      | "map"
      | "void"
-     | type "[" "]"
+     | "[" "]" type
      | "function" "(" ( type ( "," type )* )? ")" ":" type
      | qualifiedIdentifier ;
 
