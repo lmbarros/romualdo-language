@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
+	romulangLexer "gitlab.com/stackedboxes/romulang/romulangc/lexer"
 )
 
 // SourceFile contains all the declarations found in a single Romualdo Language
@@ -59,8 +60,8 @@ type Meta struct {
 // MetaEntry represents one entry in a `meta` block.
 type MetaEntry struct {
 	Pos   lexer.Position
-	Name  *string `@Ident "="`
-	Value *string `@String`
+	Name  *string `@IDENTIFIER "="`
+	Value *string `@STRING`
 }
 
 type Vars struct {
@@ -72,9 +73,9 @@ type Vars struct {
 
 type VarDecl struct {
 	Pos          lexer.Position
-	Name         *string `@Ident ":"`
-	Type         *string `@Ident "="`
-	InitialValue *string `@String`
+	Name         *string `@IDENTIFIER ":"`
+	Type         *string `@IDENTIFIER "="`
+	InitialValue *string `@STRING`
 }
 
 // TypeDecl is a declaration of a user-defined type.
@@ -100,16 +101,16 @@ type Function struct {
 // A Passage represents a `passage` in a Romualdo program.
 type Passage struct {
 	Pos        lexer.Position
-	Name       *string       `"passage" @Ident`
-	Version    *int          `"@" @Int "(" ")" ":"`
-	ReturnType *string       `@Ident`
+	Name       *string       `"passage" @IDENTIFIER`
+	Version    *int          `"@" @INTEGER "(" ")" ":"`
+	ReturnType *string       `@IDENTIFIER`
 	Body       []*Assignment `@@* "end"`
 }
 
 type Assignment struct {
 	Pos   lexer.Position
-	Var   *string `@Ident "="`
-	Value *string `@String`
+	Var   *string `@IDENTIFIER "="`
+	Value *string `@STRING`
 }
 
 // Parse parses a given string (assumed to be Romualdo source code) and returns
@@ -117,8 +118,8 @@ type Assignment struct {
 func Parse(input string) (*SourceFile, error) {
 	parser, err := participle.Build(
 		&SourceFile{},
-		participle.Lexer(romualdoLexer()),
-		participle.Elide("Comment", "Blank"))
+		participle.Lexer(romulangLexer.New()),
+		participle.Elide("COMMENT", "BLANK"))
 
 	if err != nil {
 		return nil, err

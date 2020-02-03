@@ -120,13 +120,13 @@ passageDecl = "passage" IDENTIFIER "@" INTEGER "(" parameters? ")" ":" type
 Romualdo is strongly-typed (well, mostly).
 
 ```ebnf
-type = bool
-     | int
-     | float
-     | bnum
-     | string
-     | map
-     | void
+type = "bool"
+     | "int"
+     | "float"
+     | "bnum"
+     | "string"
+     | "map"
+     | "void"
      | type "[" "]"
      | "function" "(" ( type ( "," type )* )? ")" ":" type
      | IDENTIFIER ;
@@ -283,7 +283,7 @@ DIGIT = "0" | NONZERO_DIGIT ;
 
 INTEGER = NONZERO_DIGIT DIGIT* ;
 
-STRING = "\"" ⟨anything except "\""⟩ "\"" ;
+STRING = '"' ( ⟨anything except '"' or "\\" ⟩ | '\\"' ) '"';
 
 LETTER_LIKE = ⟨Unicode Letter⟩ | ⟨Unicode Emoji⟩ | "_" ;
 
