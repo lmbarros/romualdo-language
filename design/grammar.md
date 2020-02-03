@@ -89,7 +89,9 @@ functionDecl = "function" IDENTIFIER "(" parameters? ")" ":" type
                statement*
                "end" ;
 
-parameters = IDENTIFIER ":" type ( "," IDENTIFIER ":" type )*
+parameters = parameter ( "," parameter )*
+
+parameter = IDENTIFIER ":" type
 ```
 
 ### Passages
