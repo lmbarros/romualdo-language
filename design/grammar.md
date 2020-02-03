@@ -129,7 +129,9 @@ type = "bool"
      | "void"
      | type "[" "]"
      | "function" "(" ( type ( "," type )* )? ")" ":" type
-     | IDENTIFIER ;
+     | qualifiedIdentifier ;
+
+qualifiedIdentifier = IDENTIFIER ( "." IDENTIFIER )*
 ```
 
 The supported types are:
@@ -154,7 +156,9 @@ The supported types are:
   array of `int`s, `string[]` is an array of `string`s, and so on.
 * Functions: functions taking a certain set of parameters and returning a
   certain type.
-* User-defined types: that's why we have that `IDENTIFIER` in the list of types.
+* User-defined types: that's why we have that `qualifiedIdentifier` in the list
+  of types. It is "qualified" instead of a regular `IDENTIFIER` because it may
+  contain a namespace.
 
 ## Statements
 
@@ -179,7 +183,7 @@ ifStmt = "if" expression "then" statement*
 
 returnStmt = "return" expression? ;
 
-gotoStmt = "goto" IDENTIFIER "(" arguments? ")" ;
+gotoStmt = "goto" qualifiedIdentifier "(" arguments? ")" ;
 
 sayStmt = "say" expression ;
 
@@ -221,7 +225,7 @@ translate more directly to the implementation).
 ```ebnf
 expression = assignment ;
 
-assignment = IDENTIFIER "=" assignment
+assignment = qualifiedIdentifier "=" assignment
            | logicOr ;
 
 logicOr = logicAnd ( "or" logicAnd )* ;
@@ -241,16 +245,16 @@ exponentiation = unary ( "^" exponentiation )* ;
 unary = ( "not" | "-" | "+" ) unary
       | call ;
 
-call = primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
+call = primary ( "(" arguments? ")" | "." qualifiedIdentifier )* ;
 
 primary = "true" | "false"
         | NUMBER
         | STRING
         | "[" ( expression ( "," expression )* ","? )? "]"
         | "{" ( mapEntry   ( "," mapEntry   )* ","? )? "}"
-        | IDENTIFIER
+        | qualifiedIdentifier
         | "(" expression ")"
-        | "gosub" IDENTIFIER "(" arguments? ")"
+        | "gosub" qualifiedIdentifier "(" arguments? ")"
         | "listen" expression ;
 
 mapEntry = IDENTIFIER "=" expression ;
@@ -258,6 +262,9 @@ mapEntry = IDENTIFIER "=" expression ;
 
 Notes about expressions:
 
+* In the `call` rule, I am using `qualifiedIdentifier` in a way that is not
+  semantically correct: it will match both real qualified identifiers and
+  chains of `struct`member accesses.
 * The `gosub` expression must appear in a passage. It calls another passage, and
   returns with that passage's return value.
 * The `listen` expression is used to get input from the player. Its `expression`
