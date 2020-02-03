@@ -131,7 +131,9 @@ type = "bool"
      | functionType
      | qualifiedIdentifier ;
 
-functionType = "function" "(" ( type ( "," type )* )? ")" ":" type ;
+functionType = "function" "(" typeList? ")" ":" type ;
+
+typeList = type ( "," type )* ;
 
 qualifiedIdentifier = IDENTIFIER ( "." IDENTIFIER )* ;
 ```
