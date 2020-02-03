@@ -37,7 +37,7 @@ because one can select passages according to the values of its metadata.
 ```ebnf
 metaBlock = "meta" "@" INTEGER varDecl* "end" ;
 
-varDecl = IDENTIFIER ":" type "=" expression ;
+varDecl = IDENTIFIER ":" type ( "=" expression )? ;
 ```
 
 ### Variable declarations
