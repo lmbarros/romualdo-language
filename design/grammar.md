@@ -12,7 +12,7 @@ storyworld = declaration* ;
 
 ```ebnf
 declaration = metaBlock
-            | varBlock
+            | varsBlock
             | aliasDecl
             | enumDecl
             | structDecl ;
@@ -56,7 +56,7 @@ story).
 At local scope, the `varBlock` must not include a version.
 
 ```ebnf
-varBlock = "vars" ( "@" INTEGER )? varDecl* "end" ;
+varsBlock = "vars" ( "@" INTEGER )? varDecl* "end" ;
 ```
 
 ### Type declarations
