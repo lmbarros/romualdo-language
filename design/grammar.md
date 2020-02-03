@@ -74,7 +74,7 @@ aliasDecl = "alias" IDENTIFIER type ;
 
 enumDecl = "enum" IDENTIFIER IDENTIFIER* "end" ;
 
-structDecl = "struct" IDENTIFIER varDecl* "end";
+structDecl = "struct" IDENTIFIER varDecl* "end" ;
 ```
 
 ### Functions
@@ -89,9 +89,9 @@ functionDecl = "function" IDENTIFIER "(" parameters? ")" ":" type
                statement*
                "end" ;
 
-parameters = parameter ( "," parameter )*
+parameters = parameter ( "," parameter )* ;
 
-parameter = IDENTIFIER ":" type
+parameter = IDENTIFIER ":" type ;
 ```
 
 ### Passages
@@ -112,7 +112,7 @@ functions, but:
 passageDecl = "passage" IDENTIFIER "@" INTEGER "(" parameters? ")" ":" type
               metaBlock?
               statement*
-              "end"
+              "end" ;
 ```
 
 ## Types
@@ -189,7 +189,7 @@ gotoStmt = "goto" qualifiedIdentifier "(" arguments? ")" ;
 
 sayStmt = "say" expression ;
 
-arguments = expression ( "," expression )*
+arguments = expression ( "," expression )* ;
 ```
 
 Some notes about the statements:
