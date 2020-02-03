@@ -128,10 +128,12 @@ type = "bool"
      | "map"
      | "void"
      | "[" "]" type
-     | "function" "(" ( type ( "," type )* )? ")" ":" type
+     | functionType
      | qualifiedIdentifier ;
 
-qualifiedIdentifier = IDENTIFIER ( "." IDENTIFIER )*
+functionType = "function" "(" ( type ( "," type )* )? ")" ":" type ;
+
+qualifiedIdentifier = IDENTIFIER ( "." IDENTIFIER )* ;
 ```
 
 The supported types are:
