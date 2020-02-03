@@ -17,6 +17,7 @@ func New() lexer.Definition {
 		BLANK = \s
 		COMMENT = #[^\n\r]*
 		KEYWORD = alias|and|bnum|bool|else|elseif|end|enum|false|float|function|gosub|goto|if|int|listen|map|meta|not|or|passage|return|sat|string|struct|then|true|vars|void|while
+		FLOAT = ([1-9]+.[1-9]+)|([1-9]+(.[1-9]+)?(e|E)(+|-)?[1-9]+)
 		INTEGER = [1-9][0-9]*
 		STRING = "([^"\\]|\\")*"
 		IDENTIFIER = ⟨LETTER_LIKE⟩(⟨LETTER_LIKE⟩|[0-9])*

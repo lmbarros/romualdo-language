@@ -248,7 +248,8 @@ unary = ( "not" | "-" | "+" ) unary
 call = primary ( "(" arguments? ")" | "." qualifiedIdentifier )* ;
 
 primary = "true" | "false"
-        | NUMBER
+        | FLOAT
+        | INTEGER
         | STRING
         | "[" ( expression ( "," expression )* ","? )? "]"
         | "{" ( mapEntry   ( "," mapEntry   )* ","? )? "}"
@@ -289,6 +290,9 @@ NONZERO_DIGIT = "1" ... "9" ;
 DIGIT = "0" | NONZERO_DIGIT ;
 
 INTEGER = NONZERO_DIGIT DIGIT* ;
+
+FLOAT = DIGIT+ "." DIGIT+
+      | DIGIT+ ( "." DIGIT+ )? ("e" | "E") ( "+" | "-" )? DIGIT+ ;
 
 STRING = '"' ( ⟨anything except '"' or "\\" ⟩ | '\\"' ) '"';
 
