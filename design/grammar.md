@@ -178,12 +178,12 @@ statement = expression
 
 whileStmt = "while" expression "do"
             statement*
-            "done" ;
+            "end" ;
 
 ifStmt = "if" expression "then" statement*
          elseif*
          ( "else" statement* )?
-         "done" ;
+         "end" ;
 
 elseif = "elseif" expression "then" statement*
 
