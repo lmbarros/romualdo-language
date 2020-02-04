@@ -181,9 +181,11 @@ whileStmt = "while" expression "do"
             "done" ;
 
 ifStmt = "if" expression "then" statement*
-         ( "elseif" expression "then" statement* )*
+         elseif*
          ( "else" statement* )?
          "done" ;
+
+elseif = "elseif" expression "then" statement*
 
 returnStmt = "return" expression? ;
 
