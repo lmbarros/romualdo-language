@@ -251,7 +251,9 @@ exponentiation = unary ( "^" exponentiation )* ;
 unary = ( "not" | "-" | "+" ) unary
       | call ;
 
-call = primary ( "(" arguments? ")" | "." qualifiedIdentifier | "[" expression "]" )* ;
+call = primary callComplement* ;
+
+callComplement = "(" arguments? ")" | "." qualifiedIdentifier | "[" expression "]"
 
 primary = "true" | "false"
         | FLOAT
