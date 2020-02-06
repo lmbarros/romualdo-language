@@ -253,18 +253,24 @@ unary = ( "not" | "-" | "+" ) unary
 
 call = primary callComplement* ;
 
-callComplement = "(" arguments? ")" | "." qualifiedIdentifier | "[" expression "]"
+callComplement = "(" arguments? ")" | "." qualifiedIdentifier | "[" expression "]" ;
 
 primary = "true" | "false"
         | FLOAT
         | INTEGER
         | STRING
-        | "[" ( expression ( "," expression )* ","? )? "]"
-        | "{" ( mapEntry   ( "," mapEntry   )* ","? )? "}"
+        | arrayLiteral
+        | mapLiteral
         | qualifiedIdentifier
         | "(" expression ")"
-        | "gosub" qualifiedIdentifier "(" arguments? ")"
+        | gosub
         | "listen" expression ;
+
+arrayLiteral = "[" ( expression ( "," expression )* ","? )? "]" ;
+
+mapLiteral = "{" ( mapEntry   ( "," mapEntry   )* ","? )? "}" ;
+
+gosub = "gosub" qualifiedIdentifier "(" arguments? ")" ;
 
 mapEntry = IDENTIFIER "=" expression ;
 ```
