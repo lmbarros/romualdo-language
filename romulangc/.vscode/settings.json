@@ -1,7 +1,8 @@
 {
     "cSpell.words": [
         "Romualdo",
-        "Romulang"
+        "Romulang",
+        "romulangc"
     ],
     "go.liveErrors": {
         // Live Errors complain about struct tags, which is hell for a project

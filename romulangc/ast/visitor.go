@@ -1,12 +1,14 @@
-package main
+package ast
+
+import "gitlab.com/stackedboxes/romulang/parser"
 
 // A Visitor has all the methods needed to traverse a Romualdo parse tree.
 type Visitor interface {
-	Visit(node interface{})
-	Leave(node interface{})
+	Visit(node Node)
+	Leave(node Node)
 }
 
-func (sf *SourceFile) Walk(v Visitor) {
+func (sf *parser.SourceFile) Walk(v Visitor) {
 	v.Visit(sf)
 
 	for _, d := range sf.Declarations {
@@ -16,7 +18,7 @@ func (sf *SourceFile) Walk(v Visitor) {
 	v.Leave(sf)
 }
 
-func (d *Declaration) Walk(v Visitor) {
+func (d *ast.Declaration) Walk(v Visitor) {
 	v.Visit(d)
 
 	switch {

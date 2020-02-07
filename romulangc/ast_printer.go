@@ -3,6 +3,9 @@ package main
 import (
 	"strconv"
 	"strings"
+
+	"gitlab.com/stackedboxes/romulang/romulangc/ast"
+	"gitlab.com/stackedboxes/romulang/romulangc/parser"
 )
 
 type ASTPrinter struct {
@@ -10,31 +13,31 @@ type ASTPrinter struct {
 	result      string
 }
 
-func (ap *ASTPrinter) Visit(node interface{}) {
+func (ap *ASTPrinter) Visit(node ast.Node) {
 	switch n := node.(type) {
-	case *SourceFile:
+	case *parser.SourceFile:
 		ap.result += indent(ap.indentLevel) + "SourceFile [" + n.Namespace +
 			"]\n"
-	case *Declaration:
+	case *ast.Declaration:
 		ap.result += indent(ap.indentLevel) + "Declaration\n"
-	case *Storyworld:
+	case *ast.Storyworld:
 		ap.result += indent(ap.indentLevel) + "Storyworld\n"
-	case *StoryworldBlock:
+	case *ast.StoryworldBlock:
 		ap.result += indent(ap.indentLevel) + "StoryworldBlock\n"
-	case *Meta:
+	case *ast.Meta:
 		ap.result += indent(ap.indentLevel) + "Meta\n"
-	case *MetaEntry:
+	case *ast.MetaEntry:
 		ap.result += indent(ap.indentLevel) + "MetaEntry (" + *n.Name + " = " +
 			*n.Value + ")\n"
-	case *Vars:
+	case *ast.Vars:
 		ap.result += indent(ap.indentLevel) + "Vars\n"
-	case *VarDecl:
+	case *ast.VarDecl:
 		ap.result += indent(ap.indentLevel) + "VarDecl (" + *n.Name + ": " +
 			*n.Type + " = " + *n.InitialValue + ")\n"
-	case *Passage:
+	case *ast.Passage:
 		ap.result += indent(ap.indentLevel) + "Passage (" + *n.Name + "@" +
 			strconv.Itoa(*n.Version) + "(): " + *n.ReturnType + "\n"
-	case *Assignment:
+	case *ast.Assignment:
 		ap.result += indent(ap.indentLevel) + "Assignment (" + *n.Var + " = " +
 			*n.Value + ")\n"
 	}
