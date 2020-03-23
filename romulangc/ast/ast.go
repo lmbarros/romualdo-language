@@ -82,7 +82,7 @@ type FunctionDecl struct {
 	Pos        lexer.Position
 	Name       *string      `"function" @IDENTIFIER`
 	Parameters *Parameters  `"(" @@? ")"`
-	Type       *Type        `":" @@`
+	ReturnType *Type        `":" @@`
 	Body       []*Statement `@@* "end"`
 }
 
@@ -103,11 +103,11 @@ type Parameter struct {
 // PassageDecl represents the declaration of a passage.
 type PassageDecl struct {
 	Pos        lexer.Position
-	Name       *string       `passage @IDENTIFIER`
-	Version    *int          `"@" @INTEGER`
-	Parameters *Parameters   `"(" @@ ")"`
-	Type       *Type         `":" @@`
-	Body       *[]*Statement `@@* "end"`
+	Name       *string      `passage @IDENTIFIER`
+	Version    *int         `"@" @INTEGER`
+	Parameters *Parameters  `"(" @@ ")"`
+	ReturnType *Type        `":" @@`
+	Body       []*Statement `@@* "end"`
 }
 
 // Type represents a type.
@@ -137,18 +137,18 @@ type TypeList struct {
 type QualifiedIdentifier struct {
 	Pos   lexer.Position
 	First *string   `@IDENTIFIER`
-	Rest  []*string `( "," @@ )*` // xxxxxxxxxxxx does this work as intended?
+	Rest  []*string `( "," @@ )*` // xxxxxxxxxxxx does this work as intended? Should be @IDENTIFIER here?
 }
 
 // Statement represents, well, a statement.
 type Statement struct {
 	Pos        lexer.Position
-	Expression Expression `  @@`
-	WhileStmt  WhileStmt  `| @@`
-	IfStmt     IfStmt     `| @@`
-	ReturnStmt ReturnStmt `| @@`
-	GotoStmt   GotoStmt   `| @@`
-	SayStmt    SayStmt    `| @@`
+	Expression *Expression `  @@`
+	WhileStmt  *WhileStmt  `| @@`
+	IfStmt     *IfStmt     `| @@`
+	ReturnStmt *ReturnStmt `| @@`
+	GotoStmt   *GotoStmt   `| @@`
+	SayStmt    *SayStmt    `| @@`
 }
 
 // WhileStmt represents a `while` statement.
@@ -230,6 +230,7 @@ type LogicAnd struct {
 }
 
 // Equality represents an equality (or un-equality) expression.
+// FIXME: I need to store the operator used!
 type Equality struct {
 	Pos   lexer.Position
 	First *Comparison   `@@`
@@ -237,6 +238,7 @@ type Equality struct {
 }
 
 // Comparison represents a comparison expression.
+// FIXME: I need to store the operator used!
 type Comparison struct {
 	Pos   lexer.Position
 	First *Addition   `@@`
@@ -244,6 +246,7 @@ type Comparison struct {
 }
 
 // Addition represents an addition expression.
+// FIXME: I need to store the operator used!
 type Addition struct {
 	Pos   lexer.Position
 	First *Multiplication   `@@`
@@ -251,6 +254,7 @@ type Addition struct {
 }
 
 // Multiplication represents a multiplication expression.
+// FIXME: I need to store the operator used!
 type Multiplication struct {
 	Pos   lexer.Position
 	First *Exponentiation   `@@`
