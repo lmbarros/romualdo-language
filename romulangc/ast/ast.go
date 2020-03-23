@@ -4,6 +4,24 @@ import (
 	"github.com/alecthomas/participle/lexer"
 )
 
+// SourceFile contains all the declarations found in a single Romualdo Language
+// source file.
+//
+// Not technically part of the AST, but this is the best package to include it.
+type SourceFile struct {
+	Pos lexer.Position
+
+	// Namespace is the namespace in which all the declarations are. The
+	// namespace is derived from the file path. Declarations in a file on the
+	// compilation root would be in the global namespace. Declarations in a file
+	// located at `compilationRoot/foo/Bar` would be in the `foo.bar` namespace.
+	// Notice that the namespace is always in lower case.
+	Namespace string
+
+	// Declarations are the declarations found in the source file.
+	Declarations []*Declaration `@@*`
+}
+
 // Declaration is any of the declarations making up a Romualdo program.
 type Declaration struct {
 	Pos          lexer.Position

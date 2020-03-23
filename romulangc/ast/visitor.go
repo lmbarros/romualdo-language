@@ -1,7 +1,5 @@
 package ast
 
-import "gitlab.com/stackedboxes/romulang/parser"
-
 // A Visitor has all the methods needed to traverse a Romualdo parse tree.
 type Visitor interface {
 	Visit(node Node)

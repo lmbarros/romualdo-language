@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"gitlab.com/stackedboxes/romulang/romulangc/ast"
-	"gitlab.com/stackedboxes/romulang/romulangc/parser"
 )
 
 type ASTPrinter struct {
@@ -15,7 +14,7 @@ type ASTPrinter struct {
 
 func (ap *ASTPrinter) Visit(node ast.Node) {
 	switch n := node.(type) {
-	case *parser.SourceFile:
+	case *ast.SourceFile:
 		ap.result += indent(ap.indentLevel) + "SourceFile [" + n.Namespace +
 			"]\n"
 	case *ast.Declaration:

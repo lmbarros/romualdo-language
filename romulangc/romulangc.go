@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"gitlab.com/stackedboxes/romulang/romulangc/ast"
 )
 
 func main() {
@@ -43,13 +45,13 @@ func main() {
 	}
 }
 
-func compile(ast *SourceFile) {
+func compile(ast *ast.SourceFile) {
 	compiler := &GDScriptBackend{}
 	ast.Walk(compiler)
 	fmt.Printf("%v", compiler.result)
 }
 
-func printAST(ast *SourceFile) {
+func printAST(ast *ast.SourceFile) {
 	printer := &ASTPrinter{}
 	ast.Walk(printer)
 	fmt.Printf("%v", printer.result)
