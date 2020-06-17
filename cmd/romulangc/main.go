@@ -16,5 +16,7 @@ import (
 func main() {
 	var chunk compiler.Chunk
 
-	fmt.Printf("The chunk: %v\n", chunk)
+	chunk.Write(compiler.OpReturn)
+
+	fmt.Printf(chunk.Disassemble("test chunk"))
 }
