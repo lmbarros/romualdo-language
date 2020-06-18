@@ -5,21 +5,14 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package main
+package compiler
 
-import (
-	"fmt"
+import "fmt"
 
-	"gitlab.com/stackedboxes/romulang/pkg/compiler"
-)
+// Value is a Romualdo language value.
+type Value float64
 
-func main() {
-	var chunk compiler.Chunk
-
-	constant := chunk.AddConstant(1.2)
-	chunk.EmitOp(compiler.OpReturn)
-	chunk.EmitOp(compiler.OpConstant)
-	chunk.EmitByte(uint8(constant))
-
-	fmt.Print(chunk.Disassemble("test chunk"))
+// String converts the value to a string.
+func (v *Value) String() string {
+	return fmt.Sprintf("%g", *v)
 }

@@ -18,19 +18,37 @@ import (
 type Opcode uint8
 
 const (
-	// The OpReturn instruction is used to return values from functions.
-	OpReturn Opcode = iota
+	// OpConstant loads a constant from the constants pool.
+	OpConstant Opcode = iota
+
+	// OpReturn is used to return values from functions.
+	OpReturn
 )
 
 // A Chunk is a chunk of bytecode.
 type Chunk struct {
 	// The code itself.
-	Code []Opcode
+	Code []uint8
+
+	// The constant values used in Code.
+	Constants []Value
 }
 
-// Write writes an instructions to the chunk.
-func (c *Chunk) Write(opcode Opcode) {
-	c.Code = append(c.Code, opcode)
+// EmitOp writes an instruction to the chunk.
+func (c *Chunk) EmitOp(opcode Opcode) {
+	c.Code = append(c.Code, uint8(opcode))
+}
+
+// EmitByte writes a byte to the chunk.
+func (c *Chunk) EmitByte(b uint8) {
+	c.Code = append(c.Code, b)
+}
+
+// AddConstant adds a constant to the chunk and returns the index of the new
+// constant into c.Constants.
+func (c *Chunk) AddConstant(value Value) int {
+	c.Constants = append(c.Constants, value)
+	return len(c.Constants) - 1
 }
 
 // Disassemble disassembles the chunk amd resturns a string representation of
@@ -53,8 +71,12 @@ func (c *Chunk) Disassemble(name string) string {
 func (c *Chunk) disassembleInstruction(out io.Writer, offset int) int {
 	fmt.Fprintf(out, "%04v ", offset)
 
-	instruction := c.Code[offset]
+	instruction := Opcode(c.Code[offset])
+
 	switch instruction {
+	case OpConstant:
+		return c.disassembleConstantInstruction(out, "CONSTANT", offset)
+
 	case OpReturn:
 		return c.disassembleSimpleInstruction(out, "RETURN", offset)
 
@@ -69,8 +91,18 @@ func (c *Chunk) disassembleInstruction(out io.Writer, offset int) int {
 // Returns the offset to the next instruction.
 //
 // A simple instruction is one composed of a single byte (just the opcode, no
-// parameters).
+// operands).
 func (c *Chunk) disassembleSimpleInstruction(out io.Writer, name string, offset int) int {
 	fmt.Fprintf(out, "%v\n", name)
 	return offset + 1
+}
+
+// disassembleConstantInstruction disassembles a OpConstant instruction at a
+// given offset. name is the instruction name, and the output is written to out.
+// Returns the offset to the next instruction.
+func (c *Chunk) disassembleConstantInstruction(out io.Writer, name string, offset int) int {
+	index := c.Code[offset+1]
+	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Constants[index])
+
+	return offset + 2
 }
