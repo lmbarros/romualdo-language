@@ -13,13 +13,9 @@ import (
 	"strings"
 )
 
-// An Opcode is a code representing one of the instructions (or operations) in
-// the RomualdoVM.
-type Opcode uint8
-
 const (
 	// OpConstant loads a constant from the constants pool.
-	OpConstant Opcode = iota
+	OpConstant uint8 = iota
 
 	// OpReturn is used to return values from functions.
 	OpReturn
@@ -32,16 +28,17 @@ type Chunk struct {
 
 	// The constant values used in Code.
 	Constants []Value
+
+	// The source code line that generated each instruction. We have one entry
+	// for each entry in Code. Very space-inefficient, but very simple.
+	Lines []int
 }
 
-// EmitOp writes an instruction to the chunk.
-func (c *Chunk) EmitOp(opcode Opcode) {
-	c.Code = append(c.Code, uint8(opcode))
-}
-
-// EmitByte writes a byte to the chunk.
-func (c *Chunk) EmitByte(b uint8) {
+// Write writes a byte to the chunk. line is the source code line number that
+// generated this byte.
+func (c *Chunk) Write(b uint8, line int) {
 	c.Code = append(c.Code, b)
+	c.Lines = append(c.Lines, line)
 }
 
 // AddConstant adds a constant to the chunk and returns the index of the new
@@ -71,7 +68,13 @@ func (c *Chunk) Disassemble(name string) string {
 func (c *Chunk) disassembleInstruction(out io.Writer, offset int) int {
 	fmt.Fprintf(out, "%04v ", offset)
 
-	instruction := Opcode(c.Code[offset])
+	if offset > 0 && c.Lines[offset] == c.Lines[offset-1] {
+		fmt.Fprint(out, "   | ")
+	} else {
+		fmt.Fprintf(out, "%4d ", c.Lines[offset])
+	}
+
+	instruction := c.Code[offset]
 
 	switch instruction {
 	case OpConstant:
