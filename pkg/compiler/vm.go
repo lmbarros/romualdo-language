@@ -33,12 +33,15 @@ type VM struct {
 	// runs through it.
 	DebugTraceExecution bool
 
-	// The Chunk containing the code to execute.
+	// chunk is the Chunk containing the code to execute.
 	chunk *Chunk
 
-	// The instruction pointer, which points to the next instruction to be
+	// ip is the instruction pointer, which points to the next instruction to be
 	// executed (it's an index into chunk.Code).
 	ip int
+
+	// stack is the VM stack, used for storing values during interpretation.
+	stack []Value
 }
 
 // NewVM returns a new Virtual Machine.
@@ -58,6 +61,14 @@ func (vm *VM) Interpret(chunk *Chunk) InterpretResult {
 func (vm *VM) run() InterpretResult {
 	for {
 		if vm.DebugTraceExecution {
+			fmt.Print("          ")
+
+			for _, v := range vm.stack {
+				fmt.Printf("[ %v ]", v)
+			}
+
+			fmt.Print("\n")
+
 			vm.chunk.disassembleInstruction(os.Stdout, vm.ip)
 		}
 
@@ -67,9 +78,10 @@ func (vm *VM) run() InterpretResult {
 		switch instruction {
 		case OpConstant:
 			constant := vm.readConstant()
-			fmt.Printf("%v\n", constant)
+			vm.push(constant)
 
 		case OpReturn:
+			fmt.Println(vm.pop())
 			return InterpretOK
 		}
 	}
@@ -81,4 +93,17 @@ func (vm *VM) readConstant() Value {
 	vm.ip++
 
 	return constant
+}
+
+// push pushes a value into the VM stack.
+func (vm *VM) push(value Value) {
+	vm.stack = append(vm.stack, value)
+}
+
+// pop pops a value from the VM stack and returns it. Panics on underflow.
+func (vm *VM) pop() Value {
+	top := vm.stack[len(vm.stack)-1]
+	vm.stack = vm.stack[:len(vm.stack)-1]
+
+	return top
 }
