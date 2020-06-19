@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	// OpConstant loads a constant from the constants pool.
 	OpConstant uint8 = iota
-
-	// OpNegate is the "unary minus" operator, as in -3.14.
+	OpAdd
+	OpSubtract
+	OpMultiply
+	OpDivide
+	OpPower
 	OpNegate
-
-	// OpReturn is used to return values from functions.
 	OpReturn
 )
 
@@ -82,6 +82,21 @@ func (c *Chunk) disassembleInstruction(out io.Writer, offset int) int {
 	switch instruction {
 	case OpConstant:
 		return c.disassembleConstantInstruction(out, "CONSTANT", offset)
+
+	case OpAdd:
+		return c.disassembleSimpleInstruction(out, "ADD", offset)
+
+	case OpSubtract:
+		return c.disassembleSimpleInstruction(out, "SUBTRACT", offset)
+
+	case OpMultiply:
+		return c.disassembleSimpleInstruction(out, "MULTIPLY", offset)
+
+	case OpDivide:
+		return c.disassembleSimpleInstruction(out, "DIVIDE", offset)
+
+	case OpPower:
+		return c.disassembleSimpleInstruction(out, "POWER", offset)
 
 	case OpNegate:
 		return c.disassembleSimpleInstruction(out, "NEGATE", offset)

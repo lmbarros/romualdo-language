@@ -9,6 +9,7 @@ package compiler
 
 import (
 	"fmt"
+	"math"
 	"os"
 )
 
@@ -79,6 +80,31 @@ func (vm *VM) run() InterpretResult {
 		case OpConstant:
 			constant := vm.readConstant()
 			vm.push(constant)
+
+		case OpAdd:
+			b := vm.pop()
+			a := vm.pop()
+			vm.push(a + b)
+
+		case OpSubtract:
+			b := vm.pop()
+			a := vm.pop()
+			vm.push(a - b)
+
+		case OpMultiply:
+			b := vm.pop()
+			a := vm.pop()
+			vm.push(a * b)
+
+		case OpDivide:
+			b := vm.pop()
+			a := vm.pop()
+			vm.push(a / b)
+
+		case OpPower:
+			b := float64(vm.pop())
+			a := float64(vm.pop())
+			vm.push(Value(math.Pow(a, b)))
 
 		case OpNegate:
 			vm.push(-vm.pop())
