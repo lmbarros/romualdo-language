@@ -80,6 +80,9 @@ func (vm *VM) run() InterpretResult {
 			constant := vm.readConstant()
 			vm.push(constant)
 
+		case OpNegate:
+			vm.push(-vm.pop())
+
 		case OpReturn:
 			fmt.Println(vm.pop())
 			return InterpretOK
