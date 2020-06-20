@@ -28,8 +28,7 @@
         "scopelint",
         "gocritic",
         "godox",
-        "funlen",
-        "wsl",
+        "funlen"
     ]
 
 [linters-settings]
@@ -39,12 +38,6 @@
     [linters-settings.govet]
         check-shadowing = true
     [linters-settings.gocyclo]
-        min-complexity = 10
+        min-complexity = 15
     [linters-settings.gocognit]
-        min-complexity = 10
-
-[issues]
-    exclude = [
-        "bad syntax for struct tag pair",
-        "bad syntax for struct tag key"
-    ]
+        min-complexity = 15
