@@ -48,7 +48,10 @@ const (
 	TokenAlias    // alias
 	TokenBnum     // bnum
 	TokenBool     // bool
+	TokenBreak    // break
 	TokenAnd      // and
+	TokenCase     // case
+	TokenClass    // class
 	TokenDo       // do
 	TokenElse     // else
 	TokenElseif   // elseif
@@ -66,6 +69,7 @@ const (
 	TokenListen   // listen
 	TokenMap      // map
 	TokenMeta     // meta
+	TokenNil      // nil
 	TokenNot      // not
 	TokenOr       // or
 	TokenString   // string
@@ -74,6 +78,7 @@ const (
 	TokenReturn   // return
 	TokenSay      // say
 	TokenStruct   // struct
+	TokenSwitch   // switch
 	TokenThen     // then
 	TokenTrue     // true
 	TokenVars     // vars
