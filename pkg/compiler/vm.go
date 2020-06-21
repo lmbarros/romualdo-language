@@ -50,16 +50,16 @@ func NewVM() *VM {
 	return &VM{}
 }
 
-// Interpret interprets a given chunk of code.
-func (vm *VM) Interpret(chunk *Chunk) InterpretResult {
-	vm.chunk = chunk
-	vm.ip = 0
+// Interpret interprets a given program, passed as the source code.
+func (vm *VM) Interpret(source string) InterpretResult {
+	c := &Compiler{}
+	c.Compile(source)
 
-	return vm.run()
+	return InterpretOK
 }
 
 // run runs the code in vm.chunk.
-func (vm *VM) run() InterpretResult {
+func (vm *VM) run() InterpretResult { //nolint: gocyclo
 	for {
 		if vm.DebugTraceExecution {
 			fmt.Print("          ")

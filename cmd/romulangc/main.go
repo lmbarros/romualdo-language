@@ -9,41 +9,35 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"gitlab.com/stackedboxes/romulang/pkg/compiler"
 )
 
 func main() {
-	var chunk compiler.Chunk
 
-	constant := chunk.AddConstant(1.2)
-	chunk.Write(compiler.OpConstant, 171)
-	chunk.Write(uint8(constant), 171)
+	if len(os.Args) != 1 {
+		fmt.Fprintf(os.Stderr, "Usage: romulangc <file>\n")
+		os.Exit(1)
+	}
 
-	constant = chunk.AddConstant(3.4)
-	chunk.Write(compiler.OpConstant, 171)
-	chunk.Write(uint8(constant), 171)
+	runFile(os.Args[1])
+}
 
-	chunk.Write(compiler.OpAdd, 171)
+func runFile(path string) {
 
-	constant = chunk.AddConstant(5.6)
-	chunk.Write(compiler.OpConstant, 171)
-	chunk.Write(uint8(constant), 171)
+	source, err := ioutil.ReadFile(path)
 
-	chunk.Write(compiler.OpDivide, 171)
-	chunk.Write(compiler.OpNegate, 171)
-
-	constant = chunk.AddConstant(2.0)
-	chunk.Write(compiler.OpConstant, 171)
-	chunk.Write(uint8(constant), 171)
-
-	chunk.Write(compiler.OpPower, 171)
-
-	chunk.Write(compiler.OpReturn, 171)
-
-	fmt.Print(chunk.Disassemble("test chunk"))
-	fmt.Print("\n\n")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading %v: %v\n", path, err)
+		os.Exit(1)
+	}
 
 	vm := compiler.NewVM()
-	vm.Interpret(&chunk)
+	result := vm.Interpret(string(source))
+
+	if result != compiler.InterpretOK {
+		os.Exit(1)
+	}
 }
