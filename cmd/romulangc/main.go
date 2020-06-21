@@ -17,7 +17,7 @@ import (
 
 func main() {
 
-	if len(os.Args) != 1 {
+	if len(os.Args) != 2 {
 		fmt.Fprintf(os.Stderr, "Usage: romulangc <file>\n")
 		os.Exit(1)
 	}
