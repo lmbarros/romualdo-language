@@ -7,7 +7,10 @@
 
 package compiler
 
-import "unicode/utf8"
+import (
+	"unicode"
+	"unicode/utf8"
+)
 
 // A Scanner is used to scan (tokenize) the Romualdo code.
 type Scanner struct {
@@ -36,6 +39,8 @@ func NewScanner(source string) *Scanner {
 
 // Token returns the next token in the source code being scanned.
 func (s *Scanner) Token() *Token {
+	s.skipWhitespace()
+
 	s.start = s.current
 
 	if s.isAtEnd() {
@@ -151,4 +156,44 @@ func (s *Scanner) match(expected rune) bool {
 
 	s.current += width
 	return true
+}
+
+// skipWhitespace skips all whitespace and comments, leaving s.current pointing
+// to the start of a non-space, non-comment rune.
+func (s *Scanner) skipWhitespace() {
+	for {
+		r, width := utf8.DecodeRuneInString(s.source[s.current:])
+
+		switch {
+		case r == '#':
+			for s.peek() != '\n' && !s.isAtEnd() {
+				s.advance()
+			}
+		case r == '\n':
+			s.line++
+			s.current += width
+		case unicode.IsSpace(r):
+			s.current += width
+		default:
+			return
+		}
+	}
+}
+
+// peek returns the current rune from the input without advancing the s.current
+// pointer.
+func (s *Scanner) peek() rune {
+	r, _ := utf8.DecodeRuneInString(s.source[s.current:])
+	return r
+}
+
+// peekNext returns the next rune from the input (one rune past s.current)
+// without the advancing s.current pointer.
+func (s *Scanner) peekNext() rune {
+	if s.isAtEnd() {
+		return 0
+	}
+	_, width := utf8.DecodeRuneInString(s.source[s.current:])
+	r, _ := utf8.DecodeRuneInString(s.source[s.current+width:])
+	return r
 }
