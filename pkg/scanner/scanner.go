@@ -5,11 +5,13 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package compiler
+package scanner
 
 import (
 	"unicode"
 	"unicode/utf8"
+
+	"gitlab.com/stackedboxes/romulang/pkg/token"
 )
 
 // A Scanner is used to scan (tokenize) the Romualdo code.
@@ -29,8 +31,8 @@ type Scanner struct {
 	line int
 }
 
-// NewScanner returns a new Scanner that will scan source.
-func NewScanner(source string) *Scanner {
+// New returns a new Scanner that will scan source.
+func New(source string) *Scanner {
 	return &Scanner{
 		source: source,
 		line:   1,
@@ -38,13 +40,13 @@ func NewScanner(source string) *Scanner {
 }
 
 // Token returns the next token in the source code being scanned.
-func (s *Scanner) Token() *Token {
+func (s *Scanner) Token() *token.Token { // nolint:funlen,gocyclo
 	s.skipWhitespace()
 
 	s.start = s.current
 
 	if s.isAtEnd() {
-		return s.makeToken(TokenEOF)
+		return s.makeToken(token.KindEOF)
 	}
 
 	r := s.advance()
@@ -59,57 +61,57 @@ func (s *Scanner) Token() *Token {
 
 	switch r {
 	case '(':
-		return s.makeToken(TokenLeftParen)
+		return s.makeToken(token.KindLeftParen)
 	case ')':
-		return s.makeToken(TokenRightParen)
+		return s.makeToken(token.KindRightParen)
 	case '{':
-		return s.makeToken(TokenLeftBrace)
+		return s.makeToken(token.KindLeftBrace)
 	case '}':
-		return s.makeToken(TokenRightBrace)
+		return s.makeToken(token.KindRightBrace)
 	case '[':
-		return s.makeToken(TokenLeftBracket)
+		return s.makeToken(token.KindLeftBracket)
 	case ']':
-		return s.makeToken(TokenRightBracket)
+		return s.makeToken(token.KindRightBracket)
 	case ',':
-		return s.makeToken(TokenComma)
+		return s.makeToken(token.KindComma)
 	case '.':
-		return s.makeToken(TokenDot)
+		return s.makeToken(token.KindDot)
 	case '-':
-		return s.makeToken(TokenMinus)
+		return s.makeToken(token.KindMinus)
 	case '+':
-		return s.makeToken(TokenPlus)
+		return s.makeToken(token.KindPlus)
 	case '/':
-		return s.makeToken(TokenSlash)
+		return s.makeToken(token.KindSlash)
 	case '*':
-		return s.makeToken(TokenStar)
+		return s.makeToken(token.KindStar)
 	case ':':
-		return s.makeToken(TokenColon)
+		return s.makeToken(token.KindColon)
 	case '~':
-		return s.makeToken(TokenTilde)
+		return s.makeToken(token.KindTilde)
 	case '@':
-		return s.makeToken(TokenAt)
+		return s.makeToken(token.KindAt)
 	case '^':
-		return s.makeToken(TokenHat)
+		return s.makeToken(token.KindHat)
 	case '!':
 		if s.match('=') {
-			return s.makeToken(TokenBangEqual)
+			return s.makeToken(token.KindBangEqual)
 		}
 		return s.errorToken("'!' not followed by '='")
 	case '=':
 		if s.match('=') {
-			return s.makeToken(TokenEqualEqual)
+			return s.makeToken(token.KindEqualEqual)
 		}
-		return s.makeToken(TokenEqual)
+		return s.makeToken(token.KindEqual)
 	case '<':
 		if s.match('=') {
-			return s.makeToken(TokenLessEqual)
+			return s.makeToken(token.KindLessEqual)
 		}
-		return s.makeToken(TokenLess)
+		return s.makeToken(token.KindLess)
 	case '>':
 		if s.match('=') {
-			return s.makeToken(TokenGreaterEqual)
+			return s.makeToken(token.KindGreaterEqual)
 		}
-		return s.makeToken(TokenGreater)
+		return s.makeToken(token.KindGreater)
 
 	case '"':
 		return s.scanString()
@@ -124,8 +126,8 @@ func (s *Scanner) isAtEnd() bool {
 }
 
 // makeToken returns a token of a given kind.
-func (s *Scanner) makeToken(kind TokenKind) *Token {
-	return &Token{
+func (s *Scanner) makeToken(kind token.Kind) *token.Token {
+	return &token.Token{
 		Kind:   kind,
 		Lexeme: s.source[s.start:s.current],
 		Line:   s.line,
@@ -134,9 +136,9 @@ func (s *Scanner) makeToken(kind TokenKind) *Token {
 
 // errorToken returns a new token of kind TokenError containing a given error
 // message.s
-func (s *Scanner) errorToken(message string) *Token {
-	return &Token{
-		Kind:   TokenError,
+func (s *Scanner) errorToken(message string) *token.Token {
+	return &token.Token{
+		Kind:   token.KindError,
 		Lexeme: message,
 		Line:   s.line,
 	}
@@ -210,7 +212,7 @@ func (s *Scanner) peekNext() rune {
 }
 
 // scanString scans a string token.
-func (s *Scanner) scanString() *Token {
+func (s *Scanner) scanString() *token.Token {
 	for s.peek() != '"' && !s.isAtEnd() {
 		if s.peek() == '\n' {
 			s.line++
@@ -224,11 +226,11 @@ func (s *Scanner) scanString() *Token {
 
 	// The closing quote.
 	s.advance()
-	return s.makeToken(TokenString)
+	return s.makeToken(token.KindString)
 }
 
 // scanNumber scans a number token.
-func (s *Scanner) scanNumber() *Token {
+func (s *Scanner) scanNumber() *token.Token {
 	for unicode.IsDigit(s.peek()) {
 		s.advance()
 	}
@@ -243,11 +245,11 @@ func (s *Scanner) scanNumber() *Token {
 		}
 	}
 
-	return s.makeToken(TokenNumberLiteral)
+	return s.makeToken(token.KindNumberLiteral)
 }
 
 // scanIdentifier scans an identifier token.
-func (s *Scanner) scanIdentifier() *Token {
+func (s *Scanner) scanIdentifier() *token.Token {
 	for {
 		r := s.peek()
 		if r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) {
@@ -262,7 +264,7 @@ func (s *Scanner) scanIdentifier() *Token {
 
 // identifierKind returns the token kind corresponding to the current token
 // (assumed to be either a reserved word or an identifier).
-func (s *Scanner) identifierKind() TokenKind {
+func (s *Scanner) identifierKind() token.Kind { // nolint:funlen,gocognit,gocyclo
 	lexeme := s.source[s.start:s.current]
 
 	// It's fine to not decode a UTF-8 character here: we are trying to identify
@@ -274,128 +276,128 @@ func (s *Scanner) identifierKind() TokenKind {
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'l':
-				return s.checkKeyword(2, "ias", TokenAlias)
+				return s.checkKeyword(2, "ias", token.KindAlias)
 			case 'n':
-				return s.checkKeyword(2, "d", TokenAnd)
+				return s.checkKeyword(2, "d", token.KindAnd)
 			}
 		}
 	case 'b':
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'n':
-				return s.checkKeyword(2, "um", TokenBnum)
+				return s.checkKeyword(2, "um", token.KindBnum)
 			case 'o':
-				return s.checkKeyword(2, "ol", TokenBool)
+				return s.checkKeyword(2, "ol", token.KindBool)
 			case 'r':
-				return s.checkKeyword(2, "eak", TokenBreak)
+				return s.checkKeyword(2, "eak", token.KindBreak)
 			}
 		}
 	case 'c':
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'a':
-				return s.checkKeyword(2, "se", TokenCase)
+				return s.checkKeyword(2, "se", token.KindCase)
 			case 'l':
-				return s.checkKeyword(2, "ass", TokenClass)
+				return s.checkKeyword(2, "ass", token.KindClass)
 			}
 		}
 	case 'd':
-		return s.checkKeyword(1, "o", TokenDo)
+		return s.checkKeyword(1, "o", token.KindDo)
 	case 'e':
 		switch lexeme {
 		case "else":
-			return TokenElse
+			return token.KindElse
 		case "elseif":
-			return TokenElseif
+			return token.KindElseif
 		case "end":
-			return TokenEnd
+			return token.KindEnd
 		case "enum":
-			return TokenEnum
+			return token.KindEnum
 		}
 	case 'f':
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'a':
-				return s.checkKeyword(2, "lse", TokenFalse)
+				return s.checkKeyword(2, "lse", token.KindFalse)
 			case 'l':
-				return s.checkKeyword(2, "oat", TokenFloat)
+				return s.checkKeyword(2, "oat", token.KindFloat)
 			case 'o':
-				return s.checkKeyword(2, "r", TokenFor)
+				return s.checkKeyword(2, "r", token.KindFor)
 			case 'u':
-				return s.checkKeyword(2, "nction", TokenFunction)
+				return s.checkKeyword(2, "nction", token.KindFunction)
 			}
 		}
 	case 'g':
 		if len(lexeme) > 2 {
 			switch lexeme {
 			case "gosub":
-				return TokenGosub
+				return token.KindGosub
 			case "goto":
-				return TokenGoto
+				return token.KindGoto
 			}
 		}
 	case 'i':
 		if len(lexeme) > 2 {
 			switch s.source[s.start+1] {
 			case 'f':
-				return s.checkKeyword(2, "", TokenIf)
+				return s.checkKeyword(2, "", token.KindIf)
 			case 'n':
 				switch lexeme {
 				case "in":
-					return TokenIn
+					return token.KindIn
 				case "int":
-					return TokenInt
+					return token.KindInt
 				}
 			}
 		}
 	case 'l':
-		return s.checkKeyword(1, "isten", TokenListen)
+		return s.checkKeyword(1, "isten", token.KindListen)
 	case 'm':
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'a':
-				return s.checkKeyword(2, "p", TokenMap)
+				return s.checkKeyword(2, "p", token.KindMap)
 			case 'e':
-				return s.checkKeyword(2, "ta", TokenMeta)
+				return s.checkKeyword(2, "ta", token.KindMeta)
 			}
 		}
 	case 'n':
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'i':
-				return s.checkKeyword(2, "l", TokenNil)
+				return s.checkKeyword(2, "l", token.KindNil)
 			case 'o':
-				return s.checkKeyword(2, "t", TokenNot)
+				return s.checkKeyword(2, "t", token.KindNot)
 			}
 		}
 	case 'o':
-		return s.checkKeyword(1, "r", TokenOr)
+		return s.checkKeyword(1, "r", token.KindOr)
 	case 'p':
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'r':
-				return s.checkKeyword(2, "int", TokenPrint)
+				return s.checkKeyword(2, "int", token.KindPrint)
 			case 'a':
-				return s.checkKeyword(2, "ssage", TokenPassage)
+				return s.checkKeyword(2, "ssage", token.KindPassage)
 			}
 		}
 	case 'r':
-		return s.checkKeyword(1, "eturn", TokenReturn)
+		return s.checkKeyword(1, "eturn", token.KindReturn)
 	case 's':
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'a':
-				return s.checkKeyword(2, "y", TokenSay)
+				return s.checkKeyword(2, "y", token.KindSay)
 			case 'u':
-				return s.checkKeyword(2, "per", TokenSuper)
+				return s.checkKeyword(2, "per", token.KindSuper)
 			case 'w':
-				return s.checkKeyword(2, "itch", TokenSwitch)
+				return s.checkKeyword(2, "itch", token.KindSwitch)
 			case 't':
 				switch lexeme {
 				case "struct":
-					return TokenStruct
+					return token.KindStruct
 				case "string":
-					return TokenString
+					return token.KindString
 				}
 			}
 		}
@@ -403,32 +405,32 @@ func (s *Scanner) identifierKind() TokenKind {
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'h':
-				return s.checkKeyword(2, "en", TokenThen)
+				return s.checkKeyword(2, "en", token.KindThen)
 			case 'r':
-				return s.checkKeyword(2, "ue", TokenTrue)
+				return s.checkKeyword(2, "ue", token.KindTrue)
 			}
 		}
 	case 'v':
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'a':
-				return s.checkKeyword(2, "rs", TokenVars)
+				return s.checkKeyword(2, "rs", token.KindVars)
 			case 'o':
-				return s.checkKeyword(2, "id", TokenVoid)
+				return s.checkKeyword(2, "id", token.KindVoid)
 			}
 		}
 	case 'w':
-		return s.checkKeyword(1, "hile", TokenWhile)
+		return s.checkKeyword(1, "hile", token.KindWhile)
 
 	}
 
-	return TokenIdentifier
+	return token.KindIdentifier
 }
 
 // checkKeyword checks if the current lexeme is a given keyword. It start
 // checking at the start-th character, checking if it matches rest. If there is
 // a match, returns kind. Otherwise, returns TokenIdentifier.
-func (s *Scanner) checkKeyword(start int, rest string, kind TokenKind) TokenKind {
+func (s *Scanner) checkKeyword(start int, rest string, kind token.Kind) token.Kind {
 	restLength := len(rest)
 	lexemeLength := s.current - s.start
 	keywordLength := s.start + restLength
@@ -437,5 +439,5 @@ func (s *Scanner) checkKeyword(start int, rest string, kind TokenKind) TokenKind
 		return kind
 	}
 
-	return TokenIdentifier
+	return token.KindIdentifier
 }

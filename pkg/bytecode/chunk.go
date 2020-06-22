@@ -5,7 +5,7 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package compiler
+package bytecode
 
 import (
 	"fmt"
@@ -59,16 +59,16 @@ func (c *Chunk) Disassemble(name string) string {
 	fmt.Fprintf(&out, "== %v ==\n", name)
 
 	for offset := 0; offset < len(c.Code); {
-		offset = c.disassembleInstruction(&out, offset)
+		offset = c.DisassembleInstruction(&out, offset)
 	}
 
 	return out.String()
 }
 
-// disassembleInstruction disassembles the instruction at a given offset and
+// DisassembleInstruction disassembles the instruction at a given offset and
 // returns the offset of the next instruction to disassemble. Output is written
 // to out.
-func (c *Chunk) disassembleInstruction(out io.Writer, offset int) int {
+func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int {
 	fmt.Fprintf(out, "%04v ", offset)
 
 	if offset > 0 && c.Lines[offset] == c.Lines[offset-1] {

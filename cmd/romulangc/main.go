@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"gitlab.com/stackedboxes/romulang/pkg/compiler"
+	"gitlab.com/stackedboxes/romulang/pkg/vm"
 )
 
 func main() {
@@ -34,10 +34,10 @@ func runFile(path string) {
 		os.Exit(1)
 	}
 
-	vm := compiler.NewVM()
-	result := vm.Interpret(string(source))
+	theVM := vm.New()
+	result := theVM.Interpret(string(source))
 
-	if result != compiler.InterpretOK {
+	if result != vm.InterpretOK {
 		os.Exit(1)
 	}
 }

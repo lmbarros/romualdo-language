@@ -5,7 +5,7 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package compiler
+package bytecode
 
 import "fmt"
 

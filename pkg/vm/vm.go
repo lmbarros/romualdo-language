@@ -5,12 +5,15 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package compiler
+package vm
 
 import (
 	"fmt"
 	"math"
 	"os"
+
+	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
+	"gitlab.com/stackedboxes/romulang/pkg/compiler"
 )
 
 // InterpretResult is the result of interpreting some Romualdo code.
@@ -35,24 +38,26 @@ type VM struct {
 	DebugTraceExecution bool
 
 	// chunk is the Chunk containing the code to execute.
-	chunk *Chunk
+	chunk *bytecode.Chunk
 
 	// ip is the instruction pointer, which points to the next instruction to be
 	// executed (it's an index into chunk.Code).
 	ip int
 
 	// stack is the VM stack, used for storing values during interpretation.
-	stack []Value
+	stack []bytecode.Value
 }
 
-// NewVM returns a new Virtual Machine.
-func NewVM() *VM {
+// New returns a new Virtual Machine.
+func New() *VM {
 	return &VM{}
 }
 
 // Interpret interprets a given program, passed as the source code.
 func (vm *VM) Interpret(source string) InterpretResult {
-	c := &Compiler{}
+	// TODO: Move the compilation out of here. The vm should read the bytecode
+	// directly.
+	c := compiler.New()
 	c.Compile(source)
 
 	return InterpretOK
@@ -70,46 +75,46 @@ func (vm *VM) run() InterpretResult { //nolint: gocyclo
 
 			fmt.Print("\n")
 
-			vm.chunk.disassembleInstruction(os.Stdout, vm.ip)
+			vm.chunk.DisassembleInstruction(os.Stdout, vm.ip)
 		}
 
 		instruction := vm.chunk.Code[vm.ip]
 		vm.ip++
 
 		switch instruction {
-		case OpConstant:
+		case bytecode.OpConstant:
 			constant := vm.readConstant()
 			vm.push(constant)
 
-		case OpAdd:
+		case bytecode.OpAdd:
 			b := vm.pop()
 			a := vm.pop()
 			vm.push(a + b)
 
-		case OpSubtract:
+		case bytecode.OpSubtract:
 			b := vm.pop()
 			a := vm.pop()
 			vm.push(a - b)
 
-		case OpMultiply:
+		case bytecode.OpMultiply:
 			b := vm.pop()
 			a := vm.pop()
 			vm.push(a * b)
 
-		case OpDivide:
+		case bytecode.OpDivide:
 			b := vm.pop()
 			a := vm.pop()
 			vm.push(a / b)
 
-		case OpPower:
+		case bytecode.OpPower:
 			b := float64(vm.pop())
 			a := float64(vm.pop())
-			vm.push(Value(math.Pow(a, b)))
+			vm.push(bytecode.Value(math.Pow(a, b)))
 
-		case OpNegate:
+		case bytecode.OpNegate:
 			vm.push(-vm.pop())
 
-		case OpReturn:
+		case bytecode.OpReturn:
 			fmt.Println(vm.pop())
 			return InterpretOK
 		}
@@ -117,7 +122,7 @@ func (vm *VM) run() InterpretResult { //nolint: gocyclo
 }
 
 // run runs the code in vm.chunk.
-func (vm *VM) readConstant() Value {
+func (vm *VM) readConstant() bytecode.Value {
 	constant := vm.chunk.Constants[vm.chunk.Code[vm.ip]]
 	vm.ip++
 
@@ -125,12 +130,12 @@ func (vm *VM) readConstant() Value {
 }
 
 // push pushes a value into the VM stack.
-func (vm *VM) push(value Value) {
+func (vm *VM) push(value bytecode.Value) {
 	vm.stack = append(vm.stack, value)
 }
 
 // pop pops a value from the VM stack and returns it. Panics on underflow.
-func (vm *VM) pop() Value {
+func (vm *VM) pop() bytecode.Value {
 	top := vm.stack[len(vm.stack)-1]
 	vm.stack = vm.stack[:len(vm.stack)-1]
 
