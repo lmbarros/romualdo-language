@@ -49,6 +49,10 @@ func (s *Scanner) Token() *Token {
 
 	r := s.advance()
 
+	if unicode.IsDigit(r) {
+		return s.scanNumber()
+	}
+
 	switch r {
 	case '(':
 		return s.makeToken(TokenLeftParen)
@@ -102,6 +106,9 @@ func (s *Scanner) Token() *Token {
 			return s.makeToken(TokenGreaterEqual)
 		}
 		return s.makeToken(TokenGreater)
+
+	case '"':
+		return s.scanString()
 	}
 
 	return s.errorToken("Unexpected character.")
@@ -196,4 +203,41 @@ func (s *Scanner) peekNext() rune {
 	_, width := utf8.DecodeRuneInString(s.source[s.current:])
 	r, _ := utf8.DecodeRuneInString(s.source[s.current+width:])
 	return r
+}
+
+// scanString scans a string token.
+func (s *Scanner) scanString() *Token {
+	for s.peek() != '"' && !s.isAtEnd() {
+		if s.peek() == '\n' {
+			s.line++
+		}
+		s.advance()
+	}
+
+	if s.isAtEnd() {
+		return s.errorToken("Unterminated string.")
+	}
+
+	// The closing quote.
+	s.advance()
+	return s.makeToken(TokenString)
+}
+
+// scanNumber scans a number token.
+func (s *Scanner) scanNumber() *Token {
+	for unicode.IsDigit(s.peek()) {
+		s.advance()
+	}
+
+	// Look for a fractional part.
+	if s.peek() == '.' && unicode.IsDigit(s.peekNext()) {
+		// Consume the ".".
+		s.advance()
+
+		for unicode.IsDigit(s.peek()) {
+			s.advance()
+		}
+	}
+
+	return s.makeToken(TokenNumberLiteral)
 }
