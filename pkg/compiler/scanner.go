@@ -49,6 +49,10 @@ func (s *Scanner) Token() *Token {
 
 	r := s.advance()
 
+	if unicode.IsLetter(r) {
+		return s.scanIdentifier()
+	}
+
 	if unicode.IsDigit(r) {
 		return s.scanNumber()
 	}
@@ -240,4 +244,198 @@ func (s *Scanner) scanNumber() *Token {
 	}
 
 	return s.makeToken(TokenNumberLiteral)
+}
+
+// scanIdentifier scans an identifier token.
+func (s *Scanner) scanIdentifier() *Token {
+	for {
+		r := s.peek()
+		if r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) {
+			s.advance()
+		} else {
+			break
+		}
+	}
+
+	return s.makeToken(s.identifierKind())
+}
+
+// identifierKind returns the token kind corresponding to the current token
+// (assumed to be either a reserved word or an identifier).
+func (s *Scanner) identifierKind() TokenKind {
+	lexeme := s.source[s.start:s.current]
+
+	// It's fine to not decode a UTF-8 character here: we are trying to identify
+	// keywords, and keywords are 100% 7-bit clean ASCII. Any non-ASCII
+	// character will not match any keyword and therefore will be classified as
+	// TokenIdentifier.
+	switch s.source[s.start] {
+	case 'a':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'l':
+				return s.checkKeyword(2, "ias", TokenAlias)
+			case 'n':
+				return s.checkKeyword(2, "d", TokenAnd)
+			}
+		}
+	case 'b':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'n':
+				return s.checkKeyword(2, "um", TokenBnum)
+			case 'o':
+				return s.checkKeyword(2, "ol", TokenBool)
+			case 'r':
+				return s.checkKeyword(2, "eak", TokenBreak)
+			}
+		}
+	case 'c':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'a':
+				return s.checkKeyword(2, "se", TokenCase)
+			case 'l':
+				return s.checkKeyword(2, "ass", TokenClass)
+			}
+		}
+	case 'd':
+		return s.checkKeyword(1, "o", TokenDo)
+	case 'e':
+		switch lexeme {
+		case "else":
+			return TokenElse
+		case "elseif":
+			return TokenElseif
+		case "end":
+			return TokenEnd
+		case "enum":
+			return TokenEnum
+		}
+	case 'f':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'a':
+				return s.checkKeyword(2, "lse", TokenFalse)
+			case 'l':
+				return s.checkKeyword(2, "oat", TokenFloat)
+			case 'o':
+				return s.checkKeyword(2, "r", TokenFor)
+			case 'u':
+				return s.checkKeyword(2, "nction", TokenFunction)
+			}
+		}
+	case 'g':
+		if len(lexeme) > 2 {
+			switch lexeme {
+			case "gosub":
+				return TokenGosub
+			case "goto":
+				return TokenGoto
+			}
+		}
+	case 'i':
+		if len(lexeme) > 2 {
+			switch s.source[s.start+1] {
+			case 'f':
+				return s.checkKeyword(2, "", TokenIf)
+			case 'n':
+				switch lexeme {
+				case "in":
+					return TokenIn
+				case "int":
+					return TokenInt
+				}
+			}
+		}
+	case 'l':
+		return s.checkKeyword(1, "isten", TokenListen)
+	case 'm':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'a':
+				return s.checkKeyword(2, "p", TokenMap)
+			case 'e':
+				return s.checkKeyword(2, "ta", TokenMeta)
+			}
+		}
+	case 'n':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'i':
+				return s.checkKeyword(2, "l", TokenNil)
+			case 'o':
+				return s.checkKeyword(2, "t", TokenNot)
+			}
+		}
+	case 'o':
+		return s.checkKeyword(1, "r", TokenOr)
+	case 'p':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'r':
+				return s.checkKeyword(2, "int", TokenPrint)
+			case 'a':
+				return s.checkKeyword(2, "ssage", TokenPassage)
+			}
+		}
+	case 'r':
+		return s.checkKeyword(1, "eturn", TokenReturn)
+	case 's':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'a':
+				return s.checkKeyword(2, "y", TokenSay)
+			case 'u':
+				return s.checkKeyword(2, "per", TokenSuper)
+			case 'w':
+				return s.checkKeyword(2, "itch", TokenSwitch)
+			case 't':
+				switch lexeme {
+				case "struct":
+					return TokenStruct
+				case "string":
+					return TokenString
+				}
+			}
+		}
+	case 't':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'h':
+				return s.checkKeyword(2, "en", TokenThen)
+			case 'r':
+				return s.checkKeyword(2, "ue", TokenTrue)
+			}
+		}
+	case 'v':
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'a':
+				return s.checkKeyword(2, "rs", TokenVars)
+			case 'o':
+				return s.checkKeyword(2, "id", TokenVoid)
+			}
+		}
+	case 'w':
+		return s.checkKeyword(1, "hile", TokenWhile)
+
+	}
+
+	return TokenIdentifier
+}
+
+// checkKeyword checks if the current lexeme is a given keyword. It start
+// checking at the start-th character, checking if it matches rest. If there is
+// a match, returns kind. Otherwise, returns TokenIdentifier.
+func (s *Scanner) checkKeyword(start int, rest string, kind TokenKind) TokenKind {
+	restLength := len(rest)
+	lexemeLength := s.current - s.start
+	keywordLength := s.start + restLength
+
+	if lexemeLength == keywordLength && s.source[s.start+start:s.current] == rest {
+		return kind
+	}
+
+	return TokenIdentifier
 }

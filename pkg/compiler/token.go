@@ -46,10 +46,10 @@ const (
 
 	// Keywords.
 	TokenAlias    // alias
+	TokenAnd      // and
 	TokenBnum     // bnum
 	TokenBool     // bool
 	TokenBreak    // break
-	TokenAnd      // and
 	TokenCase     // case
 	TokenClass    // class
 	TokenDo       // do
@@ -58,26 +58,27 @@ const (
 	TokenEnd      // end
 	TokenEnum     // enum
 	TokenFalse    // false
+	TokenFloat    // float
+	TokenFor      // for
 	TokenFunction // function
 	TokenGosub    // gosub
 	TokenGoto     // goto
 	TokenIf       // if
 	TokenIn       // in
 	TokenInt      // int
-	TokenFloat    // float
-	TokenFor      // for
 	TokenListen   // listen
 	TokenMap      // map
 	TokenMeta     // meta
 	TokenNil      // nil
 	TokenNot      // not
 	TokenOr       // or
-	TokenString   // string
 	TokenPassage  // passage
 	TokenPrint    // print (temporary?!)
 	TokenReturn   // return
 	TokenSay      // say
+	TokenString   // string
 	TokenStruct   // struct
+	TokenSuper    // super
 	TokenSwitch   // switch
 	TokenThen     // then
 	TokenTrue     // true
