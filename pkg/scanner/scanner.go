@@ -226,7 +226,7 @@ func (s *Scanner) scanString() *token.Token {
 
 	// The closing quote.
 	s.advance()
-	return s.makeToken(token.KindString)
+	return s.makeToken(token.KindStringLiteral)
 }
 
 // scanNumber scans a number token.
@@ -435,7 +435,7 @@ func (s *Scanner) identifierKind() token.Kind { // nolint:funlen,gocognit,gocycl
 func (s *Scanner) checkKeyword(start int, rest string, kind token.Kind) token.Kind {
 	restLength := len(rest)
 	lexemeLength := s.current - s.start
-	keywordLength := s.start + restLength
+	keywordLength := start + restLength
 
 	if lexemeLength == keywordLength && s.source[s.start+start:s.current] == rest {
 		return kind
