@@ -150,12 +150,18 @@ func (kind Kind) String() string { // nolint:funlen,gocyclo
 		return "KindNumberLiteral"
 	case KindAlias:
 		return "KindAlias"
+	case KindAnd:
+		return "KindAnd"
 	case KindBnum:
 		return "KindBnum"
 	case KindBool:
 		return "KindBool"
-	case KindAnd:
-		return "KindAnd"
+	case KindBreak:
+		return "KindBreak"
+	case KindCase:
+		return "KindCase"
+	case KindClass:
+		return "KindClass"
 	case KindContinue:
 		return "KindContinue"
 	case KindDo:
@@ -192,6 +198,8 @@ func (kind Kind) String() string { // nolint:funlen,gocyclo
 		return "KindMap"
 	case KindMeta:
 		return "KindMeta"
+	case KindNil:
+		return "KindNil"
 	case KindNot:
 		return "KindNot"
 	case KindOr:
@@ -206,8 +214,12 @@ func (kind Kind) String() string { // nolint:funlen,gocyclo
 		return "KindReturn"
 	case KindSay:
 		return "KindSay"
+	case KindSuper:
+		return "KindSuper"
 	case KindStruct:
 		return "KindStruct"
+	case KindSwitch:
+		return "KindSwitch"
 	case KindThen:
 		return "KindThen"
 	case KindTrue:
