@@ -52,6 +52,7 @@ const (
 	KindBreak    // break
 	KindCase     // case
 	KindClass    // class
+	KindContinue // continue
 	KindDo       // do
 	KindElse     // else
 	KindElseif   // elseif
@@ -155,6 +156,8 @@ func (kind Kind) String() string { // nolint:funlen,gocyclo
 		return "KindBool"
 	case KindAnd:
 		return "KindAnd"
+	case KindContinue:
+		return "KindContinue"
 	case KindDo:
 		return "KindDo"
 	case KindElse:

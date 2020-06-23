@@ -299,6 +299,8 @@ func (s *Scanner) identifierKind() token.Kind { // nolint:funlen,gocognit,gocycl
 				return s.checkKeyword(2, "se", token.KindCase)
 			case 'l':
 				return s.checkKeyword(2, "ass", token.KindClass)
+			case 'o':
+				return s.checkKeyword(2, "ntinue", token.KindContinue)
 			}
 		}
 	case 'd':
