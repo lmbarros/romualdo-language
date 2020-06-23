@@ -14,8 +14,8 @@ import (
 	"gitlab.com/stackedboxes/romulang/pkg/token"
 )
 
-// Tests Scanner.Token() with simple cases.
-func TestScannerTokenSimpleCases(t *testing.T) {
+// Tests Scanner.Token() with simple cases (zero or one-token only).
+func TestScannerTokenSimpleCases(t *testing.T) { // nolint: funlen
 	tokens := tokenizeString("")
 	assert.Equal(t, []token.Kind{token.KindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{""}, tokenLexemes(tokens))
@@ -78,6 +78,49 @@ func TestScannerTokenSimpleCases(t *testing.T) {
 
 	tokens = tokenizeString("!")
 	assert.Equal(t, []token.Kind{token.KindError}, tokenKinds(tokens))
+
+	tokens = tokenizeString("⟨")
+	assert.Equal(t, []token.Kind{token.KindError}, tokenKinds(tokens))
+}
+
+// Tests Scanner.Token() token sequences longer than one token.
+func TestScannerTokenTokenSequences(t *testing.T) { // nolint: funlen
+	tokens := tokenizeString("while true do")
+	assert.Equal(t, []token.Kind{
+		token.KindWhile, token.KindTrue, token.KindDo, token.KindEOF},
+		tokenKinds(tokens))
+	assert.Equal(t, []string{"while", "true", "do", ""}, tokenLexemes(tokens))
+	assert.Equal(t, []int{1, 1, 1, 1}, tokenLines(tokens))
+
+	tokens = tokenizeString("vars x: int = 1 + 2 end")
+	assert.Equal(t, []token.Kind{
+		token.KindVars, token.KindIdentifier, token.KindColon, token.KindInt,
+		token.KindEqual, token.KindNumberLiteral, token.KindPlus,
+		token.KindNumberLiteral, token.KindEnd, token.KindEOF},
+		tokenKinds(tokens))
+	assert.Equal(t, []string{"vars", "x", ":", "int", "=", "1", "+", "2", "end", ""},
+		tokenLexemes(tokens))
+	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
+
+	tokens = tokenizeString(`struct,物語 "string"+~`)
+	assert.Equal(t, []token.Kind{
+		token.KindStruct, token.KindComma, token.KindIdentifier,
+		token.KindStringLiteral, token.KindPlus, token.KindTilde, token.KindEOF},
+		tokenKinds(tokens))
+	assert.Equal(t, []string{"struct", ",", "物語", `"string"`, "+", "~", ""},
+		tokenLexemes(tokens))
+	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
+
+	tokens = tokenizeString("(alias{and / or}    super) # ⟨123.2⟩")
+	assert.Equal(t, []token.Kind{
+		token.KindLeftParen, token.KindAlias, token.KindLeftBrace, token.KindAnd,
+		token.KindSlash, token.KindOr, token.KindRightBrace, token.KindSuper,
+		token.KindRightParen, token.KindEOF},
+		tokenKinds(tokens))
+	assert.Equal(t, []string{"(", "alias", "{", "and", "/", "or", "}", "super", ")", ""},
+		tokenLexemes(tokens))
+	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
+
 }
 
 // tokenKinds extract the token kinds from a slice of tokens.
