@@ -341,7 +341,7 @@ func (s *Scanner) identifierKind() token.Kind { // nolint:funlen,gocognit,gocycl
 			}
 		}
 	case 'i':
-		if len(lexeme) > 2 {
+		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'f':
 				return s.checkKeyword(2, "", token.KindIf)
