@@ -8,6 +8,8 @@
 package compiler
 
 import (
+	"strconv"
+
 	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
 	"gitlab.com/stackedboxes/romulang/pkg/scanner"
 	"gitlab.com/stackedboxes/romulang/pkg/token"
@@ -43,6 +45,7 @@ func (c *Compiler) Compile(source string) *bytecode.Chunk {
 	c.s = scanner.New(source)
 
 	c.advance()
+	c.consume(token.KindNumberLiteral, "Expect number literal.")
 	c.expression()
 	c.consume(token.KindEOF, "Expect end of expression.")
 
@@ -58,4 +61,18 @@ func (c *Compiler) Compile(source string) *bytecode.Chunk {
 // endCompiler wraps up the compilation.
 func (c *Compiler) endCompiler() {
 	c.emitReturn()
+}
+
+// expression parses and generates code for an expression.
+func (c *Compiler) expression() {
+	c.number()
+}
+
+// number parses and generates code for a number literal.
+func (c *Compiler) number() {
+	value, err := strconv.ParseFloat(c.p.previous.Lexeme, 64)
+	if err != nil {
+		panic("Compiler got invalid number lexeme: " + c.p.previous.Lexeme)
+	}
+	c.emitConstant(bytecode.Value(value))
 }

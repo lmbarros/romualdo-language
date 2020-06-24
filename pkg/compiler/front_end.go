@@ -51,6 +51,7 @@ func (c *Compiler) error(message string) {
 	c.errorAt(c.p.previous, message)
 }
 
+// errorAt reports an error at a given token, with a given error message.
 func (c *Compiler) errorAt(tok *token.Token, message string) {
 	if c.p.panicMode {
 		return

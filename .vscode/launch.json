@@ -11,7 +11,8 @@
             "mode": "auto",
             "program": "${fileDirname}",
             "env": {},
-            "args": []
+            "cwd": "${workspaceFolder}",
+            "args": ["test.romulang"]
         }
     ]
 }
