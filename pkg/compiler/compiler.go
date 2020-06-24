@@ -65,11 +65,11 @@ func (c *Compiler) endCompiler() {
 
 // expression parses and generates code for an expression.
 func (c *Compiler) expression() {
-	c.number()
+	c.floatNumber()
 }
 
 // number parses and generates code for a number literal.
-func (c *Compiler) number() {
+func (c *Compiler) floatNumber() {
 	value, err := strconv.ParseFloat(c.p.previous.Lexeme, 64)
 	if err != nil {
 		panic("Compiler got invalid number lexeme: " + c.p.previous.Lexeme)
