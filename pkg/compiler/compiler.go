@@ -46,9 +46,16 @@ func (c *Compiler) Compile(source string) *bytecode.Chunk {
 	c.expression()
 	c.consume(token.KindEOF, "Expect end of expression.")
 
+	c.endCompiler()
+
 	if c.p.hadError {
 		return nil
 	} else {
 		return c.chunk
 	}
+}
+
+// endCompiler wraps up the compilation.
+func (c *Compiler) endCompiler() {
+	c.emitReturn()
 }
