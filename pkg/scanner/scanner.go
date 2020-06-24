@@ -120,7 +120,9 @@ func (s *Scanner) Token() *token.Token { // nolint:funlen,gocyclo
 	return s.errorToken("Unexpected character.")
 }
 
-// isAtEnd checks if the scanner reached the end of the input.
+// isAtEnd checks if the scanner reached the end of the input. Specifically,
+// this means that s.current is pointing beyond the last valid index of
+// s.source.
 func (s *Scanner) isAtEnd() bool {
 	return s.current == len(s.source)
 }
@@ -203,7 +205,7 @@ func (s *Scanner) peek() rune {
 // peekNext returns the next rune from the input (one rune past s.current)
 // without the advancing s.current pointer.
 func (s *Scanner) peekNext() rune {
-	if s.isAtEnd() {
+	if s.current >= len(s.source)-1 {
 		return 0
 	}
 	_, width := utf8.DecodeRuneInString(s.source[s.current:])
