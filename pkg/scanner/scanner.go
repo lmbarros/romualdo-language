@@ -332,13 +332,11 @@ func (s *Scanner) identifierKind() token.Kind { // nolint:funlen,gocognit,gocycl
 			}
 		}
 	case 'g':
-		if len(lexeme) > 2 {
-			switch lexeme {
-			case "gosub":
-				return token.KindGosub
-			case "goto":
-				return token.KindGoto
-			}
+		switch lexeme {
+		case "gosub":
+			return token.KindGosub
+		case "goto":
+			return token.KindGoto
 		}
 	case 'i':
 		if len(lexeme) > 1 {
