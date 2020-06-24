@@ -13,22 +13,6 @@ import (
 	"os"
 
 	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
-	"gitlab.com/stackedboxes/romulang/pkg/compiler"
-)
-
-// InterpretResult is the result of interpreting some Romualdo code.
-type InterpretResult int
-
-const (
-	// InterpretOK is used to indicate that the interpretation worked without
-	// errors.
-	InterpretOK InterpretResult = iota
-
-	// InterpretCompileError is used to indicate a compilation error.
-	InterpretCompileError
-
-	// InterpretRuntimeError is used to indicate a runtime error.
-	InterpretRuntimeError
 )
 
 // VM is a Romualdo Virtual Machine.
@@ -54,17 +38,13 @@ func New() *VM {
 }
 
 // Interpret interprets a given program, passed as the source code.
-func (vm *VM) Interpret(source string) InterpretResult {
-	// TODO: Move the compilation out of here. The vm should read the bytecode
-	// directly.
-	c := compiler.New()
-	c.Compile(source)
-
-	return InterpretOK
+func (vm *VM) Interpret(chunk *bytecode.Chunk) bool {
+	vm.chunk = chunk
+	return vm.run()
 }
 
 // run runs the code in vm.chunk.
-func (vm *VM) run() InterpretResult { //nolint: gocyclo
+func (vm *VM) run() bool { // nolint:gocyclo
 	for {
 		if vm.DebugTraceExecution {
 			fmt.Print("          ")
@@ -116,7 +96,7 @@ func (vm *VM) run() InterpretResult { //nolint: gocyclo
 
 		case bytecode.OpReturn:
 			fmt.Println(vm.pop())
-			return InterpretOK
+			return true
 		}
 	}
 }

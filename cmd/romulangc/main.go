@@ -12,7 +12,14 @@ import (
 	"io/ioutil"
 	"os"
 
+	"gitlab.com/stackedboxes/romulang/pkg/compiler"
 	"gitlab.com/stackedboxes/romulang/pkg/vm"
+)
+
+const (
+	exitCodeSuccess = iota
+	exitCodeCompilationError
+	exitCodeInterpretationError
 )
 
 func main() {
@@ -34,10 +41,16 @@ func runFile(path string) {
 		os.Exit(1)
 	}
 
-	theVM := vm.New()
-	result := theVM.Interpret(string(source))
-
-	if result != vm.InterpretOK {
-		os.Exit(1)
+	theCompiler := compiler.New()
+	chunk := theCompiler.Compile(string(source))
+	if chunk == nil {
+		os.Exit(exitCodeCompilationError)
 	}
+
+	theVM := vm.New()
+	if !theVM.Interpret(chunk) {
+		os.Exit(exitCodeInterpretationError)
+	}
+
+	os.Exit(exitCodeSuccess)
 }

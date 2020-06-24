@@ -10,6 +10,7 @@ package compiler
 import (
 	"fmt"
 
+	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
 	"gitlab.com/stackedboxes/romulang/pkg/scanner"
 	"gitlab.com/stackedboxes/romulang/pkg/token"
 )
@@ -24,7 +25,7 @@ func New() *Compiler {
 }
 
 // Compile compiles source.
-func (c *Compiler) Compile(source string) {
+func (c *Compiler) Compile(source string) *bytecode.Chunk {
 	s := scanner.New(source)
 
 	line := -1
@@ -46,4 +47,6 @@ func (c *Compiler) Compile(source string) {
 		}
 	}
 
+	// TODO: Dummy return
+	return &bytecode.Chunk{}
 }
