@@ -60,13 +60,15 @@ func (c *Compiler) errorAt(tok *token.Token, message string) {
 
 	fmt.Fprintf(os.Stderr, "[line %v] Error", tok.Line)
 
-	if tok.Kind == token.KindEOF {
-		fmt.Fprintf(os.Stderr, " at end", tok.Line)
-	} else if tok.Kind == token.KindError {
+	switch tok.Kind {
+	case token.KindEOF:
+		fmt.Fprintf(os.Stderr, " at end")
+	case token.KindError:
 		// Nothing.
-	} else {
+	default:
 		fmt.Fprintf(os.Stderr, " at '%v'", tok.Lexeme)
 	}
+
 	fmt.Fprintf(os.Stderr, ": %v\n", message)
 	c.p.hadError = true
 }
