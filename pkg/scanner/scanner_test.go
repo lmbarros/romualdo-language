@@ -220,20 +220,21 @@ meta		map
 		else enum false # a comment...
 		float function  # to make it...
 		gosub nil not   # less boring
-		print passage say switch string then void`)
+		print passage say switch string then void return`)
 	assert.Equal(t, []token.Kind{
 		token.KindMinus, token.KindStar, token.KindBool, token.KindCase,
 		token.KindClass, token.KindElse, token.KindEnum, token.KindFalse,
 		token.KindFloat, token.KindFunction, token.KindGosub, token.KindNil,
 		token.KindNot, token.KindPrint, token.KindPassage, token.KindSay,
 		token.KindSwitch, token.KindString, token.KindThen, token.KindVoid,
-		token.KindEOF},
+		token.KindReturn, token.KindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"-", "*", "bool", "case", "class", "else", "enum",
 		"false", "float", "function", "gosub", "nil", "not", "print", "passage",
-		"say", "switch", "string", "then", "void", ""}, tokenLexemes(tokens))
+		"say", "switch", "string", "then", "void", "return", ""},
+		tokenLexemes(tokens))
 	assert.Equal(t, []int{2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5,
-		6, 6, 6, 6, 6, 6, 6, 6}, tokenLines(tokens))
+		6, 6, 6, 6, 6, 6, 6, 6, 6}, tokenLines(tokens))
 }
 
 // Tests Scanner.Token() with numbers.
