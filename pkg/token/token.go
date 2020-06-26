@@ -90,6 +90,9 @@ const (
 	// Special tokens.
 	KindError
 	KindEOF // end-of-file
+
+	// Not really a token.
+	NumberOfKinds
 )
 
 // String converts a TokenKind to its string representation. Returns an empty
