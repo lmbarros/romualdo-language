@@ -32,8 +32,8 @@ const (
 	PrecComparison                   // < > <= >=
 	PrecTerm                         // + -
 	PrecFactor                       // * /
-	PrecPower                        // ^
 	PrecUnary                        // not -
+	PrecPower                        // ^
 	PrecCall                         // . ()
 	PrecPrimary
 )
@@ -177,7 +177,11 @@ func (c *Compiler) binary() {
 
 	// Compile the right operand.
 	rule := rules[operatorKind]
-	c.parsePrecedence(rule.precedence + 1)
+	if operatorKind == token.KindHat {
+		c.parsePrecedence(rule.precedence)
+	} else {
+		c.parsePrecedence(rule.precedence + 1)
+	}
 
 	// Emit the operator instruction.
 	switch operatorKind {
