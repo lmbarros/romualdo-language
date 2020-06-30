@@ -90,9 +90,9 @@ func (c *Compiler) Compile(source string) *bytecode.Chunk {
 
 	if c.p.hadError {
 		return nil
-	} else {
-		return c.chunk
 	}
+
+	return c.chunk
 }
 
 // endCompiler wraps up the compilation.
@@ -142,7 +142,7 @@ func (c *Compiler) floatNumber() {
 	if err != nil {
 		panic("Compiler got invalid number lexeme: " + c.p.previous.Lexeme)
 	}
-	c.emitConstant(bytecode.Value(value))
+	c.emitConstant(bytecode.NewValueFloat(value))
 }
 
 // grouping parses and generates code for a parenthesized expression. The left

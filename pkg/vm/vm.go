@@ -67,36 +67,53 @@ func (vm *VM) run() bool { // nolint:gocyclo
 			vm.push(constant)
 
 		case bytecode.OpAdd:
-			b := vm.pop()
-			a := vm.pop()
-			vm.push(a + b)
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			vm.push(bytecode.NewValueFloat(a + b))
 
 		case bytecode.OpSubtract:
-			b := vm.pop()
-			a := vm.pop()
-			vm.push(a - b)
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			vm.push(bytecode.NewValueFloat(a - b))
 
 		case bytecode.OpMultiply:
-			b := vm.pop()
-			a := vm.pop()
-			vm.push(a * b)
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			vm.push(bytecode.NewValueFloat(a * b))
 
 		case bytecode.OpDivide:
-			b := vm.pop()
-			a := vm.pop()
-			vm.push(a / b)
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			vm.push(bytecode.NewValueFloat(a / b))
 
 		case bytecode.OpPower:
-			b := float64(vm.pop())
-			a := float64(vm.pop())
-			vm.push(bytecode.Value(math.Pow(a, b)))
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			vm.push(bytecode.NewValueFloat(math.Pow(a, b)))
 
 		case bytecode.OpNegate:
-			vm.push(-vm.pop())
+			if !vm.peek(0).IsFloat() {
+				vm.runtimeError("Operand must be a floating-point number.")
+				return false
+			}
+			vm.push(bytecode.NewValueFloat(-vm.pop().AsFloat()))
 
 		case bytecode.OpReturn:
 			fmt.Println(vm.pop())
 			return true
+
+		default:
+			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))
 		}
 	}
 }
@@ -120,4 +137,32 @@ func (vm *VM) pop() bytecode.Value {
 	vm.stack = vm.stack[:len(vm.stack)-1]
 
 	return top
+}
+
+// peek returns a value on the stack that is a given distance from the top.
+// Passing 0 means "give me the value on the top of the stack". The stack is not
+// changed at all.
+func (vm *VM) peek(distance int) bytecode.Value {
+	return vm.stack[len(vm.stack)-1-distance]
+}
+
+// runtimeError stops the execution and reports a runtime error with a given
+// message and fmt.Printf-like arguments.
+func (vm *VM) runtimeError(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, format+"\n", a)
+	line := vm.chunk.Lines[vm.ip-1]
+	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
+}
+
+// popTwoFloatOperands pops and returns two values from the stack, assumed to be
+// floating point numbers to be used as operands of a binary operator.
+func (vm *VM) popTwoFloatOperands() (a float64, b float64, ok bool) {
+	if !vm.peek(0).IsFloat() || !vm.peek(1).IsFloat() {
+		vm.runtimeError("Operands must be floating-point numbers.")
+		return
+	}
+	b = vm.pop().AsFloat()
+	a = vm.pop().AsFloat()
+	ok = true
+	return
 }
