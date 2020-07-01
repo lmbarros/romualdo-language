@@ -187,6 +187,18 @@ func (c *Compiler) binary() {
 
 	// Emit the operator instruction.
 	switch operatorKind {
+	case token.KindBangEqual:
+		c.emitBytes(bytecode.OpEqual, bytecode.OpNot)
+	case token.KindEqualEqual:
+		c.emitBytes(bytecode.OpEqual)
+	case token.KindGreater:
+		c.emitBytes(bytecode.OpGreater)
+	case token.KindGreaterEqual:
+		c.emitBytes(bytecode.OpLess, bytecode.OpNot)
+	case token.KindLess:
+		c.emitBytes(bytecode.OpLess)
+	case token.KindLessEqual:
+		c.emitBytes(bytecode.OpGreater, bytecode.OpNot)
 	case token.KindPlus:
 		c.emitBytes(bytecode.OpAdd)
 	case token.KindMinus:
@@ -241,12 +253,12 @@ func initRules() { // nolint:funlen
 	rules[token.KindAt] = /*            */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindHat] = /*           */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecPower}
 	rules[token.KindEqual] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindEqualEqual] = /*    */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindBangEqual] = /*     */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindGreater] = /*       */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindGreaterEqual] = /*  */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindLess] = /*          */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindLessEqual] = /*     */ parseRule{nil /*                     */, nil /*                */, PrecNone}
+	rules[token.KindEqualEqual] = /*    */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecEquality}
+	rules[token.KindBangEqual] = /*     */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecEquality}
+	rules[token.KindGreater] = /*       */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecComparison}
+	rules[token.KindGreaterEqual] = /*  */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecComparison}
+	rules[token.KindLess] = /*          */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecComparison}
+	rules[token.KindLessEqual] = /*     */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecComparison}
 	rules[token.KindIdentifier] = /*    */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindStringLiteral] = /* */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindNumberLiteral] = /* */ parseRule{(*Compiler).floatNumber /* */, nil /*                */, PrecNone}

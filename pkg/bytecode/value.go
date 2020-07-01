@@ -7,7 +7,10 @@
 
 package bytecode
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 // A ValueKind represents one of the types a value in the Romualdo Virtual
 // Machine can have. This is the type from the perspective of the VM (in the
@@ -102,5 +105,23 @@ func (v Value) String() string {
 		return fmt.Sprintf("%v", vv)
 	default:
 		return fmt.Sprintf("<Unexpected type %T>", vv)
+	}
+}
+
+// ValuesEqual checks if a and b are considered equal.
+func ValuesEqual(a, b Value) bool {
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+		return false
+	}
+
+	switch va := a.Value.(type) {
+	case bool:
+		return va == b.Value.(bool)
+	case float64:
+		return va == b.Value.(float64)
+	case int64:
+		return va == b.Value.(int64)
+	default:
+		panic(fmt.Sprintf("Unexpected Value type: %T", va))
 	}
 }
