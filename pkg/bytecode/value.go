@@ -98,6 +98,8 @@ func (v Value) String() string {
 		return fmt.Sprintf("%g", vv)
 	case int64:
 		return fmt.Sprintf("%d", vv)
+	case bool:
+		return fmt.Sprintf("%v", vv)
 	default:
 		return fmt.Sprintf("<Unexpected type %T>", vv)
 	}

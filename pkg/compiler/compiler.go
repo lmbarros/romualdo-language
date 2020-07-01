@@ -162,6 +162,8 @@ func (c *Compiler) unary() {
 
 	// Emit the operator instruction.
 	switch operatorKind {
+	case token.KindNot:
+		c.emitBytes(bytecode.OpNot)
 	case token.KindMinus:
 		c.emitBytes(bytecode.OpNegate)
 	default:
@@ -197,6 +199,19 @@ func (c *Compiler) binary() {
 		c.emitBytes(bytecode.OpPower)
 	default:
 		panic(fmt.Sprintf("Unexpected token type on binary operator: %v", operatorKind))
+	}
+}
+
+// literal parses and generates code for a literal Boolean value. The
+// corresponding keyword is expected to have been just consumed.
+func (c *Compiler) literal() {
+	switch c.p.previous.Kind {
+	case token.KindTrue:
+		c.emitBytes(bytecode.OpTrue)
+	case token.KindFalse:
+		c.emitBytes(bytecode.OpFalse)
+	default:
+		panic(fmt.Sprintf("Unexpected token type on literal: %v", c.p.previous.Kind))
 	}
 }
 
@@ -248,7 +263,7 @@ func initRules() { // nolint:funlen
 	rules[token.KindElseif] = /*        */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindEnd] = /*           */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindEnum] = /*          */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindFalse] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}
+	rules[token.KindFalse] = /*         */ parseRule{(*Compiler).literal /*     */, nil /*                */, PrecNone}
 	rules[token.KindFloat] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindFor] = /*           */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindFunction] = /*      */ parseRule{nil /*                     */, nil /*                */, PrecNone}
@@ -261,7 +276,7 @@ func initRules() { // nolint:funlen
 	rules[token.KindMap] = /*           */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindMeta] = /*          */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindNil] = /*           */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindNot] = /*           */ parseRule{nil /*                     */, nil /*                */, PrecNone}
+	rules[token.KindNot] = /*           */ parseRule{(*Compiler).unary /*       */, nil /*                */, PrecNone}
 	rules[token.KindOr] = /*            */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindPassage] = /*       */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindPrint] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}
@@ -272,7 +287,7 @@ func initRules() { // nolint:funlen
 	rules[token.KindSuper] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindSwitch] = /*        */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindThen] = /*          */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindTrue] = /*          */ parseRule{nil /*                     */, nil /*                */, PrecNone}
+	rules[token.KindTrue] = /*          */ parseRule{(*Compiler).literal /*     */, nil /*                */, PrecNone}
 	rules[token.KindVars] = /*          */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindVoid] = /*          */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindWhile] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}

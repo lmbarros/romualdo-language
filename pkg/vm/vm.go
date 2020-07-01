@@ -66,6 +66,12 @@ func (vm *VM) run() bool { // nolint:gocyclo
 			constant := vm.readConstant()
 			vm.push(constant)
 
+		case bytecode.OpTrue:
+			vm.push(bytecode.NewValueBool(true))
+
+		case bytecode.OpFalse:
+			vm.push(bytecode.NewValueBool(false))
+
 		case bytecode.OpAdd:
 			a, b, ok := vm.popTwoFloatOperands()
 			if !ok {
@@ -100,6 +106,13 @@ func (vm *VM) run() bool { // nolint:gocyclo
 				return false
 			}
 			vm.push(bytecode.NewValueFloat(math.Pow(a, b)))
+
+		case bytecode.OpNot:
+			if !vm.peek(0).IsBool() {
+				vm.runtimeError("Operand must be a Boolean value.")
+				return false
+			}
+			vm.push(bytecode.NewValueBool(!vm.pop().AsBool()))
 
 		case bytecode.OpNegate:
 			if !vm.peek(0).IsFloat() {

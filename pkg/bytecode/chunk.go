@@ -15,11 +15,14 @@ import (
 
 const (
 	OpConstant uint8 = iota
+	OpTrue
+	OpFalse
 	OpAdd
 	OpSubtract
 	OpMultiply
 	OpDivide
 	OpPower
+	OpNot
 	OpNegate
 	OpReturn
 )
@@ -83,6 +86,12 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int {
 	case OpConstant:
 		return c.disassembleConstantInstruction(out, "CONSTANT", offset)
 
+	case OpTrue:
+		return c.disassembleSimpleInstruction(out, "TRUE", offset)
+
+	case OpFalse:
+		return c.disassembleSimpleInstruction(out, "FALSE", offset)
+
 	case OpAdd:
 		return c.disassembleSimpleInstruction(out, "ADD", offset)
 
@@ -97,6 +106,9 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int {
 
 	case OpPower:
 		return c.disassembleSimpleInstruction(out, "POWER", offset)
+
+	case OpNot:
+		return c.disassembleSimpleInstruction(out, "NOT", offset)
 
 	case OpNegate:
 		return c.disassembleSimpleInstruction(out, "NEGATE", offset)
