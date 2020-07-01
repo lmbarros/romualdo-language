@@ -92,7 +92,7 @@ func (v Value) IsBool() bool {
 }
 
 // String converts the value to a string.
-func (v *Value) String() string {
+func (v Value) String() string {
 	switch vv := v.Value.(type) {
 	case float64:
 		return fmt.Sprintf("%g", vv)
