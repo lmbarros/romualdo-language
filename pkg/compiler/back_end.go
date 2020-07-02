@@ -32,24 +32,30 @@ func (c *Compiler) emitReturn() {
 
 // emitConstant emits the bytecode for a constant having a given value.
 func (c *Compiler) emitConstant(value bytecode.Value) {
-	c.emitBytes(bytecode.OpConstant, c.makeConstant(value))
+	constantIndex := c.makeConstant(value)
+	if constantIndex <= math.MaxUint8 {
+		c.emitBytes(bytecode.OpConstant, byte(constantIndex))
+	} else {
+		b0, b1, b2 := bytecode.IntToThreeBytes(constantIndex)
+		c.emitBytes(bytecode.OpConstantLong, b0, b1, b2)
+	}
+
 }
 
 // makeConstant adds value to the pool of constants and returns the index in
 // which it was added. If there is already a constant with this value, its index
 // is returned (hey, we don't need duplicate constants, right? They are
 // constant, after all!)
-func (c *Compiler) makeConstant(value bytecode.Value) byte {
-	// TODO: Support a more reasonable number of constants.
+func (c *Compiler) makeConstant(value bytecode.Value) int {
 	if i := c.currentChunk().SearchConstant(value); i >= 0 {
-		return byte(i)
+		return i
 	}
 
-	constant := c.currentChunk().AddConstant(value)
-	if constant > math.MaxUint8 {
+	constantIndex := c.currentChunk().AddConstant(value)
+	if constantIndex >= bytecode.MaxConstantsPerChunk {
 		c.error("Too many constants in one chunk.")
 		return 0
 	}
 
-	return byte(constant)
+	return constantIndex
 }

@@ -66,6 +66,10 @@ func (vm *VM) run() bool { // nolint:gocyclo
 			constant := vm.readConstant()
 			vm.push(constant)
 
+		case bytecode.OpConstantLong:
+			constant := vm.readLongConstant()
+			vm.push(constant)
+
 		case bytecode.OpTrue:
 			vm.push(bytecode.NewValueBool(true))
 
@@ -150,11 +154,23 @@ func (vm *VM) run() bool { // nolint:gocyclo
 	}
 }
 
-// run runs the code in vm.chunk.
+// readConstant reads a single-byte constant index from the chunk bytecode and
+// returns the corresponding constant value.
 func (vm *VM) readConstant() bytecode.Value {
 	constant := vm.chunk.Constants[vm.chunk.Code[vm.ip]]
 	vm.ip++
 
+	return constant
+}
+
+// readConstant reads a three-byte constant index from the chunk bytecode and
+// returns the corresponding constant value.
+func (vm *VM) readLongConstant() bytecode.Value {
+	index := bytecode.ThreeBytesToInt(
+		vm.chunk.Code[vm.ip], vm.chunk.Code[vm.ip+1], vm.chunk.Code[vm.ip+2])
+
+	constant := vm.chunk.Constants[index]
+	vm.ip += 3
 	return constant
 }
 

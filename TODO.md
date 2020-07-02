@@ -15,6 +15,10 @@
 
 ## Smallish improvements
 
-* Support more than 256 constants.
 * Add the unary plus operator.
 * Implement opcodes for `!=`, `<=`, `>=`.
+
+## Things to benchmark
+
+* Type switches and `reflect.TypeOf` versus an explicit type tag on
+  `bytecode.Value`.

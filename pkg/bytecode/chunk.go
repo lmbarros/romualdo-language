@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	OpConstant uint8 = iota
+	OpConstant     uint8 = iota
+	OpConstantLong       // three extra bytes with a 24-bit index; stored little endian.
 	OpTrue
 	OpFalse
 	OpEqual
@@ -28,6 +29,18 @@ const (
 	OpNot
 	OpNegate
 	OpReturn
+)
+
+const (
+	// MaxConstantIndex is the maximum number of constants we can have on a
+	// single chunk. This is equals to 2^24.
+	//
+	// To establish the relationship with bytecode, we have two opcodes for
+	// reading constants: bytecode.OpConstant is the faster one and supports
+	// indices between 0 and 255; when this is not enough, we also have
+	// bytecode.OpConstantLong, which can deal with the whole range of supported
+	// indices between: 0 to 16777215 (=2^24-1).
+	MaxConstantsPerChunk = 16777216
 )
 
 // A Chunk is a chunk of bytecode.
@@ -87,7 +100,7 @@ func (c *Chunk) Disassemble(name string) string {
 // DisassembleInstruction disassembles the instruction at a given offset and
 // returns the offset of the next instruction to disassemble. Output is written
 // to out.
-func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int {
+func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolint:gocyclo
 	fmt.Fprintf(out, "%04v ", offset)
 
 	if offset > 0 && c.Lines[offset] == c.Lines[offset-1] {
@@ -101,6 +114,9 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int {
 	switch instruction {
 	case OpConstant:
 		return c.disassembleConstantInstruction(out, "CONSTANT", offset)
+
+	case OpConstantLong:
+		return c.disassembleConstantLongInstruction(out, "CONSTANT_LONG", offset)
 
 	case OpTrue:
 		return c.disassembleSimpleInstruction(out, "TRUE", offset)
@@ -166,4 +182,29 @@ func (c *Chunk) disassembleConstantInstruction(out io.Writer, name string, offse
 	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Constants[index])
 
 	return offset + 2
+}
+
+// disassembleConstantLongInstruction disassembles a OpConstantLong instruction
+// at a given offset. name is the instruction name, and the output is written to
+// out. Returns the offset to the next instruction.
+func (c *Chunk) disassembleConstantLongInstruction(out io.Writer, name string, offset int) int {
+	index := ThreeBytesToInt(c.Code[offset+1], c.Code[offset+2], c.Code[offset+3])
+	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Constants[index])
+
+	return offset + 4
+}
+
+// Converts three bytes to a 24-bit unsigned integer. a is the least significant
+// byte; c is the most significant byte.
+func ThreeBytesToInt(a, b, c byte) int {
+	return (int(c) << 16) | (int(b) << 8) | int(a)
+}
+
+// Converts a 24-bit unsigned integer to three bytes. The least significant byte
+// is returned in a; the most significant byte is returned in c.
+func IntToThreeBytes(v int) (a, b, c byte) {
+	a = byte(v & 0x000000FF)
+	b = byte((v & 0x0000FF00) >> 8)
+	c = byte((v & 0x00FF0000) >> 16)
+	return
 }
