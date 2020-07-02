@@ -36,11 +36,15 @@ func (c *Compiler) emitConstant(value bytecode.Value) {
 }
 
 // makeConstant adds value to the pool of constants and returns the index in
-// which it was added.
+// which it was added. If there is already a constant with this value, its index
+// is returned (hey, we don't need duplicate constants, right? They are
+// constant, after all!)
 func (c *Compiler) makeConstant(value bytecode.Value) byte {
 	// TODO: Support a more reasonable number of constants.
-	// TODO: Maybe check if the value is already present to avoid having
-	//       duplicates in the constant pool.
+	if i := c.currentChunk().SearchConstant(value); i >= 0 {
+		return byte(i)
+	}
+
 	constant := c.currentChunk().AddConstant(value)
 	if constant > math.MaxUint8 {
 		c.error("Too many constants in one chunk.")

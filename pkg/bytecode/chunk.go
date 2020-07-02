@@ -57,6 +57,19 @@ func (c *Chunk) AddConstant(value Value) int {
 	return len(c.Constants) - 1
 }
 
+// SearchConstant searches the constant pool for a constant with the given
+// value. If found, it returns the index of this constant into c.Constants. If
+// not found, it returns a negative value.
+func (c *Chunk) SearchConstant(value Value) int {
+	for i, v := range c.Constants {
+		if ValuesEqual(value, v) {
+			return i
+		}
+	}
+
+	return -1
+}
+
 // Disassemble disassembles the chunk amd resturns a string representation of
 // it. The chunk name (passed as name) is included in the disassembly.
 func (c *Chunk) Disassemble(name string) string {
