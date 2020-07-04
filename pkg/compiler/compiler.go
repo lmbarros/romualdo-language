@@ -145,6 +145,13 @@ func (c *Compiler) floatNumber() {
 	c.emitConstant(bytecode.NewValueFloat(value))
 }
 
+// stringLiteral parses and generates code for a string literal. The string
+// literal token is expected to have been just consumed.
+func (c *Compiler) stringLiteral() {
+	value := c.p.previous.Lexeme[1 : len(c.p.previous.Lexeme)-1] // remove the quotes
+	c.emitConstant(bytecode.NewValueString(value))
+}
+
 // grouping parses and generates code for a parenthesized expression. The left
 // paren token is expected to have been just consumed.
 func (c *Compiler) grouping() {
@@ -262,7 +269,7 @@ func initRules() { // nolint:funlen
 	rules[token.KindLess] = /*          */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecComparison}
 	rules[token.KindLessEqual] = /*     */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecComparison}
 	rules[token.KindIdentifier] = /*    */ parseRule{nil /*                     */, nil /*                */, PrecNone}
-	rules[token.KindStringLiteral] = /* */ parseRule{nil /*                     */, nil /*                */, PrecNone}
+	rules[token.KindStringLiteral] = /* */ parseRule{(*Compiler).stringLiteral /**/, nil /*                */, PrecNone}
 	rules[token.KindNumberLiteral] = /* */ parseRule{(*Compiler).floatNumber /* */, nil /*                */, PrecNone}
 	rules[token.KindAlias] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindAnd] = /*           */ parseRule{nil /*                     */, nil /*                */, PrecNone}

@@ -4,6 +4,12 @@
 
 * Implement static typing.
     * Integers x floats could be a good initial case.
+    * But then, I have strings in already.
+    * I guess the way to go here is:
+        * Produce an AST
+        * Each AST node has a type
+        * When generating code, look at the types on the AST to check for type
+          errors and to know what type-specific opcodes to use.
 
 ## Not so big, but not small either
 
@@ -11,6 +17,11 @@
     * Add some kind of end-to-end testing: if we run this Storyworld with this
       input, the output must be this one.
     * I am sure there are more things that can be unit tested.
+* Maybe I'll want to keep string literals stored in a more organized way, with
+  the string contents themselves in an easy to serialize format. (Because since
+  I'll want to dump my bytecode to a ready-to-consume format). One key point for
+  this is `compiler.go`, function `stringLiteral()`.
+
 * Document the instruction set.
 
 ## Smallish improvements

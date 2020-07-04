@@ -32,6 +32,9 @@ const (
 
 	// ValueBool identifies a Boolean value.
 	ValueBool
+
+	// ValueString identifies a string value.
+	ValueString
 )
 
 // Value is a Romualdo language value.
@@ -61,6 +64,13 @@ func NewValueBool(v bool) Value {
 	}
 }
 
+// NewValueString creates a new Value initialized to the string value v.
+func NewValueString(v string) Value {
+	return Value{
+		Value: v,
+	}
+}
+
 // AsFloat returns this Value's value, assuming it is a floating-point number.
 func (v Value) AsFloat() float64 {
 	return v.Value.(float64)
@@ -74,6 +84,11 @@ func (v Value) AsInt() int64 {
 // AsBool returns this Value's value, assuming it is a Boolean value.
 func (v Value) AsBool() bool {
 	return v.Value.(bool)
+}
+
+// AsString returns this Value's value, assuming it is a string value.
+func (v Value) AsString() string {
+	return v.Value.(string)
 }
 
 // IsFloat checks if the value contains a floating-point number.
@@ -94,6 +109,12 @@ func (v Value) IsBool() bool {
 	return ok
 }
 
+// IsString checks if the value contains a string value.
+func (v Value) IsString() bool {
+	_, ok := v.Value.(string)
+	return ok
+}
+
 // String converts the value to a string.
 func (v Value) String() string {
 	switch vv := v.Value.(type) {
@@ -102,6 +123,8 @@ func (v Value) String() string {
 	case int64:
 		return fmt.Sprintf("%d", vv)
 	case bool:
+		return fmt.Sprintf("%v", vv)
+	case string:
 		return fmt.Sprintf("%v", vv)
 	default:
 		return fmt.Sprintf("<Unexpected type %T>", vv)
@@ -121,6 +144,8 @@ func ValuesEqual(a, b Value) bool {
 		return va == b.Value.(float64)
 	case int64:
 		return va == b.Value.(int64)
+	case string:
+		return va == b.Value.(string)
 	default:
 		panic(fmt.Sprintf("Unexpected Value type: %T", va))
 	}

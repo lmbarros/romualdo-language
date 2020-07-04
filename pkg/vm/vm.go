@@ -115,11 +115,23 @@ func (vm *VM) run() bool { // nolint:gocyclo
 			vm.push(bytecode.NewValueBool(a <= b))
 
 		case bytecode.OpAdd:
-			a, b, ok := vm.popTwoFloatOperands()
-			if !ok {
+
+			if vm.peek(0).IsString() && vm.peek(1).IsString() {
+				a, b, ok := vm.popTwoStringOperands()
+				if !ok {
+					return false
+				}
+				vm.push(bytecode.NewValueString(a + b))
+			} else if vm.peek(0).IsFloat() && vm.peek(1).IsFloat() {
+				a, b, ok := vm.popTwoFloatOperands()
+				if !ok {
+					return false
+				}
+				vm.push(bytecode.NewValueFloat(a + b))
+			} else {
+				vm.runtimeError("Operands must be two numbers or two strings.")
 				return false
 			}
-			vm.push(bytecode.NewValueFloat(a + b))
 
 		case bytecode.OpSubtract:
 			a, b, ok := vm.popTwoFloatOperands()
@@ -230,6 +242,19 @@ func (vm *VM) popTwoFloatOperands() (a float64, b float64, ok bool) {
 	}
 	b = vm.pop().AsFloat()
 	a = vm.pop().AsFloat()
+	ok = true
+	return
+}
+
+// popTwoStringOperands pops and returns two values from the stack, assumed to
+// be strings to be used as operands of a binary operator.
+func (vm *VM) popTwoStringOperands() (a string, b string, ok bool) {
+	if !vm.peek(0).IsString() || !vm.peek(1).IsString() {
+		vm.runtimeError("Operands must be strings.")
+		return
+	}
+	b = vm.pop().AsString()
+	a = vm.pop().AsString()
 	ok = true
 	return
 }
