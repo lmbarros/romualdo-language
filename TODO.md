@@ -2,8 +2,8 @@
 
 ## Strategy for AST implementation
 
-* Make the `compileFn` return an AST node (but otherwise keep the same
-  behavior).
+* ~~Make the `compileFn` return an AST node (but otherwise keep the same
+  behavior).~~
 * Implement an AST printer visitor, to test the AST infrastructure.
 * Implement an `Executable` (or something) type, serializable, that is my
   "redistributable" format.

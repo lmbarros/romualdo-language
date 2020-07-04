@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"gitlab.com/stackedboxes/romulang/pkg/ast"
 	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
 	"gitlab.com/stackedboxes/romulang/pkg/scanner"
 	"gitlab.com/stackedboxes/romulang/pkg/token"
@@ -39,14 +40,19 @@ const (
 )
 
 // compileFn is a function used to parse and generate code for a certain kind of
-// expression.
-type compileFn = func(c *Compiler)
+// prefix expression.
+type compileFn = func(c *Compiler) ast.Node
+
+// infixCompileFn is a function used to parse and generate code for a certain
+// kind of infix expression. lhs is the left-hand side expression previously
+// parsed.
+type infixCompileFn = func(c *Compiler, lhs ast.Node) ast.Node
 
 // parseRule encodes one rule of our Pratt parser.
 type parseRule struct {
-	prefix     compileFn  // For expressions using the token as a prefix operator.
-	infix      compileFn  // For expressions using the token as an infix operator.
-	precedence precedence // When the token is used as a binary operator.
+	prefix     compileFn      // For expressions using the token as a prefix operator.
+	infix      infixCompileFn // For expressions using the token as an infix operator.
+	precedence precedence     // When the token is used as a binary operator.
 }
 
 // parser holds some parsing-related data. I'd say it's not really a parser.
@@ -106,21 +112,23 @@ func (c *Compiler) endCompiler() {
 
 // parsePrecedence parses and generates code for expressions with a precedence
 // level equal to or greater than p.
-func (c *Compiler) parsePrecedence(p precedence) {
+func (c *Compiler) parsePrecedence(p precedence) ast.Node {
 	c.advance()
 	prefixRule := rules[c.p.previous.Kind].prefix
 	if prefixRule == nil {
 		c.error("Expect expression.")
-		return
+		return nil
 	}
 
-	prefixRule(c)
+	node := prefixRule(c)
 
 	for p <= rules[c.p.current.Kind].precedence {
 		c.advance()
 		infixRule := rules[c.p.previous.Kind].infix
-		infixRule(c)
+		node = infixRule(c, node)
 	}
+
+	return node
 }
 
 //
@@ -131,50 +139,62 @@ func (c *Compiler) parsePrecedence(p precedence) {
 var rules []parseRule
 
 // expression parses and generates code for an expression.
-func (c *Compiler) expression() {
-	c.parsePrecedence(PrecAssignment)
+func (c *Compiler) expression() ast.Node {
+	return c.parsePrecedence(PrecAssignment)
 }
 
-// floatNumber parses and generates code for a number literal. The float literal
-// token is expected to have been just consumed.
-func (c *Compiler) floatNumber() {
+// floatLiteral parses and generates code for a number literal. The float
+// literal token is expected to have been just consumed.
+func (c *Compiler) floatLiteral() ast.Node {
 	value, err := strconv.ParseFloat(c.p.previous.Lexeme, 64)
 	if err != nil {
 		panic("Compiler got invalid number lexeme: " + c.p.previous.Lexeme)
 	}
 	c.emitConstant(bytecode.NewValueFloat(value))
+
+	return &ast.FloatLiteral{
+		Value: value,
+	}
 }
 
 // stringLiteral parses and generates code for a string literal. The string
 // literal token is expected to have been just consumed.
-func (c *Compiler) stringLiteral() {
+func (c *Compiler) stringLiteral() ast.Node {
 	value := c.p.previous.Lexeme[1 : len(c.p.previous.Lexeme)-1] // remove the quotes
 	c.emitConstant(bytecode.NewValueString(value))
+
+	return &ast.StringLiteral{
+		Value: value,
+	}
 }
 
 // grouping parses and generates code for a parenthesized expression. The left
 // paren token is expected to have been just consumed.
-func (c *Compiler) grouping() {
-	c.expression()
+func (c *Compiler) grouping() ast.Node {
+	expr := c.expression()
 	c.consume(token.KindRightParen, "Expect ')' after expression.")
+	return &ast.Grouping{Expr: expr}
 }
 
 // unary parses and generates code for a unary expression. The operator token is
 // expected to have been just consumed.
-func (c *Compiler) unary() {
+func (c *Compiler) unary() ast.Node {
 	operatorKind := c.p.previous.Kind
 
 	// Compile the operand.
-	c.parsePrecedence(PrecUnary)
+	operand := c.parsePrecedence(PrecUnary)
 
 	// Emit the operator instruction.
 	switch operatorKind {
 	case token.KindNot:
 		c.emitBytes(bytecode.OpNot)
+		return &ast.Unary{Operator: operatorKind, Operand: operand}
 	case token.KindMinus:
 		c.emitBytes(bytecode.OpNegate)
+		return &ast.Unary{Operator: operatorKind, Operand: operand}
 	case token.KindPlus:
-		// Nothing to do!
+		// Unary plus is a no-op.
+		return operand
 	default:
 		panic(fmt.Sprintf("Unexpected operator kind on unary expression: %v", operatorKind))
 	}
@@ -182,16 +202,17 @@ func (c *Compiler) unary() {
 
 // binary parses and generates code for a binary operator expression. The left
 // operand and the operator token are expected to have been just consumed.
-func (c *Compiler) binary() {
+func (c *Compiler) binary(lhs ast.Node) ast.Node {
 	// Remember the operator.
 	operatorKind := c.p.previous.Kind
 
 	// Compile the right operand.
+	var rhs ast.Node
 	rule := rules[operatorKind]
 	if operatorKind == token.KindHat {
-		c.parsePrecedence(rule.precedence)
+		rhs = c.parsePrecedence(rule.precedence)
 	} else {
-		c.parsePrecedence(rule.precedence + 1)
+		rhs = c.parsePrecedence(rule.precedence + 1)
 	}
 
 	// Emit the operator instruction.
@@ -221,18 +242,26 @@ func (c *Compiler) binary() {
 	default:
 		panic(fmt.Sprintf("Unexpected token type on binary operator: %v", operatorKind))
 	}
+
+	return &ast.Binary{
+		Operator: operatorKind,
+		LHS:      lhs,
+		RHS:      rhs,
+	}
 }
 
-// literal parses and generates code for a literal Boolean value. The
+// boolLiteral parses and generates code for a literal Boolean value. The
 // corresponding keyword is expected to have been just consumed.
-func (c *Compiler) literal() {
+func (c *Compiler) boolLiteral() ast.Node {
 	switch c.p.previous.Kind {
 	case token.KindTrue:
 		c.emitBytes(bytecode.OpTrue)
+		return &ast.BoolLiteral{Value: true}
 	case token.KindFalse:
 		c.emitBytes(bytecode.OpFalse)
+		return &ast.BoolLiteral{Value: false}
 	default:
-		panic(fmt.Sprintf("Unexpected token type on literal: %v", c.p.previous.Kind))
+		panic(fmt.Sprintf("Unexpected token type on boolLiteral: %v", c.p.previous.Kind))
 	}
 }
 
@@ -270,7 +299,7 @@ func initRules() { // nolint:funlen
 	rules[token.KindLessEqual] = /*     */ parseRule{nil /*                        */, (*Compiler).binary /*      */, PrecComparison}
 	rules[token.KindIdentifier] = /*    */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindStringLiteral] = /* */ parseRule{(*Compiler).stringLiteral /*  */, nil /*                     */, PrecNone}
-	rules[token.KindNumberLiteral] = /* */ parseRule{(*Compiler).floatNumber /*    */, nil /*                     */, PrecNone}
+	rules[token.KindNumberLiteral] = /* */ parseRule{(*Compiler).floatLiteral /*   */, nil /*                     */, PrecNone}
 	rules[token.KindAlias] = /*         */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindAnd] = /*           */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindBnum] = /*          */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
@@ -284,7 +313,7 @@ func initRules() { // nolint:funlen
 	rules[token.KindElseif] = /*        */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindEnd] = /*           */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindEnum] = /*          */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
-	rules[token.KindFalse] = /*         */ parseRule{(*Compiler).literal /*        */, nil /*                     */, PrecNone}
+	rules[token.KindFalse] = /*         */ parseRule{(*Compiler).boolLiteral /*    */, nil /*                     */, PrecNone}
 	rules[token.KindFloat] = /*         */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindFor] = /*           */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindFunction] = /*      */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
@@ -308,7 +337,7 @@ func initRules() { // nolint:funlen
 	rules[token.KindSuper] = /*         */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindSwitch] = /*        */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindThen] = /*          */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
-	rules[token.KindTrue] = /*          */ parseRule{(*Compiler).literal /*        */, nil /*                     */, PrecNone}
+	rules[token.KindTrue] = /*          */ parseRule{(*Compiler).boolLiteral /*    */, nil /*                     */, PrecNone}
 	rules[token.KindVars] = /*          */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindVoid] = /*          */ parseRule{nil /*                        */, nil /*                     */, PrecNone}
 	rules[token.KindWhile] = /*         */ parseRule{nil /*                        */, nil /*                     */, PrecNone}

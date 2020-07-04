@@ -7,6 +7,8 @@
 
 package ast
 
+import "gitlab.com/stackedboxes/romulang/pkg/token"
+
 // FloatLiteral is an AST node representing a floating point number literal.
 type FloatLiteral struct {
 	// Value is the float literal's value.
@@ -64,5 +66,66 @@ func (n *StringLiteral) Type() Type {
 
 func (n *StringLiteral) Walk(v Visitor) {
 	v.Enter(n)
+	v.Leave(n)
+}
+
+// Unary is an AST node representing a unary operator.
+type Unary struct {
+	// Operator is the kind of token used as the unary operator.
+	Operator token.Kind
+
+	// Operand is the expression on which the operator is applied.
+	Operand Node
+}
+
+func (n *Unary) Type() Type {
+	return n.Operand.Type()
+}
+
+func (n *Unary) Walk(v Visitor) {
+	v.Enter(n)
+	n.Operand.Walk(v)
+	v.Leave(n)
+}
+
+// Binary is an AST node representing a binary operator.
+type Binary struct {
+	// Operator is the kind of token used as the binary operator.
+	Operator token.Kind
+
+	// LHS is the expression on the left-hand side of the operator.
+	LHS Node
+
+	// RHS is the expression on the right-hand side of the operator.
+	RHS Node
+}
+
+func (n *Binary) Type() Type {
+	return n.LHS.Type()
+}
+
+func (n *Binary) Walk(v Visitor) {
+	v.Enter(n)
+	n.LHS.Walk(v)
+	n.RHS.Walk(v)
+	v.Leave(n)
+}
+
+// Grouping is an AST node representing a parenthesized expression.
+//
+// TODO: This is silly, isn't it? I don't need a grouping node, because the AST
+// structure itself represents the grouping. Gotta get rid of this!
+type Grouping struct {
+	// Expr is the the expression in parentheses.
+	Expr Node
+}
+
+func (n *Grouping) Type() Type {
+	return n.Expr.Type()
+}
+
+func (n *Grouping) Walk(v Visitor) {
+	v.Enter(n)
+	n.Expr.Walk(v)
 	v.Leave(n)
 }
