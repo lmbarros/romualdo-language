@@ -81,6 +81,11 @@ func (vm *VM) run() bool { // nolint:gocyclo
 			a := vm.pop()
 			vm.push(bytecode.NewValueBool(bytecode.ValuesEqual(a, b)))
 
+		case bytecode.OpNotEqual:
+			b := vm.pop()
+			a := vm.pop()
+			vm.push(bytecode.NewValueBool(!bytecode.ValuesEqual(a, b)))
+
 		case bytecode.OpGreater:
 			a, b, ok := vm.popTwoFloatOperands()
 			if !ok {
@@ -88,12 +93,26 @@ func (vm *VM) run() bool { // nolint:gocyclo
 			}
 			vm.push(bytecode.NewValueBool(a > b))
 
+		case bytecode.OpGreaterEqual:
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			vm.push(bytecode.NewValueBool(a >= b))
+
 		case bytecode.OpLess:
 			a, b, ok := vm.popTwoFloatOperands()
 			if !ok {
 				return false
 			}
 			vm.push(bytecode.NewValueBool(a < b))
+
+		case bytecode.OpLessEqual:
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			vm.push(bytecode.NewValueBool(a <= b))
 
 		case bytecode.OpAdd:
 			a, b, ok := vm.popTwoFloatOperands()

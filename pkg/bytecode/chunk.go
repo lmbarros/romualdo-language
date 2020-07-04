@@ -19,8 +19,11 @@ const (
 	OpTrue
 	OpFalse
 	OpEqual
+	OpNotEqual
 	OpGreater
+	OpGreaterEqual
 	OpLess
+	OpLessEqual
 	OpAdd
 	OpSubtract
 	OpMultiply
@@ -127,11 +130,20 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 	case OpEqual:
 		return c.disassembleSimpleInstruction(out, "EQUAL", offset)
 
+	case OpNotEqual:
+		return c.disassembleSimpleInstruction(out, "NOT_EQUAL", offset)
+
 	case OpGreater:
 		return c.disassembleSimpleInstruction(out, "GREATER", offset)
 
+	case OpGreaterEqual:
+		return c.disassembleSimpleInstruction(out, "GREATER_EQUAL", offset)
+
 	case OpLess:
 		return c.disassembleSimpleInstruction(out, "LESS", offset)
+
+	case OpLessEqual:
+		return c.disassembleSimpleInstruction(out, "LESS_EQUAL", offset)
 
 	case OpAdd:
 		return c.disassembleSimpleInstruction(out, "ADD", offset)

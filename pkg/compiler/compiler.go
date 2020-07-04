@@ -190,17 +190,17 @@ func (c *Compiler) binary() {
 	// Emit the operator instruction.
 	switch operatorKind {
 	case token.KindBangEqual:
-		c.emitBytes(bytecode.OpEqual, bytecode.OpNot)
+		c.emitBytes(bytecode.OpNotEqual)
 	case token.KindEqualEqual:
 		c.emitBytes(bytecode.OpEqual)
 	case token.KindGreater:
 		c.emitBytes(bytecode.OpGreater)
 	case token.KindGreaterEqual:
-		c.emitBytes(bytecode.OpLess, bytecode.OpNot)
+		c.emitBytes(bytecode.OpGreaterEqual)
 	case token.KindLess:
 		c.emitBytes(bytecode.OpLess)
 	case token.KindLessEqual:
-		c.emitBytes(bytecode.OpGreater, bytecode.OpNot)
+		c.emitBytes(bytecode.OpLessEqual)
 	case token.KindPlus:
 		c.emitBytes(bytecode.OpAdd)
 	case token.KindMinus:

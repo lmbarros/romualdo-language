@@ -15,7 +15,7 @@
 
 ## Smallish improvements
 
-* Implement opcodes for `!=`, `<=`, `>=`.
+* All easy improvements done!
 
 ## Things to benchmark
 
