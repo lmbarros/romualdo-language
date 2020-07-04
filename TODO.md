@@ -15,7 +15,6 @@
 
 ## Smallish improvements
 
-* Add the unary plus operator.
 * Implement opcodes for `!=`, `<=`, `>=`.
 
 ## Things to benchmark

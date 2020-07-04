@@ -166,6 +166,8 @@ func (c *Compiler) unary() {
 		c.emitBytes(bytecode.OpNot)
 	case token.KindMinus:
 		c.emitBytes(bytecode.OpNegate)
+	case token.KindPlus:
+		// Nothing to do!
 	default:
 		panic(fmt.Sprintf("Unexpected operator kind on unary expression: %v", operatorKind))
 	}
@@ -245,7 +247,7 @@ func initRules() { // nolint:funlen
 	rules[token.KindComma] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindDot] = /*           */ parseRule{nil /*                     */, nil /*                */, PrecNone}
 	rules[token.KindMinus] = /*         */ parseRule{(*Compiler).unary /*       */, (*Compiler).binary /* */, PrecTerm}
-	rules[token.KindPlus] = /*          */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecTerm}
+	rules[token.KindPlus] = /*          */ parseRule{(*Compiler).unary /*       */, (*Compiler).binary /* */, PrecTerm}
 	rules[token.KindSlash] = /*         */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecFactor}
 	rules[token.KindStar] = /*          */ parseRule{nil /*                     */, (*Compiler).binary /* */, PrecFactor}
 	rules[token.KindColon] = /*         */ parseRule{nil /*                     */, nil /*                */, PrecNone}
