@@ -4,7 +4,7 @@
 
 * ~~Make the `compileFn` return an AST node (but otherwise keep the same
   behavior).~~
-* Implement an AST printer visitor, to test the AST infrastructure.
+* ~~Implement an AST printer visitor, to test the AST infrastructure.~~
 * Implement an `Executable` (or something) type, serializable, that is my
   "redistributable" format.
 * Reimplement code generation as an AST visitor that generates an `Executable`.
@@ -41,7 +41,8 @@
 
 ## Smallish improvements
 
-* All easy improvements done!
+* Implement a decent compiler UI
+    * Print AST should be an option to it.
 
 ## Things to benchmark
 

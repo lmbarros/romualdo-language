@@ -42,7 +42,7 @@ func runFile(path string) {
 	}
 
 	theCompiler := compiler.New()
-	chunk := theCompiler.Compile(string(source))
+	chunk, _ := theCompiler.Compile(string(source))
 	if chunk == nil {
 		os.Exit(exitCodeCompilationError)
 	}

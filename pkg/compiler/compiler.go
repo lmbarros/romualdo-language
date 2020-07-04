@@ -84,21 +84,21 @@ func New() *Compiler {
 
 // Compile compiles source and returns the chunk with the compiled bytecode. In
 // case of errors, returns nil.
-func (c *Compiler) Compile(source string) *bytecode.Chunk {
+func (c *Compiler) Compile(source string) (*bytecode.Chunk, ast.Node) {
 	// TODO: Candidate to change: I'd like to instantiate the scanner on New().
 	c.s = scanner.New(source)
 
 	c.advance()
-	c.expression()
+	node := c.expression()
 	c.consume(token.KindEOF, "Expect end of expression.")
 
 	c.endCompiler()
 
 	if c.p.hadError {
-		return nil
+		return nil, nil
 	}
 
-	return c.chunk
+	return c.chunk, node
 }
 
 // endCompiler wraps up the compilation.
