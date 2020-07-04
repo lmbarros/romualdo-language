@@ -228,7 +228,7 @@ func (vm *VM) peek(distance int) bytecode.Value {
 // runtimeError stops the execution and reports a runtime error with a given
 // message and fmt.Printf-like arguments.
 func (vm *VM) runtimeError(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format+"\n", a)
+	fmt.Fprintf(os.Stderr, format+"\n", a...)
 	line := vm.chunk.Lines[vm.ip-1]
 	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
 }
