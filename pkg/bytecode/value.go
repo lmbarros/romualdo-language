@@ -133,7 +133,7 @@ func (v Value) String() string {
 
 // ValuesEqual checks if a and b are considered equal.
 func ValuesEqual(a, b Value) bool {
-	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+	if reflect.TypeOf(a.Value) != reflect.TypeOf(b.Value) {
 		return false
 	}
 
