@@ -5,7 +5,7 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package parser
+package backend
 
 import (
 	"fmt"
@@ -15,6 +15,7 @@ import (
 	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
 )
 
+// GenerateCode generates the bytecode for a given AST.
 func GenerateCode(root ast.Node) (chunk *bytecode.Chunk, err error) {
 	cg := &codeGenerator{
 		chunk:     &bytecode.Chunk{},

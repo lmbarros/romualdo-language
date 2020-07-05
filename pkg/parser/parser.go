@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"gitlab.com/stackedboxes/romulang/pkg/ast"
+	"gitlab.com/stackedboxes/romulang/pkg/backend"
 	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
 )
 
@@ -91,7 +92,7 @@ func (c *compiler) Compile(source string) (*bytecode.Chunk, ast.Node) {
 	c.consume(tokenKindEOF, "Expect end of expression.")
 
 	var err error
-	c.chunk, err = GenerateCode(node)
+	c.chunk, err = backend.GenerateCode(node)
 	if err != nil {
 		return nil, nil
 	}
