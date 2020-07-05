@@ -39,9 +39,9 @@ const (
 	PrecPrimary
 )
 
-// compileFn is a function used to parse and generate code for a certain kind of
-// prefix expression.
-type compileFn = func(c *Compiler) ast.Node
+// prefixCompileFn is a function used to parse and generate code for a certain
+// kind of prefix expression.
+type prefixCompileFn = func(c *Compiler) ast.Node
 
 // infixCompileFn is a function used to parse and generate code for a certain
 // kind of infix expression. lhs is the left-hand side expression previously
@@ -50,9 +50,9 @@ type infixCompileFn = func(c *Compiler, lhs ast.Node) ast.Node
 
 // parseRule encodes one rule of our Pratt parser.
 type parseRule struct {
-	prefix     compileFn      // For expressions using the token as a prefix operator.
-	infix      infixCompileFn // For expressions using the token as an infix operator.
-	precedence precedence     // When the token is used as a binary operator.
+	prefix     prefixCompileFn // For expressions using the token as a prefix operator.
+	infix      infixCompileFn  // For expressions using the token as an infix operator.
+	precedence precedence      // When the token is used as a binary operator.
 }
 
 // parser holds some parsing-related data. I'd say it's not really a parser.
