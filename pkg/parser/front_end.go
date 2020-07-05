@@ -5,35 +5,33 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package compiler
+package parser
 
 import (
 	"fmt"
 	"os"
-
-	"gitlab.com/stackedboxes/romulang/pkg/token"
 )
 
 // advance advances the parser by one token. This will report errors for each
 // error token found; callers will only see the non-error tokens.
-func (c *Compiler) advance() {
+func (c *compiler) advance() {
 	c.p.previous = c.p.current
 
 	for {
-		c.p.current = c.s.Token()
-		if c.p.current.Kind != token.KindError {
+		c.p.current = c.s.token()
+		if c.p.current.kind != tokenKindError {
 			break
 		}
 
-		c.errorAtCurrent(c.p.current.Lexeme)
+		c.errorAtCurrent(c.p.current.lexeme)
 	}
 }
 
 // consume consumes the current token (and advances the parser), assuming it is
 // of a given kind. If it is not of this kind, reports this is an error with a
 // given error message.
-func (c *Compiler) consume(kind token.Kind, message string) {
-	if c.p.current.Kind == kind {
+func (c *compiler) consume(kind tokenKind, message string) {
+	if c.p.current.kind == kind {
 		c.advance()
 		return
 	}
@@ -42,32 +40,32 @@ func (c *Compiler) consume(kind token.Kind, message string) {
 }
 
 // errorAtCurrent reports an error at the current (c.p.current) token.
-func (c *Compiler) errorAtCurrent(message string) {
+func (c *compiler) errorAtCurrent(message string) {
 	c.errorAt(c.p.current, message)
 }
 
 // error reports an error at the token we just consumed (c.p.previous).
-func (c *Compiler) error(message string) {
+func (c *compiler) error(message string) {
 	c.errorAt(c.p.previous, message)
 }
 
 // errorAt reports an error at a given token, with a given error message.
-func (c *Compiler) errorAt(tok *token.Token, message string) {
+func (c *compiler) errorAt(tok *token, message string) {
 	if c.p.panicMode {
 		return
 	}
 
 	c.p.panicMode = true
 
-	fmt.Fprintf(os.Stderr, "[line %v] Error", tok.Line)
+	fmt.Fprintf(os.Stderr, "[line %v] Error", tok.line)
 
-	switch tok.Kind {
-	case token.KindEOF:
+	switch tok.kind {
+	case tokenKindEOF:
 		fmt.Fprintf(os.Stderr, " at end")
-	case token.KindError:
+	case tokenKindError:
 		// Nothing.
 	default:
-		fmt.Fprintf(os.Stderr, " at '%v'", tok.Lexeme)
+		fmt.Fprintf(os.Stderr, " at '%v'", tok.lexeme)
 	}
 
 	fmt.Fprintf(os.Stderr, ": %v\n", message)

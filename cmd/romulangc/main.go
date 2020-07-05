@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"gitlab.com/stackedboxes/romulang/pkg/compiler"
+	"gitlab.com/stackedboxes/romulang/pkg/parser"
 	"gitlab.com/stackedboxes/romulang/pkg/vm"
 )
 
@@ -41,7 +41,7 @@ func runFile(path string) {
 		os.Exit(1)
 	}
 
-	theCompiler := compiler.New()
+	theCompiler := parser.NewCompiler()
 	chunk, _ := theCompiler.Compile(string(source))
 	if chunk == nil {
 		os.Exit(exitCodeCompilationError)

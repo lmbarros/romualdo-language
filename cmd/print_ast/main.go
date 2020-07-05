@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"gitlab.com/stackedboxes/romulang/pkg/ast"
-	"gitlab.com/stackedboxes/romulang/pkg/compiler"
+	"gitlab.com/stackedboxes/romulang/pkg/parser"
 )
 
 const (
@@ -41,7 +41,7 @@ func runFile(path string) {
 		os.Exit(1)
 	}
 
-	theCompiler := compiler.New()
+	theCompiler := parser.NewCompiler()
 	_, root := theCompiler.Compile(string(source))
 	if root == nil {
 		os.Exit(exitCodeCompilationError)

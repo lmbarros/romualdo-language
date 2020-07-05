@@ -5,117 +5,116 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package scanner
+package parser
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/stackedboxes/romulang/pkg/token"
 )
 
 // Tests Scanner.Token() with simple cases (zero or one-token only).
 func TestScannerTokenSimpleCases(t *testing.T) { // nolint: funlen
 	tokens := tokenizeString("")
-	assert.Equal(t, []token.Kind{token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1}, tokenLines(tokens))
 
 	tokens = tokenizeString("foo")
-	assert.Equal(t, []token.Kind{token.KindIdentifier, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindIdentifier, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"foo", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("listen")
-	assert.Equal(t, []token.Kind{token.KindListen, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindListen, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"listen", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("struct")
-	assert.Equal(t, []token.Kind{token.KindStruct, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindStruct, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"struct", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("lístên")
-	assert.Equal(t, []token.Kind{token.KindIdentifier, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindIdentifier, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"lístên", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("# foo")
-	assert.Equal(t, []token.Kind{token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1}, tokenLines(tokens))
 
 	tokens = tokenizeString("123.456")
-	assert.Equal(t, []token.Kind{token.KindNumberLiteral, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindNumberLiteral, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"123.456", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString(">=")
-	assert.Equal(t, []token.Kind{token.KindGreaterEqual, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindGreaterEqual, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{">=", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("=")
-	assert.Equal(t, []token.Kind{token.KindEqual, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindEqual, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"=", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("==")
-	assert.Equal(t, []token.Kind{token.KindEqualEqual, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindEqualEqual, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"==", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString(`"turtles"`)
-	assert.Equal(t, []token.Kind{token.KindStringLiteral, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindStringLiteral, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{`"turtles"`, ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("!=")
-	assert.Equal(t, []token.Kind{token.KindBangEqual, token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindBangEqual, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"!=", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("!")
-	assert.Equal(t, []token.Kind{token.KindError}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindError}, tokenKinds(tokens))
 
 	tokens = tokenizeString("⟨")
-	assert.Equal(t, []token.Kind{token.KindError}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindError}, tokenKinds(tokens))
 }
 
 // Tests Scanner.Token() with token sequences longer than one token.
 func TestScannerTokenSequences(t *testing.T) { // nolint: funlen
 	tokens := tokenizeString("while true do")
-	assert.Equal(t, []token.Kind{
-		token.KindWhile, token.KindTrue, token.KindDo, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindWhile, tokenKindTrue, tokenKindDo, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"while", "true", "do", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("vars x: int = 1 + 2 end")
-	assert.Equal(t, []token.Kind{
-		token.KindVars, token.KindIdentifier, token.KindColon, token.KindInt,
-		token.KindEqual, token.KindNumberLiteral, token.KindPlus,
-		token.KindNumberLiteral, token.KindEnd, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindVars, tokenKindIdentifier, tokenKindColon, tokenKindInt,
+		tokenKindEqual, tokenKindNumberLiteral, tokenKindPlus,
+		tokenKindNumberLiteral, tokenKindEnd, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"vars", "x", ":", "int", "=", "1", "+", "2", "end", ""},
 		tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString(`struct,物語 "string"+~`)
-	assert.Equal(t, []token.Kind{
-		token.KindStruct, token.KindComma, token.KindIdentifier,
-		token.KindStringLiteral, token.KindPlus, token.KindTilde, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindStruct, tokenKindComma, tokenKindIdentifier,
+		tokenKindStringLiteral, tokenKindPlus, tokenKindTilde, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"struct", ",", "物語", `"string"`, "+", "~", ""},
 		tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("(alias{and / or}    super) # ⟨123.2⟩")
-	assert.Equal(t, []token.Kind{
-		token.KindLeftParen, token.KindAlias, token.KindLeftBrace, token.KindAnd,
-		token.KindSlash, token.KindOr, token.KindRightBrace, token.KindSuper,
-		token.KindRightParen, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindLeftParen, tokenKindAlias, tokenKindLeftBrace, tokenKindAnd,
+		tokenKindSlash, tokenKindOr, tokenKindRightBrace, tokenKindSuper,
+		tokenKindRightParen, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"(", "alias", "{", "and", "/", "or", "}", "super", ")", ""},
 		tokenLexemes(tokens))
@@ -129,10 +128,10 @@ func TestScannerTokenMultiline(t *testing.T) {
 		`break "starts # goes on
 and continues" [ elseif # now this is a comment
        int inti^`)
-	assert.Equal(t, []token.Kind{
-		token.KindBreak, token.KindStringLiteral, token.KindLeftBracket,
-		token.KindElseif, token.KindInt, token.KindIdentifier, token.KindHat,
-		token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindBreak, tokenKindStringLiteral, tokenKindLeftBracket,
+		tokenKindElseif, tokenKindInt, tokenKindIdentifier, tokenKindHat,
+		tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"break", "\"starts # goes on\nand continues\"",
 		"[", "elseif", "int", "inti", "^", ""}, tokenLexemes(tokens))
@@ -149,10 +148,10 @@ nue @
 
 meta		map
 `)
-	assert.Equal(t, []token.Kind{
-		token.KindGoto, token.KindContinue, token.KindIdentifier,
-		token.KindIdentifier, token.KindAt, token.KindDot,
-		token.KindRightBracket, token.KindMeta, token.KindMap, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindGoto, tokenKindContinue, tokenKindIdentifier,
+		tokenKindIdentifier, tokenKindAt, tokenKindDot,
+		tokenKindRightBracket, tokenKindMeta, tokenKindMap, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"goto", "continue", "conti", "nue", "@", ".", "]",
 		"meta", "map", ""}, tokenLexemes(tokens))
@@ -165,7 +164,7 @@ meta		map
 # nor here
 
 `)
-	assert.Equal(t, []token.Kind{token.KindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{7}, tokenLines(tokens))
 
@@ -180,10 +179,10 @@ nue @
 
 meta		map
 `)
-	assert.Equal(t, []token.Kind{
-		token.KindGoto, token.KindContinue, token.KindIdentifier,
-		token.KindIdentifier, token.KindAt, token.KindDot,
-		token.KindRightBracket, token.KindMeta, token.KindMap, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindGoto, tokenKindContinue, tokenKindIdentifier,
+		tokenKindIdentifier, tokenKindAt, tokenKindDot,
+		tokenKindRightBracket, tokenKindMeta, tokenKindMap, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"goto", "continue", "conti", "nue", "@", ".", "]",
 		"meta", "map", ""}, tokenLexemes(tokens))
@@ -193,10 +192,10 @@ meta		map
 		`1<bnum
 		function<=2
 		void> string`)
-	assert.Equal(t, []token.Kind{
-		token.KindNumberLiteral, token.KindLess, token.KindBnum,
-		token.KindFunction, token.KindLessEqual, token.KindNumberLiteral,
-		token.KindVoid, token.KindGreater, token.KindString, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindNumberLiteral, tokenKindLess, tokenKindBnum,
+		tokenKindFunction, tokenKindLessEqual, tokenKindNumberLiteral,
+		tokenKindVoid, tokenKindGreater, tokenKindString, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"1", "<", "bnum", "function", "<=", "2",
 		"void", ">", "string", ""}, tokenLexemes(tokens))
@@ -207,9 +206,9 @@ meta		map
 		inif
 		if in
 		in if`)
-	assert.Equal(t, []token.Kind{
-		token.KindIdentifier, token.KindIdentifier, token.KindIf, token.KindIn,
-		token.KindIn, token.KindIf, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindIdentifier, tokenKindIdentifier, tokenKindIf, tokenKindIn,
+		tokenKindIn, tokenKindIf, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"ifin", "inif", "if", "in", "in", "if", ""},
 		tokenLexemes(tokens))
@@ -221,13 +220,13 @@ meta		map
 		float function  # to make it...
 		gosub nil not   # less boring
 		print passage say switch string then void return`)
-	assert.Equal(t, []token.Kind{
-		token.KindMinus, token.KindStar, token.KindBool, token.KindCase,
-		token.KindClass, token.KindElse, token.KindEnum, token.KindFalse,
-		token.KindFloat, token.KindFunction, token.KindGosub, token.KindNil,
-		token.KindNot, token.KindPrint, token.KindPassage, token.KindSay,
-		token.KindSwitch, token.KindString, token.KindThen, token.KindVoid,
-		token.KindReturn, token.KindEOF},
+	assert.Equal(t, []tokenKind{
+		tokenKindMinus, tokenKindStar, tokenKindBool, tokenKindCase,
+		tokenKindClass, tokenKindElse, tokenKindEnum, tokenKindFalse,
+		tokenKindFloat, tokenKindFunction, tokenKindGosub, tokenKindNil,
+		tokenKindNot, tokenKindPrint, tokenKindPassage, tokenKindSay,
+		tokenKindSwitch, tokenKindString, tokenKindThen, tokenKindVoid,
+		tokenKindReturn, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"-", "*", "bool", "case", "class", "else", "enum",
 		"false", "float", "function", "gosub", "nil", "not", "print", "passage",
@@ -240,13 +239,13 @@ meta		map
 // Tests Scanner.Token() with numbers.
 func TestScannerTokenNumbers(t *testing.T) {
 	tokens := tokenizeString("9876")
-	assert.Equal(t, []token.Kind{token.KindNumberLiteral, token.KindEOF},
+	assert.Equal(t, []tokenKind{tokenKindNumberLiteral, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"9876", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("9876.54")
-	assert.Equal(t, []token.Kind{token.KindNumberLiteral, token.KindEOF},
+	assert.Equal(t, []tokenKind{tokenKindNumberLiteral, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"9876.54", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
@@ -255,7 +254,7 @@ func TestScannerTokenNumbers(t *testing.T) {
 	// interpreted as a number, not as a number followed by a dot. Will have to
 	// review all this once I separate floats and ints anyway.
 	tokens = tokenizeString("9876.")
-	assert.Equal(t, []token.Kind{token.KindNumberLiteral, token.KindDot, token.KindEOF},
+	assert.Equal(t, []tokenKind{tokenKindNumberLiteral, tokenKindDot, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"9876", ".", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1}, tokenLines(tokens))
@@ -264,12 +263,12 @@ func TestScannerTokenNumbers(t *testing.T) {
 // Tests Scanner.Token() with strings.
 func TestScannerTokenStrings(t *testing.T) {
 	tokens := tokenizeString("\"the neverending string")
-	assert.Equal(t, []token.Kind{token.KindError}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindError}, tokenKinds(tokens))
 }
 
 // tokenKinds extract the token kinds from a slice of tokens.
-func tokenKinds(tokens []*token.Token) []token.Kind {
-	result := make([]token.Kind, 0, len(tokens))
+func tokenKinds(tokens []*Token) []tokenKind {
+	result := make([]tokenKind, 0, len(tokens))
 
 	for _, tok := range tokens {
 		result = append(result, tok.Kind)
@@ -279,7 +278,7 @@ func tokenKinds(tokens []*token.Token) []token.Kind {
 }
 
 // tokenLexemes extract the lexemes from a slice of tokens.
-func tokenLexemes(tokens []*token.Token) []string {
+func tokenLexemes(tokens []*Token) []string {
 	result := make([]string, 0, len(tokens))
 
 	for _, tok := range tokens {
@@ -290,7 +289,7 @@ func tokenLexemes(tokens []*token.Token) []string {
 }
 
 // tokenLexemes extract the line numbers from a slice of tokens.
-func tokenLines(tokens []*token.Token) []int {
+func tokenLines(tokens []*Token) []int {
 	result := make([]int, 0, len(tokens))
 
 	for _, tok := range tokens {
@@ -302,13 +301,13 @@ func tokenLines(tokens []*token.Token) []int {
 
 // tokenizeString creates a Scanner and calls Token() on it until getting an
 // EOF or error. Then it returns a slice with the resulting Tokens.
-func tokenizeString(source string) []*token.Token {
+func tokenizeString(source string) []*Token {
 	s := New(source)
-	result := make([]*token.Token, 0, 16)
+	result := make([]*Token, 0, 16)
 
 	tok := s.Token()
 	result = append(result, tok)
-	for tok.Kind != token.KindEOF && tok.Kind != token.KindError {
+	for tok.Kind != tokenKindEOF && tok.Kind != tokenKindError {
 		tok = s.Token()
 		result = append(result, tok)
 	}
