@@ -42,7 +42,6 @@ func runFile(path string) {
 
 	root := frontend.Parse(string(source))
 	if root == nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(exitCodeCompilationError)
 	}
 
