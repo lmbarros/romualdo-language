@@ -5,7 +5,7 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package parser
+package frontend
 
 // tokenKind represents the type of a token. I would call this tokenType if
 // "type" wasn't a reserved word in Go. So, there we have it, "tokenKind".

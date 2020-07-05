@@ -5,7 +5,7 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package parser
+package frontend
 
 import (
 	"testing"
@@ -16,7 +16,7 @@ import (
 // Tests Kind to string conversion. Looks useless, but I actually got some
 // missing cases with it!
 func TestKindString(t *testing.T) { // nolint:funlen
-	assert.Equal(t, "", Kind(-1).String())
+	assert.Equal(t, "", tokenKind(-1).String())
 
 	assert.Equal(t, "tokenKindLeftParen", tokenKindLeftParen.String())
 	assert.Equal(t, "tokenKindRightParen", tokenKindRightParen.String())

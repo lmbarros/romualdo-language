@@ -5,7 +5,7 @@
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
-package parser
+package frontend
 
 import (
 	"testing"
@@ -267,33 +267,33 @@ func TestScannerTokenStrings(t *testing.T) {
 }
 
 // tokenKinds extract the token kinds from a slice of tokens.
-func tokenKinds(tokens []*Token) []tokenKind {
+func tokenKinds(tokens []*token) []tokenKind {
 	result := make([]tokenKind, 0, len(tokens))
 
 	for _, tok := range tokens {
-		result = append(result, tok.Kind)
+		result = append(result, tok.kind)
 	}
 
 	return result
 }
 
 // tokenLexemes extract the lexemes from a slice of tokens.
-func tokenLexemes(tokens []*Token) []string {
+func tokenLexemes(tokens []*token) []string {
 	result := make([]string, 0, len(tokens))
 
 	for _, tok := range tokens {
-		result = append(result, tok.Lexeme)
+		result = append(result, tok.lexeme)
 	}
 
 	return result
 }
 
 // tokenLexemes extract the line numbers from a slice of tokens.
-func tokenLines(tokens []*Token) []int {
+func tokenLines(tokens []*token) []int {
 	result := make([]int, 0, len(tokens))
 
 	for _, tok := range tokens {
-		result = append(result, tok.Line)
+		result = append(result, tok.line)
 	}
 
 	return result
@@ -301,14 +301,14 @@ func tokenLines(tokens []*Token) []int {
 
 // tokenizeString creates a Scanner and calls Token() on it until getting an
 // EOF or error. Then it returns a slice with the resulting Tokens.
-func tokenizeString(source string) []*Token {
-	s := New(source)
-	result := make([]*Token, 0, 16)
+func tokenizeString(source string) []*token {
+	s := newScanner(source)
+	result := make([]*token, 0, 16)
 
-	tok := s.Token()
+	tok := s.token()
 	result = append(result, tok)
-	for tok.Kind != tokenKindEOF && tok.Kind != tokenKindError {
-		tok = s.Token()
+	for tok.kind != tokenKindEOF && tok.kind != tokenKindError {
+		tok = s.token()
 		result = append(result, tok)
 	}
 
