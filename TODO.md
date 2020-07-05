@@ -35,7 +35,8 @@
   the string contents themselves in an easy to serialize format. (Because since
   I'll want to dump my bytecode to a ready-to-consume format). One key point for
   this is `compiler.go`, function `stringLiteral()`.
-
+* Implement smarter storage of line numbers in the Chunk. Something more
+  efficient than storing one line number per instruction.
 * Document the instruction set.
 
 ## Smallish improvements
