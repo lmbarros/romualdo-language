@@ -44,6 +44,8 @@
 
 * Implement a decent compiler UI
     * Print AST should be an option to it.
+    * Disassemble the code (either from a binary or the just compiled code),
+      too.
 
 ## Things to benchmark
 

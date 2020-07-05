@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"gitlab.com/stackedboxes/romulang/pkg/backend"
 	"gitlab.com/stackedboxes/romulang/pkg/frontend"
 	"gitlab.com/stackedboxes/romulang/pkg/vm"
 )
@@ -41,9 +42,15 @@ func runFile(path string) {
 		os.Exit(1)
 	}
 
-	theCompiler := frontend.NewCompiler()
-	chunk, _ := theCompiler.Compile(string(source))
-	if chunk == nil {
+	root := frontend.Parse(string(source))
+	if root == nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(exitCodeCompilationError)
+	}
+
+	chunk, err := backend.GenerateCode(root)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(exitCodeCompilationError)
 	}
 
