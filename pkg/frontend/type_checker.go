@@ -41,7 +41,8 @@ func (tc *typeChecker) checkTypeBinary(node *ast.Binary) {
 	switch node.Operator {
 	case "<", "<=", ">", ">=":
 		if node.LHS.Type().Tag != ast.TypeFloat {
-			tc.error("Operator %v expects numeric operands; got %v", node.Operator, node.LHS.Type())
+			tc.error("Operator %v expects numeric operands; got '%v' (a %v)",
+				node.Operator, node.LHS.Lexeme(), node.LHS.Type())
 		}
 	}
 }

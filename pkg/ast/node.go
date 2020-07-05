@@ -15,6 +15,9 @@ type Node interface {
 	// Line returns the line of code that produced this node.
 	Line() int
 
+	// Lexeme returns the lexeme that produced this node.
+	Lexeme() string
+
 	// Walk is used to traverse the AST using the visitor v. Must start by
 	// calling v.Enter(), then visit all subnodes (by calling their Walk()
 	// methods), and finish by calling v.Leave().

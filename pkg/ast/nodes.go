@@ -7,17 +7,26 @@
 
 package ast
 
-type baseNode struct {
-	line int
+// BaseNode contains the functionality common to all AST nodes.
+type BaseNode struct {
+	// LineNumber stores the line number from where this node comes.
+	LineNumber int
+
+	// SourceLexeme stores the lexeme from where this node comes.
+	SourceLexeme string
 }
 
-func (n *baseNode) Line() int {
-	return n.line
+func (n *BaseNode) Line() int {
+	return n.LineNumber
+}
+
+func (n *BaseNode) Lexeme() string {
+	return n.SourceLexeme
 }
 
 // FloatLiteral is an AST node representing a floating point number literal.
 type FloatLiteral struct {
-	baseNode
+	BaseNode
 
 	// Value is the float literal's value.
 	Value float64
@@ -34,7 +43,7 @@ func (n *FloatLiteral) Walk(v Visitor) {
 
 // IntLiteral is an AST node representing an integer number literal.
 type IntLiteral struct {
-	baseNode
+	BaseNode
 
 	// Value is the int literal's value.
 	Value int64
@@ -51,7 +60,7 @@ func (n *IntLiteral) Walk(v Visitor) {
 
 // BoolLiteral is an AST node representing a Boolean value literal.
 type BoolLiteral struct {
-	baseNode
+	BaseNode
 
 	// Value is the bool literal's value.
 	Value bool
@@ -68,7 +77,7 @@ func (n *BoolLiteral) Walk(v Visitor) {
 
 // StringLiteral is an AST node representing a string value literal.
 type StringLiteral struct {
-	baseNode
+	BaseNode
 
 	// Value is the string literal's value.
 	Value string
@@ -85,7 +94,7 @@ func (n *StringLiteral) Walk(v Visitor) {
 
 // Unary is an AST node representing a unary operator.
 type Unary struct {
-	baseNode
+	BaseNode
 
 	// Operator contains the lexeme used as the unary operator.
 	Operator string
@@ -106,7 +115,7 @@ func (n *Unary) Walk(v Visitor) {
 
 // Binary is an AST node representing a binary operator.
 type Binary struct {
-	baseNode
+	BaseNode
 
 	// Operator contains the lexeme used as the binary operator.
 	Operator string

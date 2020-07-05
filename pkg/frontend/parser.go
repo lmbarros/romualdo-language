@@ -132,6 +132,10 @@ func (p *parser) floatLiteral() ast.Node {
 	}
 
 	return &ast.FloatLiteral{
+		BaseNode: ast.BaseNode{
+			LineNumber:   p.previousToken.line,
+			SourceLexeme: p.previousToken.lexeme,
+		},
 		Value: value,
 	}
 }
@@ -142,6 +146,10 @@ func (p *parser) stringLiteral() ast.Node {
 	value := p.previousToken.lexeme[1 : len(p.previousToken.lexeme)-1] // remove the quotes
 
 	return &ast.StringLiteral{
+		BaseNode: ast.BaseNode{
+			LineNumber:   p.previousToken.line,
+			SourceLexeme: p.previousToken.lexeme,
+		},
 		Value: value,
 	}
 }
@@ -194,6 +202,10 @@ func (p *parser) binary(lhs ast.Node) ast.Node {
 	}
 
 	return &ast.Binary{
+		BaseNode: ast.BaseNode{
+			LineNumber:   p.previousToken.line,
+			SourceLexeme: p.previousToken.lexeme,
+		},
 		Operator: operatorLexeme,
 		LHS:      lhs,
 		RHS:      rhs,
@@ -205,9 +217,21 @@ func (p *parser) binary(lhs ast.Node) ast.Node {
 func (p *parser) boolLiteral() ast.Node {
 	switch p.previousToken.kind {
 	case tokenKindTrue:
-		return &ast.BoolLiteral{Value: true}
+		return &ast.BoolLiteral{
+			BaseNode: ast.BaseNode{
+				LineNumber:   p.previousToken.line,
+				SourceLexeme: p.previousToken.lexeme,
+			},
+			Value: true,
+		}
 	case tokenKindFalse:
-		return &ast.BoolLiteral{Value: false}
+		return &ast.BoolLiteral{
+			BaseNode: ast.BaseNode{
+				LineNumber:   p.previousToken.line,
+				SourceLexeme: p.previousToken.lexeme,
+			},
+			Value: false,
+		}
 	default:
 		panic(fmt.Sprintf("Unexpected token type on boolLiteral: %v", p.previousToken.kind))
 	}
