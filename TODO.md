@@ -7,7 +7,7 @@
 * ~~Implement an AST printer visitor, to test the AST infrastructure.~~
 * ~~Reimplement code generation as an AST visitor that generates an
   `Executable`.~~
-* Implement static type checking for the `"abc" > 123` case.
+* ~~Implement static type checking for the `"abc" > 123` case.~~
 * Implement static type checking for everything else.
 * Add support for `int`s and `bnum`s.
 * Add support for type conversions. Something like this:
@@ -42,6 +42,8 @@
 
 ## Smallish improvements
 
+* Move the common visitor stuff (like keeping the current node) to some reusable
+  `struct`.
 * Implement a decent compiler UI
     * Print AST should be an option to it.
     * Disassemble the code (either from a binary or the just compiled code),

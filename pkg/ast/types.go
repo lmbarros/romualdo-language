@@ -7,6 +7,8 @@
 
 package ast
 
+import "fmt"
+
 // A TypeTag identifies a type as seen by Romulang.
 type TypeTag int
 
@@ -35,4 +37,23 @@ const (
 type Type struct {
 	// Tag is the type tag. Think of it as a "high-level" type.
 	Tag TypeTag
+}
+
+// String converts a Type to a string that looks like what a user would see in
+// his storyworld code.
+func (t Type) String() string {
+	switch t.Tag {
+	case TypeVoid:
+		return "void"
+	case TypeInt:
+		return "int"
+	case TypeFloat:
+		return "float"
+	case TypeBool:
+		return "bool"
+	case TypeString:
+		return "string"
+	default:
+		panic(fmt.Sprintf("unexpected type tag: %v", t.Tag))
+	}
 }

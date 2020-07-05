@@ -15,13 +15,6 @@ import (
 	"gitlab.com/stackedboxes/romulang/pkg/ast"
 )
 
-// Parse parses a given Romualdo Language source code and returns its AST
-// (Abstract Syntax Tree).
-func Parse(source string) ast.Node {
-	p := newParser(source)
-	return p.parse()
-}
-
 // precedence is the precedence of expressions.
 type precedence int
 
