@@ -35,7 +35,6 @@ func main() {
 func parseAndPrintAST(path string) {
 
 	source, err := ioutil.ReadFile(path)
-
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading %v: %v\n", path, err)
 		os.Exit(1)

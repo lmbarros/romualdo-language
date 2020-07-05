@@ -53,7 +53,8 @@ type codeGenerator struct {
 	// Chunk is the chunk of bytecode being generated.
 	chunk *bytecode.Chunk
 
-	// currentNode is the node currently being processed.
+	// nodeStack is used to keep track of the nodes being processed. The current
+	// on is on the top.
 	nodeStack []ast.Node
 }
 
@@ -122,7 +123,6 @@ func (cg *codeGenerator) Leave(node ast.Node) {
 	}
 
 	cg.nodeStack = cg.nodeStack[:len(cg.nodeStack)-1]
-
 }
 
 //
