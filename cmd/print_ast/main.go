@@ -29,10 +29,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	runFile(os.Args[1])
+	parseAndPrintAST(os.Args[1])
 }
 
-func runFile(path string) {
+func parseAndPrintAST(path string) {
 
 	source, err := ioutil.ReadFile(path)
 
