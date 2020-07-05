@@ -108,22 +108,3 @@ func (n *Binary) Walk(v Visitor) {
 	n.RHS.Walk(v)
 	v.Leave(n)
 }
-
-// Grouping is an AST node representing a parenthesized expression.
-//
-// TODO: This is silly, isn't it? I don't need a grouping node, because the AST
-// structure itself represents the grouping. Gotta get rid of this!
-type Grouping struct {
-	// Expr is the the expression in parentheses.
-	Expr Node
-}
-
-func (n *Grouping) Type() Type {
-	return n.Expr.Type()
-}
-
-func (n *Grouping) Walk(v Visitor) {
-	v.Enter(n)
-	n.Expr.Walk(v)
-	v.Leave(n)
-}

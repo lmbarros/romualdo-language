@@ -173,7 +173,7 @@ func (c *Compiler) stringLiteral() ast.Node {
 func (c *Compiler) grouping() ast.Node {
 	expr := c.expression()
 	c.consume(token.KindRightParen, "Expect ')' after expression.")
-	return &ast.Grouping{Expr: expr}
+	return expr
 }
 
 // unary parses and generates code for a unary expression. The operator token is

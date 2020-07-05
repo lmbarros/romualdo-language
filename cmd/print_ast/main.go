@@ -75,8 +75,6 @@ func (ap *ASTPrinter) Enter(node ast.Node) {
 		ap.builder.WriteString(fmt.Sprintf("BoolLiteral [%v]\n", n.Value))
 	case *ast.StringLiteral:
 		ap.builder.WriteString(fmt.Sprintf("StringLiteral [%v]\n", n.Value))
-	case *ast.Grouping:
-		ap.builder.WriteString("Grouping\n")
 	case *ast.Unary:
 		ap.builder.WriteString(fmt.Sprintf("Unary [%v]\n", n.Operator))
 	case *ast.Binary:
