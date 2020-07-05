@@ -7,8 +7,6 @@
 
 package ast
 
-import "gitlab.com/stackedboxes/romulang/pkg/token"
-
 // FloatLiteral is an AST node representing a floating point number literal.
 type FloatLiteral struct {
 	// Value is the float literal's value.
@@ -71,8 +69,8 @@ func (n *StringLiteral) Walk(v Visitor) {
 
 // Unary is an AST node representing a unary operator.
 type Unary struct {
-	// Operator is the kind of token used as the unary operator.
-	Operator token.Kind
+	// Operator contains the lexeme used as the unary operator.
+	Operator string
 
 	// Operand is the expression on which the operator is applied.
 	Operand Node
@@ -90,8 +88,8 @@ func (n *Unary) Walk(v Visitor) {
 
 // Binary is an AST node representing a binary operator.
 type Binary struct {
-	// Operator is the kind of token used as the binary operator.
-	Operator token.Kind
+	// Operator contains the lexeme used as the binary operator.
+	Operator string
 
 	// LHS is the expression on the left-hand side of the operator.
 	LHS Node

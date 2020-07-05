@@ -180,6 +180,7 @@ func (c *Compiler) grouping() ast.Node {
 // expected to have been just consumed.
 func (c *Compiler) unary() ast.Node {
 	operatorKind := c.p.previous.Kind
+	operatorLexeme := c.p.previous.Lexeme
 
 	// Compile the operand.
 	operand := c.parsePrecedence(PrecUnary)
@@ -188,10 +189,10 @@ func (c *Compiler) unary() ast.Node {
 	switch operatorKind {
 	case token.KindNot:
 		c.emitBytes(bytecode.OpNot)
-		return &ast.Unary{Operator: operatorKind, Operand: operand}
+		return &ast.Unary{Operator: operatorLexeme, Operand: operand}
 	case token.KindMinus:
 		c.emitBytes(bytecode.OpNegate)
-		return &ast.Unary{Operator: operatorKind, Operand: operand}
+		return &ast.Unary{Operator: operatorLexeme, Operand: operand}
 	case token.KindPlus:
 		// Unary plus is a no-op.
 		return operand
@@ -205,6 +206,7 @@ func (c *Compiler) unary() ast.Node {
 func (c *Compiler) binary(lhs ast.Node) ast.Node {
 	// Remember the operator.
 	operatorKind := c.p.previous.Kind
+	operatorLexeme := c.p.previous.Lexeme
 
 	// Compile the right operand.
 	var rhs ast.Node
@@ -244,7 +246,7 @@ func (c *Compiler) binary(lhs ast.Node) ast.Node {
 	}
 
 	return &ast.Binary{
-		Operator: operatorKind,
+		Operator: operatorLexeme,
 		LHS:      lhs,
 		RHS:      rhs,
 	}
