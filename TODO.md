@@ -5,7 +5,8 @@
 * ~~Make the `compileFn` return an AST node (but otherwise keep the same
   behavior).~~
 * ~~Implement an AST printer visitor, to test the AST infrastructure.~~
-* Reimplement code generation as an AST visitor that generates an `Executable`.
+* ~~Reimplement code generation as an AST visitor that generates an
+  `Executable`.~~
 * Implement static type checking for the `"abc" > 123` case.
 * Implement static type checking for everything else.
 * Add support for `int`s and `bnum`s.

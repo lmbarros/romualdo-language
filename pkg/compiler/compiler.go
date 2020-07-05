@@ -92,6 +92,12 @@ func (c *Compiler) Compile(source string) (*bytecode.Chunk, ast.Node) {
 	node := c.expression()
 	c.consume(token.KindEOF, "Expect end of expression.")
 
+	var err error
+	c.chunk, err = GenerateCode(node)
+	if err != nil {
+		return nil, nil
+	}
+
 	c.endCompiler()
 
 	if c.p.hadError {
@@ -103,8 +109,6 @@ func (c *Compiler) Compile(source string) (*bytecode.Chunk, ast.Node) {
 
 // endCompiler wraps up the compilation.
 func (c *Compiler) endCompiler() {
-	c.emitReturn()
-
 	if c.DebugPrintCode && !c.p.hadError {
 		c.chunk.Disassemble("code")
 	}
@@ -150,7 +154,6 @@ func (c *Compiler) floatLiteral() ast.Node {
 	if err != nil {
 		panic("Compiler got invalid number lexeme: " + c.p.previous.Lexeme)
 	}
-	c.emitConstant(bytecode.NewValueFloat(value))
 
 	return &ast.FloatLiteral{
 		Value: value,
@@ -161,7 +164,6 @@ func (c *Compiler) floatLiteral() ast.Node {
 // literal token is expected to have been just consumed.
 func (c *Compiler) stringLiteral() ast.Node {
 	value := c.p.previous.Lexeme[1 : len(c.p.previous.Lexeme)-1] // remove the quotes
-	c.emitConstant(bytecode.NewValueString(value))
 
 	return &ast.StringLiteral{
 		Value: value,
@@ -188,10 +190,8 @@ func (c *Compiler) unary() ast.Node {
 	// Emit the operator instruction.
 	switch operatorKind {
 	case token.KindNot:
-		c.emitBytes(bytecode.OpNot)
 		return &ast.Unary{Operator: operatorLexeme, Operand: operand}
 	case token.KindMinus:
-		c.emitBytes(bytecode.OpNegate)
 		return &ast.Unary{Operator: operatorLexeme, Operand: operand}
 	case token.KindPlus:
 		// Unary plus is a no-op.
@@ -217,34 +217,6 @@ func (c *Compiler) binary(lhs ast.Node) ast.Node {
 		rhs = c.parsePrecedence(rule.precedence + 1)
 	}
 
-	// Emit the operator instruction.
-	switch operatorKind {
-	case token.KindBangEqual:
-		c.emitBytes(bytecode.OpNotEqual)
-	case token.KindEqualEqual:
-		c.emitBytes(bytecode.OpEqual)
-	case token.KindGreater:
-		c.emitBytes(bytecode.OpGreater)
-	case token.KindGreaterEqual:
-		c.emitBytes(bytecode.OpGreaterEqual)
-	case token.KindLess:
-		c.emitBytes(bytecode.OpLess)
-	case token.KindLessEqual:
-		c.emitBytes(bytecode.OpLessEqual)
-	case token.KindPlus:
-		c.emitBytes(bytecode.OpAdd)
-	case token.KindMinus:
-		c.emitBytes(bytecode.OpSubtract)
-	case token.KindStar:
-		c.emitBytes(bytecode.OpMultiply)
-	case token.KindSlash:
-		c.emitBytes(bytecode.OpDivide)
-	case token.KindHat:
-		c.emitBytes(bytecode.OpPower)
-	default:
-		panic(fmt.Sprintf("Unexpected token type on binary operator: %v", operatorKind))
-	}
-
 	return &ast.Binary{
 		Operator: operatorLexeme,
 		LHS:      lhs,
@@ -257,10 +229,8 @@ func (c *Compiler) binary(lhs ast.Node) ast.Node {
 func (c *Compiler) boolLiteral() ast.Node {
 	switch c.p.previous.Kind {
 	case token.KindTrue:
-		c.emitBytes(bytecode.OpTrue)
 		return &ast.BoolLiteral{Value: true}
 	case token.KindFalse:
-		c.emitBytes(bytecode.OpFalse)
 		return &ast.BoolLiteral{Value: false}
 	default:
 		panic(fmt.Sprintf("Unexpected token type on boolLiteral: %v", c.p.previous.Kind))

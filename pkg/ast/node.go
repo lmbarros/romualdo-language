@@ -12,6 +12,9 @@ type Node interface {
 	// Type returns the type of Node.
 	Type() Type
 
+	// Line returns the line of code that produced this node.
+	Line() int
+
 	// Walk is used to traverse the AST using the visitor v. Must start by
 	// calling v.Enter(), then visit all subnodes (by calling their Walk()
 	// methods), and finish by calling v.Leave().
