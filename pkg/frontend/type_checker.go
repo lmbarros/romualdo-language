@@ -91,6 +91,18 @@ func (tc *typeChecker) checkBinary(node *ast.Binary) {
 
 // checkUnary checks for typing errors in a unary operator.
 func (tc *typeChecker) checkTypeUnary(node *ast.Unary) {
+	switch node.Operator {
+	case "not":
+		if node.Operand.Type().Tag != ast.TypeBool {
+			tc.error("Operator %v expects a bool operand; got a %v",
+				node.Operator, node.Operand.Type())
+		}
+	case "-", "+":
+		if node.Operand.Type().Tag != ast.TypeFloat {
+			tc.error("Operator %v expects a float operand; got a %v",
+				node.Operator, node.Operand.Type())
+		}
+	}
 }
 
 // error reports an error.
