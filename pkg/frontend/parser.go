@@ -165,6 +165,7 @@ func (p *parser) grouping() ast.Node {
 func (p *parser) unary() ast.Node {
 	operatorKind := p.previousToken.kind
 	operatorLexeme := p.previousToken.lexeme
+	operatorLine := p.previousToken.line
 
 	// Parse the operand.
 	operand := p.parsePrecedence(PrecUnary)
@@ -172,9 +173,19 @@ func (p *parser) unary() ast.Node {
 	// Return the node.
 	switch operatorKind {
 	case tokenKindNot:
-		return &ast.Unary{Operator: operatorLexeme, Operand: operand}
+		return &ast.Unary{
+			BaseNode: ast.BaseNode{
+				LineNumber: operatorLine,
+			},
+			Operator: operatorLexeme, Operand: operand,
+		}
 	case tokenKindMinus:
-		return &ast.Unary{Operator: operatorLexeme, Operand: operand}
+		return &ast.Unary{
+			BaseNode: ast.BaseNode{
+				LineNumber: operatorLine,
+			},
+			Operator: operatorLexeme, Operand: operand,
+		}
 	case tokenKindPlus:
 		// Unary plus is a no-op.
 		return operand
@@ -189,6 +200,7 @@ func (p *parser) binary(lhs ast.Node) ast.Node {
 	// Remember the operator.
 	operatorKind := p.previousToken.kind
 	operatorLexeme := p.previousToken.lexeme
+	operatorLine := p.previousToken.line
 
 	// Parse the right operand.
 	var rhs ast.Node
@@ -201,7 +213,7 @@ func (p *parser) binary(lhs ast.Node) ast.Node {
 
 	return &ast.Binary{
 		BaseNode: ast.BaseNode{
-			LineNumber: p.previousToken.line,
+			LineNumber: operatorLine,
 		},
 		Operator: operatorLexeme,
 		LHS:      lhs,
