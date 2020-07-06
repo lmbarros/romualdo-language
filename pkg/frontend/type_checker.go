@@ -23,12 +23,17 @@ type typeChecker struct {
 	nodeStack []ast.Node
 }
 
+//
+// The Visitor interface
+//
 func (tc *typeChecker) Enter(node ast.Node) {
 	tc.nodeStack = append(tc.nodeStack, node)
 
 	switch n := node.(type) {
 	case *ast.Binary:
-		tc.checkTypeBinary(n)
+		tc.checkBinary(n)
+	case *ast.Unary:
+		tc.checkTypeUnary(n)
 	}
 
 }
@@ -37,14 +42,55 @@ func (tc *typeChecker) Leave(ast.Node) {
 	tc.nodeStack = tc.nodeStack[:len(tc.nodeStack)-1]
 }
 
-func (tc *typeChecker) checkTypeBinary(node *ast.Binary) {
+//
+// Type checking
+//
+
+// checkBinary checks for typing errors in a binary operator.
+func (tc *typeChecker) checkBinary(node *ast.Binary) {
 	switch node.Operator {
 	case "<", "<=", ">", ">=":
 		if node.LHS.Type().Tag != ast.TypeFloat {
 			tc.error("Operator %v expects numeric operands; got '%v' (a %v)",
 				node.Operator, node.LHS.Lexeme(), node.LHS.Type())
 		}
+		if node.RHS.Type().Tag != ast.TypeFloat {
+			tc.error("Operator %v expects numeric operands; got '%v' (a %v)",
+				node.Operator, node.RHS.Lexeme(), node.RHS.Type())
+		}
+	case "==", "!=":
+		if node.LHS.Type().Tag != node.RHS.Type().Tag {
+			tc.error("Operator %v expects operands of same type; got '%v' (a %v) and '%v' (a %v)",
+				node.Operator, node.LHS.Lexeme(), node.LHS.Type(), node.RHS.Lexeme(), node.RHS.Type())
+		}
+	case "+":
+		if node.LHS.Type().Tag != ast.TypeFloat && node.LHS.Type().Tag != ast.TypeString {
+			tc.error("Operator %v expects either strings or float operands; got a %v",
+				node.Operator, node.LHS.Type())
+		}
+		if node.RHS.Type().Tag != ast.TypeFloat && node.RHS.Type().Tag != ast.TypeString {
+			tc.error("Operator %v expects either strings or float operands; got a %v",
+				node.Operator, node.RHS.Type())
+		}
+		if node.LHS.Type().Tag != node.RHS.Type().Tag {
+			tc.error("Operator %v expects operands of same type; got '%v' (a %v) and '%v' (a %v)",
+				node.Operator, node.LHS.Lexeme(), node.LHS.Type(), node.RHS.Lexeme(), node.RHS.Type())
+		}
+	default:
+		if node.LHS.Type().Tag != ast.TypeFloat {
+			tc.error("Operator %v expects float operands; got a %v",
+				node.Operator, node.LHS.Type())
+		}
+		if node.RHS.Type().Tag != ast.TypeFloat {
+			tc.error("Operator %v expects float operands; got a %v",
+				node.Operator, node.RHS.Type())
+		}
 	}
+
+}
+
+// checkUnary checks for typing errors in a unary operator.
+func (tc *typeChecker) checkTypeUnary(node *ast.Unary) {
 }
 
 // error reports an error.

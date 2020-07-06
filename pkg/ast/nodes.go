@@ -128,7 +128,14 @@ type Binary struct {
 }
 
 func (n *Binary) Type() Type {
-	return n.LHS.Type()
+	switch n.Operator {
+	case "==", "!=", "<", "<=", ">", ">=":
+		return Type{TypeBool}
+	case "+":
+		return n.LHS.Type()
+	default:
+		return Type{TypeFloat}
+	}
 }
 
 func (n *Binary) Walk(v Visitor) {
