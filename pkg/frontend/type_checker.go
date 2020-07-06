@@ -51,38 +51,38 @@ func (tc *typeChecker) checkBinary(node *ast.Binary) {
 	switch node.Operator {
 	case "<", "<=", ">", ">=":
 		if node.LHS.Type().Tag != ast.TypeFloat {
-			tc.error("Operator %v expects numeric operands; got '%v' (a %v)",
-				node.Operator, node.LHS.Lexeme(), node.LHS.Type())
+			tc.error("Operator %v expects numeric operands; got a %v on the left-hand side",
+				node.Operator, node.LHS.Type())
 		}
 		if node.RHS.Type().Tag != ast.TypeFloat {
-			tc.error("Operator %v expects numeric operands; got '%v' (a %v)",
-				node.Operator, node.RHS.Lexeme(), node.RHS.Type())
+			tc.error("Operator %v expects numeric operands; got a %v on the right-hand side",
+				node.Operator, node.RHS.Type())
 		}
 	case "==", "!=":
 		if node.LHS.Type().Tag != node.RHS.Type().Tag {
-			tc.error("Operator %v expects operands of same type; got '%v' (a %v) and '%v' (a %v)",
-				node.Operator, node.LHS.Lexeme(), node.LHS.Type(), node.RHS.Lexeme(), node.RHS.Type())
+			tc.error("Operator %v expects operands of same type; got a %v and a %v",
+				node.Operator, node.LHS.Type(), node.RHS.Type())
 		}
 	case "+":
 		if node.LHS.Type().Tag != ast.TypeFloat && node.LHS.Type().Tag != ast.TypeString {
-			tc.error("Operator %v expects either strings or float operands; got a %v",
+			tc.error("Operator %v expects either strings or float operands; got a %v on the left-hand side",
 				node.Operator, node.LHS.Type())
 		}
 		if node.RHS.Type().Tag != ast.TypeFloat && node.RHS.Type().Tag != ast.TypeString {
-			tc.error("Operator %v expects either strings or float operands; got a %v",
+			tc.error("Operator %v expects either strings or float operands; got a %v on the right-hand side",
 				node.Operator, node.RHS.Type())
 		}
 		if node.LHS.Type().Tag != node.RHS.Type().Tag {
-			tc.error("Operator %v expects operands of same type; got '%v' (a %v) and '%v' (a %v)",
-				node.Operator, node.LHS.Lexeme(), node.LHS.Type(), node.RHS.Lexeme(), node.RHS.Type())
+			tc.error("Operator %v expects operands of same type; got a %v and a %v",
+				node.Operator, node.LHS.Type(), node.RHS.Type())
 		}
 	default:
 		if node.LHS.Type().Tag != ast.TypeFloat {
-			tc.error("Operator %v expects float operands; got a %v",
+			tc.error("Operator %v expects float operands; got a %v on the left-hand side",
 				node.Operator, node.LHS.Type())
 		}
 		if node.RHS.Type().Tag != ast.TypeFloat {
-			tc.error("Operator %v expects float operands; got a %v",
+			tc.error("Operator %v expects float operands; got a %v on the right-hand side",
 				node.Operator, node.RHS.Type())
 		}
 	}

@@ -11,17 +11,10 @@ package ast
 type BaseNode struct {
 	// LineNumber stores the line number from where this node comes.
 	LineNumber int
-
-	// SourceLexeme stores the lexeme from where this node comes.
-	SourceLexeme string
 }
 
 func (n *BaseNode) Line() int {
 	return n.LineNumber
-}
-
-func (n *BaseNode) Lexeme() string {
-	return n.SourceLexeme
 }
 
 // FloatLiteral is an AST node representing a floating point number literal.

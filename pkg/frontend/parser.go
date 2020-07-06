@@ -133,8 +133,7 @@ func (p *parser) floatLiteral() ast.Node {
 
 	return &ast.FloatLiteral{
 		BaseNode: ast.BaseNode{
-			LineNumber:   p.previousToken.line,
-			SourceLexeme: p.previousToken.lexeme,
+			LineNumber: p.previousToken.line,
 		},
 		Value: value,
 	}
@@ -147,8 +146,7 @@ func (p *parser) stringLiteral() ast.Node {
 
 	return &ast.StringLiteral{
 		BaseNode: ast.BaseNode{
-			LineNumber:   p.previousToken.line,
-			SourceLexeme: p.previousToken.lexeme,
+			LineNumber: p.previousToken.line,
 		},
 		Value: value,
 	}
@@ -203,8 +201,7 @@ func (p *parser) binary(lhs ast.Node) ast.Node {
 
 	return &ast.Binary{
 		BaseNode: ast.BaseNode{
-			LineNumber:   p.previousToken.line,
-			SourceLexeme: p.previousToken.lexeme,
+			LineNumber: p.previousToken.line,
 		},
 		Operator: operatorLexeme,
 		LHS:      lhs,
@@ -219,16 +216,14 @@ func (p *parser) boolLiteral() ast.Node {
 	case tokenKindTrue:
 		return &ast.BoolLiteral{
 			BaseNode: ast.BaseNode{
-				LineNumber:   p.previousToken.line,
-				SourceLexeme: p.previousToken.lexeme,
+				LineNumber: p.previousToken.line,
 			},
 			Value: true,
 		}
 	case tokenKindFalse:
 		return &ast.BoolLiteral{
 			BaseNode: ast.BaseNode{
-				LineNumber:   p.previousToken.line,
-				SourceLexeme: p.previousToken.lexeme,
+				LineNumber: p.previousToken.line,
 			},
 			Value: false,
 		}
