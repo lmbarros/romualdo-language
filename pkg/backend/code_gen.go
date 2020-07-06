@@ -75,7 +75,11 @@ func (cg *codeGenerator) Leave(node ast.Node) {
 		// TODO
 
 	case *ast.BoolLiteral:
-		// TODO
+		if n.Value {
+			cg.emitBytes(bytecode.OpTrue)
+		} else {
+			cg.emitBytes(bytecode.OpFalse)
+		}
 
 	case *ast.StringLiteral:
 		cg.emitConstant(bytecode.NewValueString(n.Value))
