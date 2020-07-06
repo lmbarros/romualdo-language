@@ -82,6 +82,8 @@ func (cg *codeGenerator) Leave(node ast.Node) {
 
 	case *ast.Unary:
 		switch n.Operator {
+		case "+":
+			break // no-op
 		case "-":
 			cg.emitBytes(bytecode.OpNegate)
 		case "not":

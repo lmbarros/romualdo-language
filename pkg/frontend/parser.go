@@ -172,23 +172,13 @@ func (p *parser) unary() ast.Node {
 
 	// Return the node.
 	switch operatorKind {
-	case tokenKindNot:
+	case tokenKindNot, tokenKindMinus, tokenKindPlus:
 		return &ast.Unary{
 			BaseNode: ast.BaseNode{
 				LineNumber: operatorLine,
 			},
 			Operator: operatorLexeme, Operand: operand,
 		}
-	case tokenKindMinus:
-		return &ast.Unary{
-			BaseNode: ast.BaseNode{
-				LineNumber: operatorLine,
-			},
-			Operator: operatorLexeme, Operand: operand,
-		}
-	case tokenKindPlus:
-		// Unary plus is a no-op.
-		return operand
 	default:
 		panic(fmt.Sprintf("Unexpected operator kind on unary expression: %v", operatorKind))
 	}
