@@ -46,7 +46,7 @@ func TestScannerTokenSimpleCases(t *testing.T) { // nolint: funlen
 	assert.Equal(t, []int{1}, tokenLines(tokens))
 
 	tokens = tokenizeString("123.456")
-	assert.Equal(t, []tokenKind{tokenKindNumberLiteral, tokenKindEOF}, tokenKinds(tokens))
+	assert.Equal(t, []tokenKind{tokenKindFloatLiteral, tokenKindEOF}, tokenKinds(tokens))
 	assert.Equal(t, []string{"123.456", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
@@ -91,13 +91,13 @@ func TestScannerTokenSequences(t *testing.T) { // nolint: funlen
 	assert.Equal(t, []string{"while", "true", "do", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 1}, tokenLines(tokens))
 
-	tokens = tokenizeString("vars x: int = 1 + 2 end")
+	tokens = tokenizeString("vars x: int = 1 + 2.0 end")
 	assert.Equal(t, []tokenKind{
 		tokenKindVars, tokenKindIdentifier, tokenKindColon, tokenKindInt,
-		tokenKindEqual, tokenKindNumberLiteral, tokenKindPlus,
-		tokenKindNumberLiteral, tokenKindEnd, tokenKindEOF},
+		tokenKindEqual, tokenKindIntLiteral, tokenKindPlus,
+		tokenKindFloatLiteral, tokenKindEnd, tokenKindEOF},
 		tokenKinds(tokens))
-	assert.Equal(t, []string{"vars", "x", ":", "int", "=", "1", "+", "2", "end", ""},
+	assert.Equal(t, []string{"vars", "x", ":", "int", "=", "1", "+", "2.0", "end", ""},
 		tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
 
@@ -190,14 +190,14 @@ meta		map
 
 	tokens = tokenizeString(
 		`1<bnum
-		function<=2
+		function<=0.55b
 		void> string`)
 	assert.Equal(t, []tokenKind{
-		tokenKindNumberLiteral, tokenKindLess, tokenKindBnum,
-		tokenKindFunction, tokenKindLessEqual, tokenKindNumberLiteral,
+		tokenKindIntLiteral, tokenKindLess, tokenKindBnum,
+		tokenKindFunction, tokenKindLessEqual, tokenKindBNumLiteral,
 		tokenKindVoid, tokenKindGreater, tokenKindString, tokenKindEOF},
 		tokenKinds(tokens))
-	assert.Equal(t, []string{"1", "<", "bnum", "function", "<=", "2",
+	assert.Equal(t, []string{"1", "<", "bnum", "function", "<=", "0.55b",
 		"void", ">", "string", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 2, 2, 2, 3, 3, 3, 3}, tokenLines(tokens))
 
@@ -239,24 +239,35 @@ meta		map
 // Tests Scanner.Token() with numbers.
 func TestScannerTokenNumbers(t *testing.T) {
 	tokens := tokenizeString("9876")
-	assert.Equal(t, []tokenKind{tokenKindNumberLiteral, tokenKindEOF},
+	assert.Equal(t, []tokenKind{tokenKindIntLiteral, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"9876", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
 	tokens = tokenizeString("9876.54")
-	assert.Equal(t, []tokenKind{tokenKindNumberLiteral, tokenKindEOF},
+	assert.Equal(t, []tokenKind{tokenKindFloatLiteral, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"9876.54", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
 
-	// Not sure if this is the syntax I want. Maybe I want `9876.` to be
-	// interpreted as a number, not as a number followed by a dot. Will have to
-	// review all this once I separate floats and ints anyway.
+	tokens = tokenizeString("0.123b")
+	assert.Equal(t, []tokenKind{tokenKindBNumLiteral, tokenKindEOF},
+		tokenKinds(tokens))
+	assert.Equal(t, []string{"0.123b", ""}, tokenLexemes(tokens))
+	assert.Equal(t, []int{1, 1}, tokenLines(tokens))
+
+	// We like floats looking like the complete thing, so we don't recognize
+	// ".111" or "111." as floats.
 	tokens = tokenizeString("9876.")
-	assert.Equal(t, []tokenKind{tokenKindNumberLiteral, tokenKindDot, tokenKindEOF},
+	assert.Equal(t, []tokenKind{tokenKindIntLiteral, tokenKindDot, tokenKindEOF},
 		tokenKinds(tokens))
 	assert.Equal(t, []string{"9876", ".", ""}, tokenLexemes(tokens))
+	assert.Equal(t, []int{1, 1, 1}, tokenLines(tokens))
+
+	tokens = tokenizeString(".7890")
+	assert.Equal(t, []tokenKind{tokenKindDot, tokenKindIntLiteral, tokenKindEOF},
+		tokenKinds(tokens))
+	assert.Equal(t, []string{".", "7890", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1}, tokenLines(tokens))
 }
 

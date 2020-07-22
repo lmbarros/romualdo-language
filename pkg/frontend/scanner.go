@@ -229,7 +229,7 @@ func (s *scanner) scanString() *token {
 	return s.makeToken(tokenKindStringLiteral)
 }
 
-// scanNumber scans a number token.
+// scanNumber scans a number token (it can be an int, float or bnum literal).
 func (s *scanner) scanNumber() *token {
 	for unicode.IsDigit(s.peek()) {
 		s.advance()
@@ -243,9 +243,18 @@ func (s *scanner) scanNumber() *token {
 		for unicode.IsDigit(s.peek()) {
 			s.advance()
 		}
+
+		// A trailing "b" denotes a bnum.
+		if s.peek() == 'b' {
+			// Consume the "b"
+			s.advance()
+			return s.makeToken(tokenKindBNumLiteral)
+		} else {
+			return s.makeToken(tokenKindFloatLiteral)
+		}
 	}
 
-	return s.makeToken(tokenKindNumberLiteral)
+	return s.makeToken(tokenKindIntLiteral)
 }
 
 // scanIdentifier scans an identifier token.

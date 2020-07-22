@@ -42,7 +42,9 @@ const (
 	// Literals.
 	tokenKindIdentifier
 	tokenKindStringLiteral
-	tokenKindNumberLiteral
+	tokenKindIntLiteral
+	tokenKindFloatLiteral
+	tokenKindBNumLiteral
 
 	// Keywords.
 	tokenKindAlias    // alias
@@ -149,8 +151,12 @@ func (kind tokenKind) String() string { // nolint:funlen,gocyclo
 		return "tokenKindIdentifier"
 	case tokenKindStringLiteral:
 		return "tokenKindStringLiteral"
-	case tokenKindNumberLiteral:
-		return "tokenKindNumberLiteral"
+	case tokenKindIntLiteral:
+		return "tokenKindIntLiteral"
+	case tokenKindFloatLiteral:
+		return "tokenKindFloatLiteral"
+	case tokenKindBNumLiteral:
+		return "tokenKindBNumLiteral"
 	case tokenKindAlias:
 		return "tokenKindAlias"
 	case tokenKindAnd:

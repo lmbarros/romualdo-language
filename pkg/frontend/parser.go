@@ -123,9 +123,9 @@ func (p *parser) expression() ast.Node {
 	return p.parsePrecedence(precAssignment)
 }
 
-// floatLiteral parses a floting-point number literal. The float literal token
-// is expected to have been just consumed.
-func (p *parser) floatLiteral() ast.Node {
+// numberLiteral parses a number literal (int, float, or bnum). The number
+// literal token is expected to have been just consumed.
+func (p *parser) numberLiteral() ast.Node {
 	value, err := strconv.ParseFloat(p.previousToken.lexeme, 64)
 	if err != nil {
 		panic("Compiler got invalid number lexeme: " + p.previousToken.lexeme)
@@ -307,7 +307,7 @@ func initRules() { // nolint:funlen
 
 	//                                     prefix                                      infix                          precedence
 	//                                    ---------------------------------------     --------------------------     --------------
-	rules[tokenKindLeftParen] = /*     */ parseRule{(*parser).grouping /*       */, nil /*                     */, precNone}
+	rules[tokenKindLeftParen] = /*     */ parseRule{(*parser).grouping /*         */, nil /*                     */, precNone}
 	rules[tokenKindRightParen] = /*    */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindLeftBrace] = /*     */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindRightBrace] = /*    */ parseRule{nil /*                        */, nil /*                     */, precNone}
@@ -315,24 +315,24 @@ func initRules() { // nolint:funlen
 	rules[tokenKindRightBracket] = /*  */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindComma] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindDot] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindMinus] = /*         */ parseRule{(*parser).unary /*          */, (*parser).binary /*      */, precTerm}
-	rules[tokenKindPlus] = /*          */ parseRule{(*parser).unary /*          */, (*parser).binary /*      */, precTerm}
-	rules[tokenKindSlash] = /*         */ parseRule{nil /*                        */, (*parser).binary /*      */, precFactor}
-	rules[tokenKindStar] = /*          */ parseRule{nil /*                        */, (*parser).binary /*      */, precFactor}
+	rules[tokenKindMinus] = /*         */ parseRule{(*parser).unary /*            */, (*parser).binary /*        */, precTerm}
+	rules[tokenKindPlus] = /*          */ parseRule{(*parser).unary /*            */, (*parser).binary /*        */, precTerm}
+	rules[tokenKindSlash] = /*         */ parseRule{nil /*                        */, (*parser).binary /*        */, precFactor}
+	rules[tokenKindStar] = /*          */ parseRule{nil /*                        */, (*parser).binary /*        */, precFactor}
 	rules[tokenKindColon] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindTilde] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindAt] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindHat] = /*           */ parseRule{nil /*                        */, (*parser).binary /*      */, precPower}
+	rules[tokenKindHat] = /*           */ parseRule{nil /*                        */, (*parser).binary /*        */, precPower}
 	rules[tokenKindEqual] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindEqualEqual] = /*    */ parseRule{nil /*                        */, (*parser).binary /*      */, precEquality}
-	rules[tokenKindBangEqual] = /*     */ parseRule{nil /*                        */, (*parser).binary /*      */, precEquality}
-	rules[tokenKindGreater] = /*       */ parseRule{nil /*                        */, (*parser).binary /*      */, precComparison}
-	rules[tokenKindGreaterEqual] = /*  */ parseRule{nil /*                        */, (*parser).binary /*      */, precComparison}
-	rules[tokenKindLess] = /*          */ parseRule{nil /*                        */, (*parser).binary /*      */, precComparison}
-	rules[tokenKindLessEqual] = /*     */ parseRule{nil /*                        */, (*parser).binary /*      */, precComparison}
+	rules[tokenKindEqualEqual] = /*    */ parseRule{nil /*                        */, (*parser).binary /*        */, precEquality}
+	rules[tokenKindBangEqual] = /*     */ parseRule{nil /*                        */, (*parser).binary /*        */, precEquality}
+	rules[tokenKindGreater] = /*       */ parseRule{nil /*                        */, (*parser).binary /*        */, precComparison}
+	rules[tokenKindGreaterEqual] = /*  */ parseRule{nil /*                        */, (*parser).binary /*        */, precComparison}
+	rules[tokenKindLess] = /*          */ parseRule{nil /*                        */, (*parser).binary /*        */, precComparison}
+	rules[tokenKindLessEqual] = /*     */ parseRule{nil /*                        */, (*parser).binary /*        */, precComparison}
 	rules[tokenKindIdentifier] = /*    */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindStringLiteral] = /* */ parseRule{(*parser).stringLiteral /*  */, nil /*                     */, precNone}
-	rules[tokenKindNumberLiteral] = /* */ parseRule{(*parser).floatLiteral /*   */, nil /*                     */, precNone}
+	rules[tokenKindStringLiteral] = /* */ parseRule{(*parser).stringLiteral /*    */, nil /*                     */, precNone}
+	rules[tokenKindFloatLiteral] = /*  */ parseRule{(*parser).numberLiteral /*     */, nil /*                     */, precNone}
 	rules[tokenKindAlias] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindAnd] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindBnum] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
@@ -346,7 +346,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindElseif] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindEnd] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindEnum] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindFalse] = /*         */ parseRule{(*parser).boolLiteral /*    */, nil /*                     */, precNone}
+	rules[tokenKindFalse] = /*         */ parseRule{(*parser).boolLiteral /*      */, nil /*                     */, precNone}
 	rules[tokenKindFloat] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindFor] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindFunction] = /*      */ parseRule{nil /*                        */, nil /*                     */, precNone}
@@ -359,7 +359,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindMap] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindMeta] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindNil] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindNot] = /*           */ parseRule{(*parser).unary /*          */, nil /*                     */, precNone}
+	rules[tokenKindNot] = /*           */ parseRule{(*parser).unary /*            */, nil /*                     */, precNone}
 	rules[tokenKindOr] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindPassage] = /*       */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindPrint] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
@@ -370,7 +370,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindSuper] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindSwitch] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindThen] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindTrue] = /*          */ parseRule{(*parser).boolLiteral /*    */, nil /*                     */, precNone}
+	rules[tokenKindTrue] = /*          */ parseRule{(*parser).boolLiteral /*      */, nil /*                     */, precNone}
 	rules[tokenKindVars] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindVoid] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindWhile] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
