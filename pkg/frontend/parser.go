@@ -126,16 +126,50 @@ func (p *parser) expression() ast.Node {
 // numberLiteral parses a number literal (int, float, or bnum). The number
 // literal token is expected to have been just consumed.
 func (p *parser) numberLiteral() ast.Node {
-	value, err := strconv.ParseFloat(p.previousToken.lexeme, 64)
-	if err != nil {
-		panic("Compiler got invalid number lexeme: " + p.previousToken.lexeme)
+	baseNode := ast.BaseNode{
+		LineNumber: p.previousToken.line,
 	}
 
-	return &ast.FloatLiteral{
-		BaseNode: ast.BaseNode{
-			LineNumber: p.previousToken.line,
-		},
-		Value: value,
+	switch p.previousToken.kind {
+	case tokenKindFloatLiteral:
+		value, err := strconv.ParseFloat(p.previousToken.lexeme, 64)
+		if err != nil {
+			panic("Compiler got invalid float lexeme: " + p.previousToken.lexeme)
+		}
+		return &ast.FloatLiteral{
+			BaseNode: baseNode,
+			Value:    value,
+		}
+
+	case tokenKindIntLiteral:
+		value, err := strconv.ParseInt(p.previousToken.lexeme, 10, 64)
+		if err != nil {
+			panic("Compiler got invalid int lexeme: " + p.previousToken.lexeme)
+		}
+		return &ast.IntLiteral{
+			BaseNode: baseNode,
+			Value:    value,
+		}
+
+	case tokenKindBNumLiteral:
+		s := p.previousToken.lexeme
+		s = s[0 : len(s)-1] // remove trailing "b"
+		value, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			panic("Compiler got invalid bnum lexeme: " + p.previousToken.lexeme)
+		}
+		if value <= 0.0 || value >= 1.0 {
+			p.error(fmt.Sprintf(
+				"BNum must be greater than 0.0 and less than 1.0; got %v", value))
+		}
+		return &ast.BNumLiteral{
+			BaseNode: baseNode,
+			Value:    value,
+		}
+
+	default:
+		panic(fmt.Sprintf("Got unexpected token kind when parsing number literal: %v (%v)",
+			p.previousToken.kind, int64(p.previousToken.kind)))
 	}
 }
 
@@ -332,10 +366,11 @@ func initRules() { // nolint:funlen
 	rules[tokenKindLessEqual] = /*     */ parseRule{nil /*                        */, (*parser).binary /*        */, precComparison}
 	rules[tokenKindIdentifier] = /*    */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindStringLiteral] = /* */ parseRule{(*parser).stringLiteral /*    */, nil /*                     */, precNone}
-	rules[tokenKindFloatLiteral] = /*  */ parseRule{(*parser).numberLiteral /*     */, nil /*                     */, precNone}
+	rules[tokenKindFloatLiteral] = /*  */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindAlias] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindAnd] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindBnum] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindBNumLiteral] = /*   */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindBool] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindBreak] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindCase] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
@@ -355,6 +390,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindIf] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindIn] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindInt] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindIntLiteral] = /*    */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindListen] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindMap] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindMeta] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}

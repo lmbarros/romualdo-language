@@ -51,6 +51,23 @@ func (n *IntLiteral) Walk(v Visitor) {
 	v.Leave(n)
 }
 
+// BNumLiteral is an AST node representing a bounded number (bnum) literal.
+type BNumLiteral struct {
+	BaseNode
+
+	// Value is the bnum literal's value.
+	Value float64
+}
+
+func (n *BNumLiteral) Type() Type {
+	return Type{TypeBNum}
+}
+
+func (n *BNumLiteral) Walk(v Visitor) {
+	v.Enter(n)
+	v.Leave(n)
+}
+
 // BoolLiteral is an AST node representing a Boolean value literal.
 type BoolLiteral struct {
 	BaseNode

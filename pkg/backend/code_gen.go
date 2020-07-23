@@ -72,7 +72,11 @@ func (cg *codeGenerator) Leave(node ast.Node) {
 		cg.emitConstant(bytecode.NewValueFloat(n.Value))
 
 	case *ast.IntLiteral:
-		// TODO
+		cg.emitConstant(bytecode.NewValueInt(n.Value))
+
+	case *ast.BNumLiteral:
+		// For the VM, a BNum is just a float.
+		cg.emitConstant(bytecode.NewValueFloat(n.Value))
 
 	case *ast.BoolLiteral:
 		if n.Value {

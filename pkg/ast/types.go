@@ -22,6 +22,9 @@ const (
 	// TypeFloat identifies a floating-point number type, AKA float.
 	TypeFloat
 
+	// TypeBNum identifies a bounded number number type, AKA bnum.
+	TypeBNum
+
 	// TypeBool identifies a Boolean type, AKA bool.
 	TypeBool
 
