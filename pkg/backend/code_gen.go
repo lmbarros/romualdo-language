@@ -66,7 +66,7 @@ func (cg *codeGenerator) Enter(node ast.Node) {
 	cg.nodeStack = append(cg.nodeStack, node)
 }
 
-func (cg *codeGenerator) Leave(node ast.Node) {
+func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	switch n := node.(type) {
 	case *ast.FloatLiteral:
 		cg.emitConstant(bytecode.NewValueFloat(n.Value))
