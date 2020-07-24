@@ -38,7 +38,6 @@
   this is `compiler.go`, function `stringLiteral()`.
 * Implement smarter storage of line numbers in the Chunk. Something more
   efficient than storing one line number per instruction.
-* Document the instruction set.
 
 ## Smallish improvements
 
