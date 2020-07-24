@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	OpConstant     uint8 = iota
-	OpConstantLong       // three extra bytes with a 24-bit index; stored little endian.
+	OpNop uint8 = iota
+	OpConstant
+	OpConstantLong
 	OpTrue
 	OpFalse
 	OpEqual
@@ -115,6 +116,9 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 	instruction := c.Code[offset]
 
 	switch instruction {
+	case OpNop:
+		return c.disassembleConstantInstruction(out, "NOP", offset)
+
 	case OpConstant:
 		return c.disassembleConstantInstruction(out, "CONSTANT", offset)
 

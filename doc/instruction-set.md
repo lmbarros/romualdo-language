@@ -123,6 +123,17 @@ The result is always a float, even if the result is a whole number.
 **Pops:** One unbounded numeric value, *A*.  
 **Pushes:** One unbounded numeric value, -*A*.
 
+### `NOP`
+
+**Purpose:** Does nothing.  
+**Immediate Operands:** None.  
+**Pops:** Nothing.  
+**Pushes:** Nothing.
+
+I can't really see any purpose for a no-op instruction in the Romualdo VM, but I
+*really* wanted to have it. That's probably because of the tender memories I
+have of `NOP` in the x86 architecture. Whatever.
+
 ### `NOT`
 
 **Purpose:** Performs logical negation.  

@@ -44,7 +44,7 @@ func (vm *VM) Interpret(chunk *bytecode.Chunk) bool {
 }
 
 // run runs the code in vm.chunk.
-func (vm *VM) run() bool { // nolint:gocyclo
+func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 	for {
 		if vm.DebugTraceExecution {
 			fmt.Print("          ")
@@ -62,6 +62,9 @@ func (vm *VM) run() bool { // nolint:gocyclo
 		vm.ip++
 
 		switch instruction {
+		case bytecode.OpNop:
+			break
+
 		case bytecode.OpConstant:
 			constant := vm.readConstant()
 			vm.push(constant)
