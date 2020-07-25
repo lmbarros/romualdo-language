@@ -50,43 +50,54 @@ func (tc *typeChecker) Leave(ast.Node) {
 func (tc *typeChecker) checkBinary(node *ast.Binary) {
 	switch node.Operator {
 	case "<", "<=", ">", ">=":
-		if node.LHS.Type().Tag != ast.TypeFloat {
+		if !ast.IsUnboundedNumericType(node.LHS.Type().Tag) {
 			tc.error("Operator %v expects numeric operands; got a %v on the left-hand side",
 				node.Operator, node.LHS.Type())
 		}
-		if node.RHS.Type().Tag != ast.TypeFloat {
+		if !ast.IsUnboundedNumericType(node.RHS.Type().Tag) {
 			tc.error("Operator %v expects numeric operands; got a %v on the right-hand side",
 				node.Operator, node.RHS.Type())
 		}
+
 	case "==", "!=":
-		if node.LHS.Type().Tag != node.RHS.Type().Tag {
-			tc.error("Operator %v expects operands of same type; got a %v and a %v",
-				node.Operator, node.LHS.Type(), node.RHS.Type())
+		// Values of the same type can be compared
+		if node.LHS.Type().Tag == node.RHS.Type().Tag {
+			return
 		}
+
+		// Unbounded numeric types can be compared
+		if ast.IsUnboundedNumericType(node.LHS.Type().Tag) && ast.IsUnboundedNumericType(node.RHS.Type().Tag) {
+			return
+		}
+
+		// Nothing else can be compared
+		tc.error("Operator %v expects operands of same type or two unbounded numeric values; got a %v and a %v",
+			node.Operator, node.LHS.Type(), node.RHS.Type())
+
 	case "+":
-		if node.LHS.Type().Tag != ast.TypeFloat && node.LHS.Type().Tag != ast.TypeString {
-			tc.error("Operator %v expects either strings or float operands; got a %v on the left-hand side",
+		if !ast.IsUnboundedNumericType(node.LHS.Type().Tag) && node.LHS.Type().Tag != ast.TypeString {
+			tc.error("Operator %v expects either strings or unbounded numeric operands; got a %v on the left-hand side",
 				node.Operator, node.LHS.Type())
 		}
-		if node.RHS.Type().Tag != ast.TypeFloat && node.RHS.Type().Tag != ast.TypeString {
-			tc.error("Operator %v expects either strings or float operands; got a %v on the right-hand side",
+		if !ast.IsUnboundedNumericType(node.RHS.Type().Tag) && node.RHS.Type().Tag != ast.TypeString {
+			tc.error("Operator %v expects either strings or unbounded numeric operands; got a %v on the right-hand side",
 				node.Operator, node.RHS.Type())
 		}
-		if node.LHS.Type().Tag != node.RHS.Type().Tag {
-			tc.error("Operator %v expects operands of same type; got a %v and a %v",
+		if node.LHS.Type().Tag != node.RHS.Type().Tag && (!ast.IsUnboundedNumericType(node.LHS.Type().Tag) || !ast.IsUnboundedNumericType(node.RHS.Type().Tag)) {
+			tc.error("Operator %v expects operands of same type or both be unbounded numeric values; got a %v and a %v",
 				node.Operator, node.LHS.Type(), node.RHS.Type())
 		}
+
 	default:
-		if node.LHS.Type().Tag != ast.TypeFloat {
-			tc.error("Operator %v expects float operands; got a %v on the left-hand side",
+		if !ast.IsUnboundedNumericType(node.LHS.Type().Tag) {
+			tc.error("Operator %v expects unbounded numeric operands; got a %v on the left-hand side",
 				node.Operator, node.LHS.Type())
 		}
-		if node.RHS.Type().Tag != ast.TypeFloat {
-			tc.error("Operator %v expects float operands; got a %v on the right-hand side",
+		if !ast.IsUnboundedNumericType(node.RHS.Type().Tag) {
+			tc.error("Operator %v expects unbounded numeric operands; got a %v on the left-hand side",
 				node.Operator, node.RHS.Type())
 		}
 	}
-
 }
 
 // checkUnary checks for typing errors in a unary operator.
@@ -97,8 +108,9 @@ func (tc *typeChecker) checkTypeUnary(node *ast.Unary) {
 			tc.error("Operator %v expects a bool operand; got a %v",
 				node.Operator, node.Operand.Type())
 		}
+
 	case "-", "+":
-		if node.Operand.Type().Tag != ast.TypeFloat {
+		if !ast.IsNumericType(node.Operand.Type().Tag) {
 			tc.error("Operator %v expects a float operand; got a %v",
 				node.Operator, node.Operand.Type())
 		}

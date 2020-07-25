@@ -90,75 +90,96 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.push(bytecode.NewValueBool(!bytecode.ValuesEqual(a, b)))
 
 		case bytecode.OpGreater:
-			a, b, ok := vm.popTwoFloatOperands()
+			a, b, ok := vm.popTwoUnboundedNumberOperands()
 			if !ok {
 				return false
 			}
 			vm.push(bytecode.NewValueBool(a > b))
 
 		case bytecode.OpGreaterEqual:
-			a, b, ok := vm.popTwoFloatOperands()
+			a, b, ok := vm.popTwoUnboundedNumberOperands()
 			if !ok {
 				return false
 			}
 			vm.push(bytecode.NewValueBool(a >= b))
 
 		case bytecode.OpLess:
-			a, b, ok := vm.popTwoFloatOperands()
+			a, b, ok := vm.popTwoUnboundedNumberOperands()
 			if !ok {
 				return false
 			}
 			vm.push(bytecode.NewValueBool(a < b))
 
 		case bytecode.OpLessEqual:
-			a, b, ok := vm.popTwoFloatOperands()
+			a, b, ok := vm.popTwoUnboundedNumberOperands()
 			if !ok {
 				return false
 			}
 			vm.push(bytecode.NewValueBool(a <= b))
 
 		case bytecode.OpAdd:
-
-			if vm.peek(0).IsString() && vm.peek(1).IsString() {
+			switch {
+			case vm.peek(0).IsString() && vm.peek(1).IsString():
 				a, b, ok := vm.popTwoStringOperands()
 				if !ok {
 					return false
 				}
 				vm.push(bytecode.NewValueString(a + b))
-			} else if vm.peek(0).IsFloat() && vm.peek(1).IsFloat() {
-				a, b, ok := vm.popTwoFloatOperands()
+
+			case vm.peek(0).IsInt() && vm.peek(1).IsInt():
+				a, b, ok := vm.popTwoIntOperands()
+				if !ok {
+					return false
+				}
+				vm.push(bytecode.NewValueInt(a + b))
+
+			default:
+				a, b, ok := vm.popTwoUnboundedNumberOperands()
 				if !ok {
 					return false
 				}
 				vm.push(bytecode.NewValueFloat(a + b))
-			} else {
-				vm.runtimeError("Operands must be two numbers or two strings.")
-				return false
 			}
 
 		case bytecode.OpSubtract:
-			a, b, ok := vm.popTwoFloatOperands()
-			if !ok {
-				return false
+			if vm.peek(0).IsInt() && vm.peek(1).IsInt() {
+				a, b, ok := vm.popTwoIntOperands()
+				if !ok {
+					return false
+				}
+				vm.push(bytecode.NewValueInt(a - b))
+			} else {
+				a, b, ok := vm.popTwoUnboundedNumberOperands()
+				if !ok {
+					return false
+				}
+				vm.push(bytecode.NewValueFloat(a - b))
 			}
-			vm.push(bytecode.NewValueFloat(a - b))
 
 		case bytecode.OpMultiply:
-			a, b, ok := vm.popTwoFloatOperands()
-			if !ok {
-				return false
+			if vm.peek(0).IsInt() && vm.peek(1).IsInt() {
+				a, b, ok := vm.popTwoIntOperands()
+				if !ok {
+					return false
+				}
+				vm.push(bytecode.NewValueInt(a * b))
+			} else {
+				a, b, ok := vm.popTwoUnboundedNumberOperands()
+				if !ok {
+					return false
+				}
+				vm.push(bytecode.NewValueFloat(a * b))
 			}
-			vm.push(bytecode.NewValueFloat(a * b))
 
 		case bytecode.OpDivide:
-			a, b, ok := vm.popTwoFloatOperands()
+			a, b, ok := vm.popTwoUnboundedNumberOperands()
 			if !ok {
 				return false
 			}
 			vm.push(bytecode.NewValueFloat(a / b))
 
 		case bytecode.OpPower:
-			a, b, ok := vm.popTwoFloatOperands()
+			a, b, ok := vm.popTwoUnboundedNumberOperands()
 			if !ok {
 				return false
 			}
@@ -172,11 +193,17 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.push(bytecode.NewValueBool(!vm.pop().AsBool()))
 
 		case bytecode.OpNegate:
-			if !vm.peek(0).IsFloat() {
-				vm.runtimeError("Operand must be a floating-point number.")
+			switch {
+			case vm.peek(0).IsInt():
+				vm.push(bytecode.NewValueInt(-vm.pop().AsInt()))
+
+			case vm.peek(0).IsFloat():
+				vm.push(bytecode.NewValueFloat(-vm.pop().AsFloat()))
+
+			default:
+				vm.runtimeError("Operand must be a number.")
 				return false
 			}
-			vm.push(bytecode.NewValueFloat(-vm.pop().AsFloat()))
 
 		case bytecode.OpReturn:
 			fmt.Println(vm.pop())
@@ -236,17 +263,50 @@ func (vm *VM) runtimeError(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
 }
 
-// popTwoFloatOperands pops and returns two values from the stack, assumed to be
-// floating point numbers to be used as operands of a binary operator.
-func (vm *VM) popTwoFloatOperands() (a float64, b float64, ok bool) {
-	if !vm.peek(0).IsFloat() || !vm.peek(1).IsFloat() {
-		vm.runtimeError("Operands must be floating-point numbers.")
+// popTwoIntOperands pops and returns two values from the stack, assumed to be
+// integers, to be used as operands of a binary operator.
+func (vm *VM) popTwoIntOperands() (a int64, b int64, ok bool) {
+	if !vm.peek(0).IsInt() || !vm.peek(1).IsInt() {
+		vm.runtimeError("Operands must be integer numbers.")
 		return
 	}
-	b = vm.pop().AsFloat()
-	a = vm.pop().AsFloat()
+	b = vm.pop().AsInt()
+	a = vm.pop().AsInt()
 	ok = true
 	return
+}
+
+// popTwoUnboundedNumberOperands pops and returns two values from the stack,
+// assumed to be integers ot floats, to be used as operands of a binary
+// operator.
+func (vm *VM) popTwoUnboundedNumberOperands() (a float64, b float64, ok bool) {
+	b, ok = vm.popUnboundedNumberOperand()
+	if !ok {
+		return
+	}
+
+	a, ok = vm.popUnboundedNumberOperand()
+	if !ok {
+		return
+	}
+
+	ok = true
+	return
+}
+
+// popUnboundedNumberOperand pops and returns twoone values from the stack,
+// assumed to be and integer ot float, to be used as and operand of some
+// operator.
+func (vm *VM) popUnboundedNumberOperand() (v float64, ok bool) {
+	switch {
+	case vm.peek(0).IsFloat():
+		return vm.pop().AsFloat(), true
+	case vm.peek(0).IsInt():
+		return float64(vm.pop().AsInt()), true
+	default:
+		vm.runtimeError("Operands must be integer or floating-point numbers.")
+		return 0.0, false
+	}
 }
 
 // popTwoStringOperands pops and returns two values from the stack, assumed to

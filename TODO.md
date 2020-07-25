@@ -9,11 +9,11 @@
   `Executable`.~~
 * ~~Implement static type checking for the `"abc" > 123` case.~~
 * ~~Implement static type checking for everything else.~~
-* Add support for `int`s and `bnum`s.
+* ~~Add support for `int`s.~~
+* Add support for `bnum`s.
 * Add support for type conversions. Something like this:
     * `int("124")`: `string` to `int`. Returns zero if invalid.
     * `int("124", -999)`: `string` to `int`. Returns -999 if invalid.
-* Implement serialization and deserialization of `CompiledStoryworld`.
 
 ## Big things
 
@@ -28,6 +28,7 @@
 
 ## Not so big, but not small either
 
+* Implement serialization and deserialization of `CompiledStoryworld`.
 * Testing
     * Add some kind of end-to-end testing: if we run this Storyworld with this
       input, the output must be this one.

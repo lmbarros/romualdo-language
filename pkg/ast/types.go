@@ -52,6 +52,8 @@ func (t Type) String() string {
 		return "int"
 	case TypeFloat:
 		return "float"
+	case TypeBNum:
+		return "bnum"
 	case TypeBool:
 		return "bool"
 	case TypeString:
@@ -59,4 +61,16 @@ func (t Type) String() string {
 	default:
 		panic(fmt.Sprintf("unexpected type tag: %v", t.Tag))
 	}
+}
+
+// TODO: Make those methods of Type
+
+// IsNumericType checks if a given type is numeric.
+func IsNumericType(typeTag TypeTag) bool {
+	return typeTag == TypeInt || typeTag == TypeFloat || typeTag == TypeBNum
+}
+
+// IsNumericType checks if a given type is unbounded numeric.
+func IsUnboundedNumericType(typeTag TypeTag) bool {
+	return typeTag == TypeInt || typeTag == TypeFloat
 }

@@ -5,9 +5,16 @@ but let's at least document what we can do.
 
 ## Assorted Topics
 
+### Unbounded and Bounded Numbers
+
+Romualdo has three types of numeric values: ints, floats and bnums. Whenever we
+mention "unbounded numbers" in this document, we are talking about ints and
+floats. This is contrast with bnums which are "bounded numbers".
+
 ### Operations Between Different Types
 
-In general, operations between different types are not supported and values of
+Essentially, the behavior of the VM matches the behavior of the language. In
+general, operations between different types are not supported and values of
 different types are considered different.
 
 The only exception is when one operand is an int and the other is a float: in
