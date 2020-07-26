@@ -63,14 +63,13 @@ func (t Type) String() string {
 	}
 }
 
-// TODO: Make those methods of Type
-
-// IsNumericType checks if a given type is numeric.
-func IsNumericType(typeTag TypeTag) bool {
-	return typeTag == TypeInt || typeTag == TypeFloat || typeTag == TypeBNum
+// IsNumeric checks if the type is numeric, that is, an int, float ot bnum.
+func (t Type) IsNumeric() bool {
+	return t.Tag == TypeInt || t.Tag == TypeFloat || t.Tag == TypeBNum
 }
 
-// IsNumericType checks if a given type is unbounded numeric.
-func IsUnboundedNumericType(typeTag TypeTag) bool {
-	return typeTag == TypeInt || typeTag == TypeFloat
+// IsUnboundedNumeric checks if the type is an unbounded numeric type, that is,
+// either an int or a float.
+func (t Type) IsUnboundedNumeric() bool {
+	return t.Tag == TypeInt || t.Tag == TypeFloat || t.Tag == TypeBNum
 }
