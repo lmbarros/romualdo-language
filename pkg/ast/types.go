@@ -71,5 +71,5 @@ func (t Type) IsNumeric() bool {
 // IsUnboundedNumeric checks if the type is an unbounded numeric type, that is,
 // either an int or a float.
 func (t Type) IsUnboundedNumeric() bool {
-	return t.Tag == TypeInt || t.Tag == TypeFloat || t.Tag == TypeBNum
+	return t.Tag == TypeInt || t.Tag == TypeFloat
 }

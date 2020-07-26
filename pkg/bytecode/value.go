@@ -23,6 +23,10 @@ const (
 	// they are repsented by a 64-bit IEEE 754 number, but I'd argue that if you
 	// depend on the exact representation, Romualdo is not the right tool for
 	// you.
+	//
+	// On the VM level, this is also used for Bounded Numbers. The compiler
+	// knows the difference between a float and a bnum, but for the VM they are
+	// all floats.
 	ValueFloat ValueKind = iota
 
 	// ValueInt identifies a signed integer value. In this implementation, they

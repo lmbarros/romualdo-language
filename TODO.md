@@ -10,7 +10,7 @@
 * ~~Implement static type checking for the `"abc" > 123` case.~~
 * ~~Implement static type checking for everything else.~~
 * ~~Add support for `int`s.~~
-* Add support for `bnum`s.
+* ~~Add support for `bnum`s.~~
 * Add support for type conversions. Something like this:
     * `int("124")`: `string` to `int`. Returns zero if invalid.
     * `int("124", -999)`: `string` to `int`. Returns -999 if invalid.

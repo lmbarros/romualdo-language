@@ -141,6 +141,15 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				vm.push(bytecode.NewValueFloat(a + b))
 			}
 
+		case bytecode.OpAddBNum:
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			a = boundedInverseTransform(a)
+			b = boundedInverseTransform(b)
+			vm.push(bytecode.NewValueFloat(boundedTransform(a + b)))
+
 		case bytecode.OpSubtract:
 			if vm.peek(0).IsInt() && vm.peek(1).IsInt() {
 				a, b, ok := vm.popTwoIntOperands()
@@ -155,6 +164,15 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				}
 				vm.push(bytecode.NewValueFloat(a - b))
 			}
+
+		case bytecode.OpSubtractBNum:
+			a, b, ok := vm.popTwoFloatOperands()
+			if !ok {
+				return false
+			}
+			a = boundedInverseTransform(a)
+			b = boundedInverseTransform(b)
+			vm.push(bytecode.NewValueFloat(boundedTransform(a - b)))
 
 		case bytecode.OpMultiply:
 			if vm.peek(0).IsInt() && vm.peek(1).IsInt() {
@@ -276,6 +294,19 @@ func (vm *VM) popTwoIntOperands() (a int64, b int64, ok bool) {
 	return
 }
 
+// popTwoFloatOperands pops and returns two values from the stack, assumed to be
+// floating point numbers, to be used as operands of a binary operator.
+func (vm *VM) popTwoFloatOperands() (a float64, b float64, ok bool) {
+	if !vm.peek(0).IsFloat() || !vm.peek(1).IsFloat() {
+		vm.runtimeError("Operands must be floating point numbers.")
+		return
+	}
+	b = vm.pop().AsFloat()
+	a = vm.pop().AsFloat()
+	ok = true
+	return
+}
+
 // popTwoUnboundedNumberOperands pops and returns two values from the stack,
 // assumed to be integers ot floats, to be used as operands of a binary
 // operator.
@@ -320,4 +351,22 @@ func (vm *VM) popTwoStringOperands() (a string, b string, ok bool) {
 	a = vm.pop().AsString()
 	ok = true
 	return
+}
+
+// boundedTransform transforms an unbounded number to a bounded one. See "Chris
+// Crawford on Interactive Storytelling, 2nd Ed." page 184.
+func boundedTransform(unboundedNumber float64) float64 {
+	if unboundedNumber > 0 {
+		return 1 - (1 / (1 + unboundedNumber))
+	}
+	return (1 / (1 - unboundedNumber)) - 1
+}
+
+// boundedInverseTransform transforms a bounded number to an unbounded one. See
+// "Chris Crawford on Interactive Storytelling, 2nd Ed." page 184.
+func boundedInverseTransform(boundedNumber float64) float64 {
+	if boundedNumber > 0 {
+		return (1 / (1 - boundedNumber)) - 1
+	}
+	return 1 - (1 / (1 + boundedNumber))
 }

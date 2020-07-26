@@ -42,6 +42,13 @@ Instructions are listed in alphabetical order.
 **Pops:** Two unbounded numeric values, B and A.  
 **Pushes:** One value, the result of computing *A* + *B*.
 
+### `ADD_BNUM`
+
+**Purpose:** Adds two bounded numbers.  
+**Immediate Operands:** None.  
+**Pops:** Two bounded numbers, B and A.  
+**Pushes:** One value, the result of computing the bounded sum of *A* and *B*.
+
 ### `CONSTANT`
 
 **Purpose:** Loads a constant with index in the [0, 255] interval.  
@@ -125,10 +132,13 @@ The result is always a float, even if the result is a whole number.
 
 ### `NEGATE`
 
-**Purpose:** Performs arithmetic negation on unbounded numbers.  
+**Purpose:** Performs arithmetic negation on numeric values.  
 **Immediate Operands:** None.  
-**Pops:** One unbounded numeric value, *A*.  
-**Pushes:** One unbounded numeric value, -*A*.
+**Pops:** One numeric value, *A*.  
+**Pushes:** One numeric value, -*A*.
+
+Note that, unlike other arithmetic instructions, this one is shared between
+bounded and unbounded numbers.
 
 ### `NOP`
 
@@ -175,6 +185,14 @@ TODO
 **Immediate Operands:** None.  
 **Pops:** Two unbounded numeric values, B and A.  
 **Pushes:** One value, the result of computing *A* - *B*.
+
+### `SUBTRACT_BNUM`
+
+**Purpose:** Subtracts two bounded numbers.  
+**Immediate Operands:** None.  
+**Pops:** Two bounded numbers, B and A.  
+**Pushes:** One value, the result of computing the bounded subtraction *A* -
+*B*.
 
 ### `TRUE`
 

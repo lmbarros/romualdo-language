@@ -115,9 +115,19 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		case "<=":
 			cg.emitBytes(bytecode.OpLessEqual)
 		case "+":
-			cg.emitBytes(bytecode.OpAdd)
+			// If the type checker did its job, we can look only to the LHS here
+			if n.LHS.Type().Tag == ast.TypeBNum {
+				cg.emitBytes(bytecode.OpAddBNum)
+			} else {
+				cg.emitBytes(bytecode.OpAdd)
+			}
 		case "-":
-			cg.emitBytes(bytecode.OpSubtract)
+			// If the type checker did its job, we can look only to the LHS here
+			if n.LHS.Type().Tag == ast.TypeBNum {
+				cg.emitBytes(bytecode.OpSubtractBNum)
+			} else {
+				cg.emitBytes(bytecode.OpSubtract)
+			}
 		case "*":
 			cg.emitBytes(bytecode.OpMultiply)
 		case "/":

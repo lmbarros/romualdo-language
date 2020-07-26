@@ -75,18 +75,39 @@ func (tc *typeChecker) checkBinary(node *ast.Binary) {
 			node.Operator, node.LHS.Type(), node.RHS.Type())
 
 	case "+":
-		if !node.LHS.Type().IsUnboundedNumeric() && node.LHS.Type().Tag != ast.TypeString {
-			tc.error("Operator %v expects either strings or unbounded numeric operands; got a %v on the left-hand side",
-				node.Operator, node.LHS.Type())
+		// It is OK to add two bounded numbers
+		if node.LHS.Type().Tag == ast.TypeBNum && node.RHS.Type().Tag == ast.TypeBNum {
+			return
 		}
-		if !node.RHS.Type().IsUnboundedNumeric() && node.RHS.Type().Tag != ast.TypeString {
-			tc.error("Operator %v expects either strings or unbounded numeric operands; got a %v on the right-hand side",
-				node.Operator, node.RHS.Type())
+
+		// It is OK to add two unbounded numbers
+		if node.LHS.Type().IsUnboundedNumeric() && node.RHS.Type().IsUnboundedNumeric() {
+			return
 		}
-		if node.LHS.Type().Tag != node.RHS.Type().Tag && (!node.LHS.Type().IsUnboundedNumeric() || !node.RHS.Type().IsUnboundedNumeric()) {
-			tc.error("Operator %v expects operands of same type or both be unbounded numeric values; got a %v and a %v",
-				node.Operator, node.LHS.Type(), node.RHS.Type())
+
+		// It is OK to add (ahem, concatenate) two strings
+		if node.LHS.Type().Tag == ast.TypeString && node.RHS.Type().Tag == ast.TypeString {
+			return
 		}
+
+		// Nothing else can be added
+		tc.error("Operator %v cannot work with values of type %v and %v",
+			node.Operator, node.LHS.Type(), node.LHS.Type())
+
+	case "-":
+		// It is OK to subtract two bounded numbers
+		if node.LHS.Type().Tag == ast.TypeBNum && node.RHS.Type().Tag == ast.TypeBNum {
+			return
+		}
+
+		// It is OK to subtract two unbounded numbers
+		if node.LHS.Type().IsUnboundedNumeric() && node.RHS.Type().IsUnboundedNumeric() {
+			return
+		}
+
+		// Nothing else can be subtracted
+		tc.error("Operator %v cannot work with values of type %v and %v",
+			node.Operator, node.LHS.Type(), node.LHS.Type())
 
 	default:
 		if !node.LHS.Type().IsUnboundedNumeric() {

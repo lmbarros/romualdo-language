@@ -26,7 +26,9 @@ const (
 	OpLess
 	OpLessEqual
 	OpAdd
+	OpAddBNum
 	OpSubtract
+	OpSubtractBNum
 	OpMultiply
 	OpDivide
 	OpPower
@@ -152,8 +154,14 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 	case OpAdd:
 		return c.disassembleSimpleInstruction(out, "ADD", offset)
 
+	case OpAddBNum:
+		return c.disassembleSimpleInstruction(out, "ADD_BNUM", offset)
+
 	case OpSubtract:
 		return c.disassembleSimpleInstruction(out, "SUBTRACT", offset)
+
+	case OpSubtractBNum:
+		return c.disassembleSimpleInstruction(out, "SUBTRACT_BNUM", offset)
 
 	case OpMultiply:
 		return c.disassembleSimpleInstruction(out, "MULTIPLY", offset)
