@@ -47,7 +47,7 @@ Instructions are listed in alphabetical order.
 **Purpose:** Adds two bounded numbers.  
 **Immediate Operands:** None.  
 **Pops:** Two bounded numbers, B and A.  
-**Pushes:** One value, the result of computing the bounded sum of *A* and *B*.
+**Pushes:** One value, the result of computing the bounded sum *A* + *B*.
 
 ### `CONSTANT`
 

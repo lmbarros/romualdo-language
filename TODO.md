@@ -1,34 +1,15 @@
 # TODO
 
-## Strategy for AST implementation
-
-* ~~Make the `compileFn` return an AST node (but otherwise keep the same
-  behavior).~~
-* ~~Implement an AST printer visitor, to test the AST infrastructure.~~
-* ~~Reimplement code generation as an AST visitor that generates an
-  `Executable`.~~
-* ~~Implement static type checking for the `"abc" > 123` case.~~
-* ~~Implement static type checking for everything else.~~
-* ~~Add support for `int`s.~~
-* ~~Add support for `bnum`s.~~
-* Add support for type conversions. Something like this:
-    * `int("124")`: `string` to `int`. Returns zero if invalid.
-    * `int("124", -999)`: `string` to `int`. Returns -999 if invalid.
-* Add support for the blend operator for `bnum`s.
-
 ## Big things
 
-* Implement static typing.
-    * Integers x floats could be a good initial case.
-    * But then, I have strings in already.
-    * I guess the way to go here is:
-        * Produce an AST
-        * Each AST node has a type
-        * When generating code, look at the types on the AST to check for type
-          errors and to know what type-specific opcodes to use.
+* Nothing!
 
 ## Not so big, but not small either
 
+* Add support for the blend operator for `bnum`s.
+* Add support for type conversions. Something like this:
+    * `int("124")`: `string` to `int`. Returns zero if invalid.
+    * `int("124", -999)`: `string` to `int`. Returns -999 if invalid.
 * Implement serialization and deserialization of `CompiledStoryworld`.
 * Testing
     * Add some kind of end-to-end testing: if we run this Storyworld with this
