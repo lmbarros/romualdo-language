@@ -138,6 +138,9 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 			cg.ice("unknown binary operator: %v", n.Operator)
 		}
 
+	case *ast.Blend:
+		cg.emitBytes(bytecode.OpBlend)
+
 	default:
 		cg.ice("unknown node type: %T", n)
 	}

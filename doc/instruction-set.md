@@ -49,6 +49,13 @@ Instructions are listed in alphabetical order.
 **Pops:** Two bounded numbers, B and A.  
 **Pushes:** One value, the result of computing the bounded sum *A* + *B*.
 
+### `BLEND`
+
+**Purpose:** Performs the blending operation on three bounded numbers.  
+**Immediate Operands:** None.  
+**Pops:** Three bounded numbers, C, B and A.  
+**Pushes:** One value, the result of blending *A* and *B* with the weight *C*.
+
 ### `CONSTANT`
 
 **Purpose:** Loads a constant with index in the [0, 255] interval.  

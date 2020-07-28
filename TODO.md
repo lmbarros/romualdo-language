@@ -2,11 +2,15 @@
 
 ## Big things
 
-* Nothing!
+* Given some thought to the blend operator syntax. I am currently using `a~b~c`
+  to blends from `a` to `b` weighted by `c`, but this doesn't look good for
+  something like `-0.4b~0.3b~-0.15b`. It would require parentheses for blend
+  within blend.
+    * Must also think about its precedence. I just used anything that didn't
+      felt too wrong.
 
 ## Not so big, but not small either
 
-* Add support for the blend operator for `bnum`s.
 * Add support for type conversions. Something like this:
     * `int("124")`: `string` to `int`. Returns zero if invalid.
     * `int("124", -999)`: `string` to `int`. Returns -999 if invalid.

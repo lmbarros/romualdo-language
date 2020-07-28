@@ -34,6 +34,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkBinary(n)
 	case *ast.Unary:
 		tc.checkTypeUnary(n)
+	case *ast.Blend:
+		tc.checkBlend(n)
 	}
 
 }
@@ -135,6 +137,23 @@ func (tc *typeChecker) checkTypeUnary(node *ast.Unary) {
 			tc.error("Operator %v expects a float operand; got a %v",
 				node.Operator, node.Operand.Type())
 		}
+	}
+}
+
+// checkBlend checks for typing errors in a blend operator.
+func (tc *typeChecker) checkBlend(node *ast.Blend) {
+	if node.X.Type().Tag != ast.TypeBNum {
+		tc.error("The blend Operator expects bnum operands; got a %v as the first one",
+			node.X.Type())
+	}
+
+	if node.Y.Type().Tag != ast.TypeBNum {
+		tc.error("The blend Operator expects bnum operands; got a %v as the second one",
+			node.Y.Type())
+	}
+	if node.Weight.Type().Tag != ast.TypeBNum {
+		tc.error("The blend Operator expects bnum operands; got a %v as the third one",
+			node.Weight.Type())
 	}
 }
 

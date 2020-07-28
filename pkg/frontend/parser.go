@@ -27,6 +27,7 @@ const (
 	precComparison                   // < > <= >=
 	precTerm                         // + -
 	precFactor                       // * /
+	precBlend                        // ~
 	PrecUnary                        // not -
 	precPower                        // ^
 	precCall                         // . ()
@@ -245,6 +246,29 @@ func (p *parser) binary(lhs ast.Node) ast.Node {
 	}
 }
 
+// blend parses a blend operator expression. The first operand (parameter x)
+// and the first tilde token are expected to have been just consumed.
+func (p *parser) blend(x ast.Node) ast.Node {
+	// Remember the operator
+	operatorKind := p.previousToken.kind // always a ast.tokenKindTilde
+	operatorLine := p.previousToken.line
+	rule := rules[operatorKind]
+
+	// Parse the second operand (y), the second tilde, and the third operand (weight)
+	y := p.parsePrecedence(rule.precedence + 1)
+	p.consume(tokenKindTilde, "Expect '~' after expression.")
+	weight := p.parsePrecedence(rule.precedence + 1)
+
+	return &ast.Blend{
+		BaseNode: ast.BaseNode{
+			LineNumber: operatorLine,
+		},
+		X:      x,
+		Y:      y,
+		Weight: weight,
+	}
+}
+
 // boolLiteral parses a literal Boolean value. The corresponding keyword is
 // expected to have been just consumed.
 func (p *parser) boolLiteral() ast.Node {
@@ -406,6 +430,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindSuper] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindSwitch] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindThen] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindTilde] = /*         */ parseRule{nil /*                        */, (*parser).blend /*         */, precBlend}
 	rules[tokenKindTrue] = /*          */ parseRule{(*parser).boolLiteral /*      */, nil /*                     */, precNone}
 	rules[tokenKindVars] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindVoid] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}

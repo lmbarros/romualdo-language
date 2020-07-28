@@ -34,6 +34,7 @@ const (
 	OpPower
 	OpNot
 	OpNegate
+	OpBlend
 	OpReturn
 )
 
@@ -177,6 +178,9 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 
 	case OpNegate:
 		return c.disassembleSimpleInstruction(out, "NEGATE", offset)
+
+	case OpBlend:
+		return c.disassembleSimpleInstruction(out, "BLEND", offset)
 
 	case OpReturn:
 		return c.disassembleSimpleInstruction(out, "RETURN", offset)

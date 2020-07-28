@@ -203,6 +203,15 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 			vm.push(bytecode.NewValueFloat(math.Pow(a, b)))
 
+		case bytecode.OpBlend:
+			x, y, weight, ok := vm.popThreeFloatOperands()
+			if !ok {
+				return false
+			}
+			uWeight := 1 - ((1 - weight) / 2)
+			result := y*uWeight + x*(1-uWeight)
+			vm.push(bytecode.NewValueFloat(result))
+
 		case bytecode.OpNot:
 			if !vm.peek(0).IsBool() {
 				vm.runtimeError("Operand must be a Boolean value.")
@@ -301,6 +310,20 @@ func (vm *VM) popTwoFloatOperands() (a float64, b float64, ok bool) {
 		vm.runtimeError("Operands must be floating point numbers.")
 		return
 	}
+	b = vm.pop().AsFloat()
+	a = vm.pop().AsFloat()
+	ok = true
+	return
+}
+
+// popThreeFloatOperands pops and returns three values from the stack, assumed
+// to be floating point numbers, to be used as operands of an operator.
+func (vm *VM) popThreeFloatOperands() (a, b, c float64, ok bool) {
+	if !vm.peek(0).IsFloat() || !vm.peek(1).IsFloat() || !vm.peek(2).IsFloat() {
+		vm.runtimeError("Operands must be floating point numbers.")
+		return
+	}
+	c = vm.pop().AsFloat()
 	b = vm.pop().AsFloat()
 	a = vm.pop().AsFloat()
 	ok = true

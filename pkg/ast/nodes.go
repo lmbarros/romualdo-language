@@ -154,3 +154,29 @@ func (n *Binary) Walk(v Visitor) {
 	n.RHS.Walk(v)
 	v.Leave(n)
 }
+
+// Blend is an AST node representing a blend operator.
+type Blend struct {
+	BaseNode
+
+	// X is the first of the BNumbers to be blended.
+	X Node
+
+	// Y is the second of the BNumbers to be blended.
+	Y Node
+
+	// Weight is the BNumber to be used as the blend weighting factor.
+	Weight Node
+}
+
+func (n *Blend) Type() Type {
+	return Type{TypeBNum}
+}
+
+func (n *Blend) Walk(v Visitor) {
+	v.Enter(n)
+	n.X.Walk(v)
+	n.Y.Walk(v)
+	n.Weight.Walk(v)
+	v.Leave(n)
+}
