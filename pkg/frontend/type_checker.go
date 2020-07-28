@@ -33,7 +33,7 @@ func (tc *typeChecker) Enter(node ast.Node) {
 	case *ast.Binary:
 		tc.checkBinary(n)
 	case *ast.Unary:
-		tc.checkTypeUnary(n)
+		tc.checkUnary(n)
 	case *ast.Blend:
 		tc.checkBlend(n)
 	}
@@ -124,7 +124,7 @@ func (tc *typeChecker) checkBinary(node *ast.Binary) {
 }
 
 // checkUnary checks for typing errors in a unary operator.
-func (tc *typeChecker) checkTypeUnary(node *ast.Unary) {
+func (tc *typeChecker) checkUnary(node *ast.Unary) {
 	switch node.Operator {
 	case "not":
 		if node.Operand.Type().Tag != ast.TypeBool {

@@ -39,21 +39,21 @@ Instructions are listed in alphabetical order.
 
 **Purpose:** Adds two unbounded numeric values.  
 **Immediate Operands:** None.  
-**Pops:** Two unbounded numeric values, B and A.  
+**Pops:** Two unbounded numeric values, *B* and *A*.  
 **Pushes:** One value, the result of computing *A* + *B*.
 
 ### `ADD_BNUM`
 
 **Purpose:** Adds two bounded numbers.  
 **Immediate Operands:** None.  
-**Pops:** Two bounded numbers, B and A.  
+**Pops:** Two bounded numbers, *B* and *A*.  
 **Pushes:** One value, the result of computing the bounded sum *A* + *B*.
 
 ### `BLEND`
 
 **Purpose:** Performs the blending operation on three bounded numbers.  
 **Immediate Operands:** None.  
-**Pops:** Three bounded numbers, C, B and A.  
+**Pops:** Three bounded numbers, *C*, *B* and *A*.  
 **Pushes:** One value, the result of blending *A* and *B* with the weight *C*.
 
 ### `CONSTANT`
@@ -83,7 +83,7 @@ more efficient `CONSTANT` instruction.
 
 **Purpose:** Divides two unbounded numeric values.  
 **Immediate Operands:** None.  
-**Pops:** Two unbounded numeric values, B and A.  
+**Pops:** Two unbounded numeric values, *B* and *A*.  
 **Pushes:** One float value, the result of computing *A* / *B*.
 
 The result is always a float, even if the result is a whole number.
@@ -134,7 +134,7 @@ The result is always a float, even if the result is a whole number.
 
 **Purpose:** Multiplies two unbounded numeric values.  
 **Immediate Operands:** None.  
-**Pops:** Two unbounded numeric values, B and A.  
+**Pops:** Two unbounded numeric values, *B* and *A*.  
 **Pushes:** One value, the result of computing *A* × *B*.
 
 ### `NEGATE`
@@ -177,7 +177,7 @@ have of `NOP` in the x86 architecture. Whatever.
 **Purpose:** Raises an unbounded numeric value to the power of another unbounded
 numeric value.  
 **Immediate Operands:** None.  
-**Pops:** Two unbounded numeric values, B and A.  
+**Pops:** Two unbounded numeric values, *B* and *A*.  
 **Pushes:** One float value, the result of computing *A* to the *B*-th power.
 
 AKA exponentiation.
@@ -190,14 +190,14 @@ TODO
 
 **Purpose:** Subtracts two unbounded numeric values.  
 **Immediate Operands:** None.  
-**Pops:** Two unbounded numeric values, B and A.  
+**Pops:** Two unbounded numeric values, *B* and *A*.  
 **Pushes:** One value, the result of computing *A* - *B*.
 
 ### `SUBTRACT_BNUM`
 
 **Purpose:** Subtracts two bounded numbers.  
 **Immediate Operands:** None.  
-**Pops:** Two bounded numbers, B and A.  
+**Pops:** Two bounded numbers, *B* and *A*.  
 **Pushes:** One value, the result of computing the bounded subtraction *A* -
 *B*.
 

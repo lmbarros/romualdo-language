@@ -292,7 +292,7 @@ func (vm *VM) runtimeError(format string, a ...interface{}) {
 
 // popTwoIntOperands pops and returns two values from the stack, assumed to be
 // integers, to be used as operands of a binary operator.
-func (vm *VM) popTwoIntOperands() (a int64, b int64, ok bool) {
+func (vm *VM) popTwoIntOperands() (a, b int64, ok bool) {
 	if !vm.peek(0).IsInt() || !vm.peek(1).IsInt() {
 		vm.runtimeError("Operands must be integer numbers.")
 		return
@@ -305,7 +305,7 @@ func (vm *VM) popTwoIntOperands() (a int64, b int64, ok bool) {
 
 // popTwoFloatOperands pops and returns two values from the stack, assumed to be
 // floating point numbers, to be used as operands of a binary operator.
-func (vm *VM) popTwoFloatOperands() (a float64, b float64, ok bool) {
+func (vm *VM) popTwoFloatOperands() (a, b float64, ok bool) {
 	if !vm.peek(0).IsFloat() || !vm.peek(1).IsFloat() {
 		vm.runtimeError("Operands must be floating point numbers.")
 		return
@@ -333,7 +333,7 @@ func (vm *VM) popThreeFloatOperands() (a, b, c float64, ok bool) {
 // popTwoUnboundedNumberOperands pops and returns two values from the stack,
 // assumed to be integers ot floats, to be used as operands of a binary
 // operator.
-func (vm *VM) popTwoUnboundedNumberOperands() (a float64, b float64, ok bool) {
+func (vm *VM) popTwoUnboundedNumberOperands() (a, b float64, ok bool) {
 	b, ok = vm.popUnboundedNumberOperand()
 	if !ok {
 		return
@@ -365,7 +365,7 @@ func (vm *VM) popUnboundedNumberOperand() (v float64, ok bool) {
 
 // popTwoStringOperands pops and returns two values from the stack, assumed to
 // be strings to be used as operands of a binary operator.
-func (vm *VM) popTwoStringOperands() (a string, b string, ok bool) {
+func (vm *VM) popTwoStringOperands() (a, b string, ok bool) {
 	if !vm.peek(0).IsString() || !vm.peek(1).IsString() {
 		vm.runtimeError("Operands must be strings.")
 		return
