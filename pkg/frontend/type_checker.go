@@ -94,7 +94,7 @@ func (tc *typeChecker) checkBinary(node *ast.Binary) {
 
 		// Nothing else can be added
 		tc.error("Operator %v cannot work with values of type %v and %v",
-			node.Operator, node.LHS.Type(), node.LHS.Type())
+			node.Operator, node.LHS.Type(), node.RHS.Type())
 
 	case "-":
 		// It is OK to subtract two bounded numbers
