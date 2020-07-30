@@ -49,7 +49,7 @@ func TestKindString(t *testing.T) { // nolint:funlen
 	assert.Equal(t, "tokenKindBNumLiteral", tokenKindBNumLiteral.String())
 	assert.Equal(t, "tokenKindAlias", tokenKindAlias.String())
 	assert.Equal(t, "tokenKindAnd", tokenKindAnd.String())
-	assert.Equal(t, "tokenKindBnum", tokenKindBnum.String())
+	assert.Equal(t, "tokenKindBNum", tokenKindBNum.String())
 	assert.Equal(t, "tokenKindBool", tokenKindBool.String())
 	assert.Equal(t, "tokenKindBreak", tokenKindBreak.String())
 	assert.Equal(t, "tokenKindCase", tokenKindCase.String())

@@ -193,7 +193,7 @@ meta		map
 		function<=0.55b
 		void> string`)
 	assert.Equal(t, []tokenKind{
-		tokenKindIntLiteral, tokenKindLess, tokenKindBnum,
+		tokenKindIntLiteral, tokenKindLess, tokenKindBNum,
 		tokenKindFunction, tokenKindLessEqual, tokenKindBNumLiteral,
 		tokenKindVoid, tokenKindGreater, tokenKindString, tokenKindEOF},
 		tokenKinds(tokens))

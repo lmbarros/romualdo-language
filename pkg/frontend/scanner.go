@@ -246,12 +246,10 @@ func (s *scanner) scanNumber() *token {
 
 		// A trailing "b" denotes a bnum.
 		if s.peek() == 'b' {
-			// Consume the "b"
-			s.advance()
+			s.advance() // Consume the "b"
 			return s.makeToken(tokenKindBNumLiteral)
-		} else {
-			return s.makeToken(tokenKindFloatLiteral)
 		}
+		return s.makeToken(tokenKindFloatLiteral)
 	}
 
 	return s.makeToken(tokenKindIntLiteral)
@@ -294,7 +292,7 @@ func (s *scanner) identifierKind() tokenKind { // nolint:funlen,gocognit,gocyclo
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'n':
-				return s.checkKeyword(2, "um", tokenKindBnum)
+				return s.checkKeyword(2, "um", tokenKindBNum)
 			case 'o':
 				return s.checkKeyword(2, "ol", tokenKindBool)
 			case 'r':

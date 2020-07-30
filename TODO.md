@@ -11,9 +11,6 @@
 
 ## Not so big, but not small either
 
-* Add support for type conversions. Something like this:
-    * `int("124")`: `string` to `int`. Returns zero if invalid.
-    * `int("124", -999)`: `string` to `int`. Returns -999 if invalid.
 * Implement serialization and deserialization of `CompiledStoryworld`.
 * Testing
     * Add some kind of end-to-end testing: if we run this Storyworld with this
@@ -25,9 +22,13 @@
   this is `compiler.go`, function `stringLiteral()`.
 * Implement smarter storage of line numbers in the Chunk. Something more
   efficient than storing one line number per instruction.
+* On the VM, I currently use floats to represent bnums. Works nicely, except
+  when converting a bnum to a string, in which case I'd like to have something
+  like "0.1b" instead of just "0.1".
 
 ## Smallish improvements
 
+* Should accept bnums for comparison operators
 * Move the common visitor stuff (like keeping the current node) to some reusable
   `struct`.
 * Implement a decent compiler UI

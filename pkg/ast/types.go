@@ -13,6 +13,9 @@ import "fmt"
 type TypeTag int
 
 const (
+	// TypeInvalid is used to represend an invalid type.
+	TypeInvalid = -1
+
 	// TypeVoid identifies a void type (or rather nontype).
 	TypeVoid TypeTag = iota
 

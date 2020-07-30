@@ -180,3 +180,43 @@ func (n *Blend) Walk(v Visitor) {
 	n.Weight.Walk(v)
 	v.Leave(n)
 }
+
+// TypeConversion is an AST node representing a type conversion expression.
+type TypeConversion struct {
+	BaseNode
+
+	// Operator contains the lexeme used as the conversion operator.
+	Operator string
+
+	// Value is the value to be converted.
+	Value Node
+
+	// Default is the default value to return if the conversion fails. This
+	// can't be nil, the parser must provide one even if the code itself
+	// doesn't.
+	Default Node
+}
+
+func (n *TypeConversion) Type() Type {
+	switch n.Operator {
+	case "int":
+		return Type{TypeInt}
+	case "float":
+		return Type{TypeFloat}
+	case "bnum":
+		return Type{TypeBNum}
+	case "string":
+		return Type{TypeString}
+	default:
+		return Type{TypeInvalid}
+	}
+}
+
+func (n *TypeConversion) Walk(v Visitor) {
+	v.Enter(n)
+	n.Value.Walk(v)
+	if n.Operator != "string" {
+		n.Default.Walk(v)
+	}
+	v.Leave(n)
+}

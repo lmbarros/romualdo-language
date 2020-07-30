@@ -141,6 +141,20 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	case *ast.Blend:
 		cg.emitBytes(bytecode.OpBlend)
 
+	case *ast.TypeConversion:
+		switch n.Operator {
+		case "int":
+			cg.emitBytes(bytecode.OpToInt)
+		case "float":
+			cg.emitBytes(bytecode.OpToFloat)
+		case "bnum":
+			cg.emitBytes(bytecode.OpToBNum)
+		case "string":
+			cg.emitBytes(bytecode.OpToString)
+		default:
+			cg.ice("unknown type conversion operator: %v", n.Operator)
+		}
+
 	default:
 		cg.ice("unknown node type: %T", n)
 	}

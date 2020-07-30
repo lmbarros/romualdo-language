@@ -49,7 +49,7 @@ const (
 	// Keywords.
 	tokenKindAlias    // alias
 	tokenKindAnd      // and
-	tokenKindBnum     // bnum
+	tokenKindBNum     // bnum
 	tokenKindBool     // bool
 	tokenKindBreak    // break
 	tokenKindCase     // case
@@ -161,8 +161,8 @@ func (kind tokenKind) String() string { // nolint:funlen,gocyclo
 		return "tokenKindAlias"
 	case tokenKindAnd:
 		return "tokenKindAnd"
-	case tokenKindBnum:
-		return "tokenKindBnum"
+	case tokenKindBNum:
+		return "tokenKindBNum"
 	case tokenKindBool:
 		return "tokenKindBool"
 	case tokenKindBreak:

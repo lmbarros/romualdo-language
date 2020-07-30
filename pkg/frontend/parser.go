@@ -212,7 +212,8 @@ func (p *parser) unary() ast.Node {
 			BaseNode: ast.BaseNode{
 				LineNumber: operatorLine,
 			},
-			Operator: operatorLexeme, Operand: operand,
+			Operator: operatorLexeme,
+			Operand:  operand,
 		}
 	default:
 		panic(fmt.Sprintf("Unexpected operator kind on unary expression: %v", operatorKind))
@@ -289,6 +290,57 @@ func (p *parser) boolLiteral() ast.Node {
 		}
 	default:
 		panic(fmt.Sprintf("Unexpected token type on boolLiteral: %v", p.previousToken.kind))
+	}
+}
+
+// typeConversion parses a type conversion expression. The corresponding keyword
+// is expected to have been just consumed.
+func (p *parser) typeConversion() ast.Node {
+	conversionLexeme := p.previousToken.lexeme
+
+	// Consume the open paren and parse the expression to be converted
+	p.consume(tokenKindLeftParen, "Expect '(' after conversion operator.")
+	v := p.parsePrecedence(precAssignment)
+
+	var d ast.Node
+	bn := ast.BaseNode{
+		LineNumber: p.previousToken.line,
+	}
+
+	// If we have a comma, consume it and parse the expression with the default
+	// value; otherwise, use a, er, default default value.
+	switch {
+	// Check for string first, as it can't have a default (but the parser is
+	// supposed to always generate a non-nil default, so we use an empty
+	// string).
+	case conversionLexeme == "string":
+		d = &ast.StringLiteral{BaseNode: bn, Value: "xxxx"}
+
+	// If not string, we may have an explicit default value
+	case p.currentToken.kind == tokenKindComma:
+		p.consume(tokenKindComma, "Expect ',' in conversion expresion.")
+		d = p.parsePrecedence(precAssignment)
+
+	// If no default is provided, use default default
+	case conversionLexeme == "int":
+		d = &ast.IntLiteral{BaseNode: bn, Value: 0}
+	case conversionLexeme == "float":
+		d = &ast.FloatLiteral{BaseNode: bn, Value: 0.0}
+	case conversionLexeme == "bnum":
+		d = &ast.BNumLiteral{BaseNode: bn, Value: 0.0}
+	}
+
+	// Consume the closing paren
+	p.consume(tokenKindRightParen, "Expect ')' after conversion expresion.")
+
+	// Voilà, return the node
+	return &ast.TypeConversion{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+		Operator: conversionLexeme,
+		Value:    v,
+		Default:  d,
 	}
 }
 
@@ -393,7 +445,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindFloatLiteral] = /*  */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindAlias] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindAnd] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindBnum] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindBNum] = /*          */ parseRule{(*parser).typeConversion /*   */, nil /*                     */, precNone}
 	rules[tokenKindBNumLiteral] = /*   */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindBool] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindBreak] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
@@ -406,14 +458,14 @@ func initRules() { // nolint:funlen
 	rules[tokenKindEnd] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindEnum] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindFalse] = /*         */ parseRule{(*parser).boolLiteral /*      */, nil /*                     */, precNone}
-	rules[tokenKindFloat] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindFloat] = /*         */ parseRule{(*parser).typeConversion /*   */, nil /*                     */, precNone}
 	rules[tokenKindFor] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindFunction] = /*      */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindGosub] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindGoto] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindIf] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindIn] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindInt] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindInt] = /*           */ parseRule{(*parser).typeConversion /*   */, nil /*                     */, precNone}
 	rules[tokenKindIntLiteral] = /*    */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindListen] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindMap] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
@@ -425,7 +477,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindPrint] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindReturn] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindSay] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindString] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindString] = /*        */ parseRule{(*parser).typeConversion /*   */, nil /*                     */, precNone}
 	rules[tokenKindStruct] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindSuper] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindSwitch] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}

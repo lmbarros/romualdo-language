@@ -201,6 +201,51 @@ TODO
 **Pushes:** One value, the result of computing the bounded subtraction *A* -
 *B*.
 
+### `TO_INT`
+
+**Purpose:** Converts a value to an integer.  
+**Immediate Operands:** None.  
+**Pops:** Two values, *B* (the int to return if the conversion fails) and *A*
+(the value to convert to an int).  
+**Pushes:** One integer value, which is either *A* converted to an int or *B*
+(if *A* cannot be converted to an int).
+
+TODO: Define semantics. For example, what is `int(0.1b)`? Or `int(10.9)`?
+
+### `TO_FLOAT`
+
+**Purpose:** Converts a value to a floating-point number.  
+**Immediate Operands:** None.  
+**Pops:** Two values, *B* (the float to return if the conversion fails) and *A*
+(the value to convert to a float).  
+**Pushes:** One float value, which is either *A* converted to a float or *B*
+(if *A* cannot be converted to a float).
+
+TODO: Define semantics. For example, what is `int(0.1b)`?
+
+### `TO_BNUM`
+
+**Purpose:** Converts a value to a bounded number.  
+**Immediate Operands:** None.  
+**Pops:** Two values, *B* (the float to return if the conversion fails) and *A*
+(the value to convert to a bnum).  
+**Pushes:** One float value, which is either *A* converted to a bnum or *B*
+(if *A* cannot be converted to a float within the bnum range).
+
+Note that, in the VM, bnums are represented as floats. This instruction differs
+from `TO_FLOAT` in that the conversion will fail (and thus *B* will be returned)
+if the numeric conversion to float works but the result is outside of the bnum
+valid range (-1, 1).
+
+TODO: Define semantics.
+
+### `TO_STRING`
+
+**Purpose:** Converts a value to a string.  
+**Immediate Operands:** None.  
+**Pops:** One value, *A*, the value to convert to a string.  
+**Pushes:** One value: the string representation of *A*.
+
 ### `TRUE`
 
 **Purpose:** Loads a `true` value.  

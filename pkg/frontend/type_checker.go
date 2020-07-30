@@ -36,6 +36,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkUnary(n)
 	case *ast.Blend:
 		tc.checkBlend(n)
+	case *ast.TypeConversion:
+		tc.checkTypeConversion(n)
 	}
 
 }
@@ -154,6 +156,45 @@ func (tc *typeChecker) checkBlend(node *ast.Blend) {
 	if node.Weight.Type().Tag != ast.TypeBNum {
 		tc.error("The blend Operator expects bnum operands; got a %v as the third one",
 			node.Weight.Type())
+	}
+}
+
+// checkTypeConversion checks for typing errors in a type conversion operator.
+func (tc *typeChecker) checkTypeConversion(node *ast.TypeConversion) {
+	switch node.Operator {
+	case "int":
+		if node.Value.Type().Tag == ast.TypeBNum {
+			tc.error("Cannot convert a bnum to an int")
+		}
+
+		if node.Default.Type().Tag != ast.TypeInt {
+			tc.error("The default value for a conversion to int must be an int; got a %v",
+				node.Default.Type())
+		}
+	case "float":
+		if node.Default.Type().Tag != ast.TypeFloat {
+			tc.error("The default value for a conversion to float must be a float; got a %v",
+				node.Default.Type())
+		}
+	case "bnum":
+		if node.Value.Type().Tag == ast.TypeBool {
+			tc.error("Cannot convert a bool to a bnum")
+		}
+
+		if node.Value.Type().Tag == ast.TypeInt {
+			tc.error("Cannot convert an int to a bnum")
+		}
+
+		if node.Default.Type().Tag != ast.TypeBNum {
+			tc.error("The default value for a conversion to bnum must be a bnum; got a %v",
+				node.Default.Type())
+		}
+
+	case "string":
+		if node.Default.Type().Tag != ast.TypeString {
+			tc.error("The default value for a conversion to string must be a string; got a %v",
+				node.Default.Type())
+		}
 	}
 }
 

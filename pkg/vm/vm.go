@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strconv"
 
 	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
 )
@@ -235,6 +236,107 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 		case bytecode.OpReturn:
 			fmt.Println(vm.pop())
 			return true
+
+		case bytecode.OpToInt:
+			if !vm.peek(0).IsInt() {
+				vm.runtimeError("Default value for conversion to int must be an integer number.")
+				return false
+			}
+			d := vm.pop().AsInt()
+			v := vm.pop()
+
+			switch {
+			case v.IsInt():
+				vm.push(v)
+			case v.IsFloat():
+				vm.push(bytecode.NewValueInt(int64(v.AsFloat())))
+			case v.IsBool():
+				r := int64(0)
+				if v.AsBool() {
+					r = 1
+				}
+				vm.push(bytecode.NewValueInt(r))
+			case v.IsString():
+				r, err := strconv.ParseInt(v.AsString(), 10, 64)
+				if err != nil {
+					r = d
+				}
+				vm.push(bytecode.NewValueInt(r))
+			default:
+				panic(fmt.Sprintf("Unexpected type on conversion to int: %T", v))
+			}
+
+		case bytecode.OpToFloat:
+			if !vm.peek(0).IsFloat() {
+				vm.runtimeError("Default value for conversion to float must be a floating point number.")
+				return false
+			}
+			d := vm.pop().AsFloat()
+			v := vm.pop()
+
+			switch {
+			case v.IsFloat():
+				vm.push(v)
+			case v.IsInt():
+				vm.push(bytecode.NewValueFloat(float64(v.AsInt())))
+			case v.IsBool():
+				r := float64(0.0)
+				if v.AsBool() {
+					r = 1.0
+				}
+				vm.push(bytecode.NewValueFloat(r))
+			case v.IsString():
+				r, err := strconv.ParseFloat(v.AsString(), 64)
+				if err != nil {
+					r = d
+				}
+				vm.push(bytecode.NewValueFloat(r))
+			default:
+				panic(fmt.Sprintf("Unexpected type on conversion to float: %T", v))
+			}
+
+		case bytecode.OpToBNum:
+			if !vm.peek(0).IsFloat() {
+				vm.runtimeError("Default value for conversion to bnum must be a floating point number.")
+				return false
+			}
+			d := vm.pop().AsFloat()
+			v := vm.pop()
+
+			switch {
+			case v.IsFloat():
+				r := v.AsFloat()
+				if r <= 0.0 || r >= 1.0 {
+					r = d
+				}
+				vm.push(bytecode.NewValueFloat(r))
+			case v.IsString():
+				r, err := strconv.ParseFloat(v.AsString(), 64)
+				if err != nil || r <= 0.0 || r >= 1.0 {
+					r = d
+				}
+				vm.push(bytecode.NewValueFloat(r))
+			default:
+				panic(fmt.Sprintf("Unexpected type on conversion to bnum: %T", v))
+			}
+
+		case bytecode.OpToString:
+			v := vm.pop()
+			switch {
+			case v.IsString():
+				vm.push(v)
+			case v.IsFloat():
+				r := strconv.FormatFloat(v.AsFloat(), 'f', -1, 64)
+				vm.push(bytecode.NewValueString(r))
+			case v.IsInt():
+				r := strconv.FormatInt(v.AsInt(), 10)
+				vm.push(bytecode.NewValueString(r))
+			case v.IsBool():
+				r := strconv.FormatBool(v.AsBool())
+				vm.push(bytecode.NewValueString(r))
+			default:
+				panic(fmt.Sprintf("Unexpected type on conversion to float: %T", v))
+			}
 
 		default:
 			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))

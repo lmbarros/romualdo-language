@@ -36,6 +36,10 @@ const (
 	OpNegate
 	OpBlend
 	OpReturn
+	OpToInt
+	OpToFloat
+	OpToBNum
+	OpToString
 )
 
 const (
@@ -184,6 +188,18 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 
 	case OpReturn:
 		return c.disassembleSimpleInstruction(out, "RETURN", offset)
+
+	case OpToInt:
+		return c.disassembleSimpleInstruction(out, "TO_INT", offset)
+
+	case OpToFloat:
+		return c.disassembleSimpleInstruction(out, "TO_FLOAT", offset)
+
+	case OpToBNum:
+		return c.disassembleSimpleInstruction(out, "TO_BNUM", offset)
+
+	case OpToString:
+		return c.disassembleSimpleInstruction(out, "TO_STRING", offset)
 
 	default:
 		fmt.Fprintf(out, "Unknown opcode %d\n", instruction)
