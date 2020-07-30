@@ -1,5 +1,8 @@
 # TODO
 
+* BUG: `nodes.go`, `func (n *Binary) Type()`: Need to take the "new" types
+  (float, bnum) into account.
+
 ## Big things
 
 * Given some thought to the blend operator syntax. I am currently using `a~b~c`

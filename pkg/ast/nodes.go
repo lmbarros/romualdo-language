@@ -137,6 +137,7 @@ type Binary struct {
 	RHS Node
 }
 
+// TODO: Fixme! Take bnums and int/float operations into account!
 func (n *Binary) Type() Type {
 	switch n.Operator {
 	case "==", "!=", "<", "<=", ">", ">=":
