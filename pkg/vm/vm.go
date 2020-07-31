@@ -31,17 +31,36 @@ type VM struct {
 
 	// stack is the VM stack, used for storing values during interpretation.
 	stack []bytecode.Value
+
+	// strings is the store of interned strings used by the VM. All strings are
+	// added here.
+	strings *bytecode.StringInterner
 }
 
 // New returns a new Virtual Machine.
 func New() *VM {
-	return &VM{}
+	return &VM{
+		strings: bytecode.NewStringInterner(),
+	}
 }
 
 // Interpret interprets a given program, passed as the source code.
 func (vm *VM) Interpret(chunk *bytecode.Chunk) bool {
 	vm.chunk = chunk
+	vm.strings = chunk.Strings
 	return vm.run()
+}
+
+// NewInternedValueString creates a new Value initialized to the interned string
+// value v. Emphasis on "interned": if there is already some other string value
+// equal to v on this VM, we'll reuse that same memory in the returned value.
+//
+// TODO: Someday, when I have more stuff working, do some benchmarking. Remove
+// this call to intern() and see if the performance/memory different is
+// significant in typical usage.
+func (vm *VM) NewInternedValueString(v string) bytecode.Value {
+	s := vm.strings.Intern(v)
+	return bytecode.NewValueString(s)
 }
 
 // run runs the code in vm.chunk.
@@ -125,7 +144,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				if !ok {
 					return false
 				}
-				vm.push(bytecode.NewValueString(a + b))
+				vm.push(vm.NewInternedValueString(a + b))
 
 			case vm.peek(0).IsInt() && vm.peek(1).IsInt():
 				a, b, ok := vm.popTwoIntOperands()
@@ -327,13 +346,13 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				vm.push(v)
 			case v.IsFloat():
 				r := strconv.FormatFloat(v.AsFloat(), 'f', -1, 64)
-				vm.push(bytecode.NewValueString(r))
+				vm.push(vm.NewInternedValueString(r))
 			case v.IsInt():
 				r := strconv.FormatInt(v.AsInt(), 10)
-				vm.push(bytecode.NewValueString(r))
+				vm.push(vm.NewInternedValueString(r))
 			case v.IsBool():
 				r := strconv.FormatBool(v.AsBool())
-				vm.push(bytecode.NewValueString(r))
+				vm.push(vm.NewInternedValueString(r))
 			default:
 				panic(fmt.Sprintf("Unexpected type on conversion to float: %T", v))
 			}

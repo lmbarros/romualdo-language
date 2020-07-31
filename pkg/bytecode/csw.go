@@ -39,13 +39,15 @@ const CSWVersion byte = 0
 // - Binary data
 type CompiledStoryworld struct {
 	// Chunk is the Chunk of bytecode containing the compiled data.
-	Chunk Chunk
+	Chunk *Chunk
 }
 
 // ReadCompiledStoryworld deserializes a CompiledStoryworld, reading the binary
 // data from r.
 func ReadCompiledStoryworld(r io.Reader) (*CompiledStoryworld, error) {
-	// TODO: not implemented yet.
+	// TODO: not implemented yet. This should probably use a string interner
+	// passed as parameter to allow all strings to be interned (both constants
+	// and the ones created in run-time).
 	return nil, errors.New("not implemented yet")
 }
 

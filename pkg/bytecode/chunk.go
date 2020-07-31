@@ -65,6 +65,16 @@ type Chunk struct {
 	// The source code line that generated each instruction. We have one entry
 	// for each entry in Code. Very space-inefficient, but very simple.
 	Lines []int
+
+	// Strings contains all the strings used in this
+	Strings *StringInterner
+}
+
+// NewChunk creates and returns a new Chunk.
+func NewChunk() *Chunk {
+	return &Chunk{
+		Strings: NewStringInterner(),
+	}
 }
 
 // Write writes a byte to the chunk. line is the source code line number that
@@ -111,7 +121,7 @@ func (c *Chunk) Disassemble(name string) string {
 // DisassembleInstruction disassembles the instruction at a given offset and
 // returns the offset of the next instruction to disassemble. Output is written
 // to out.
-func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolint:gocyclo
+func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolint: gocyclo, funlen
 	fmt.Fprintf(out, "%04v ", offset)
 
 	if offset > 0 && c.Lines[offset] == c.Lines[offset-1] {

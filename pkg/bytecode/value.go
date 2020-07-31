@@ -69,6 +69,11 @@ func NewValueBool(v bool) Value {
 }
 
 // NewValueString creates a new Value initialized to the string value v.
+//
+// This shall not be called directly by most client code. Instead, use the
+// wrappers that go by the name of NewInternedValueString (as methods on objects
+// around the code base). These wrappers use interning to hopefully make the
+// string handling more efficient.
 func NewValueString(v string) Value {
 	return Value{
 		Value: v,

@@ -18,7 +18,7 @@ import (
 // GenerateCode generates the bytecode for a given AST.
 func GenerateCode(root ast.Node) (chunk *bytecode.Chunk, err error) {
 	cg := &codeGenerator{
-		chunk:     &bytecode.Chunk{},
+		chunk:     bytecode.NewChunk(),
 		nodeStack: make([]ast.Node, 0, 64),
 	}
 
@@ -86,7 +86,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		}
 
 	case *ast.StringLiteral:
-		cg.emitConstant(bytecode.NewValueString(n.Value))
+		cg.emitConstant(cg.newInternedValueString(n.Value))
 
 	case *ast.Unary:
 		switch n.Operator {
@@ -229,4 +229,12 @@ func (cg *codeGenerator) error(format string, a ...interface{}) {
 // ice reports an internal compiler error.
 func (cg *codeGenerator) ice(format string, a ...interface{}) {
 	cg.error(fmt.Sprintf("Internal compiler error: %v", fmt.Sprintf(format, a...)))
+}
+
+// newInternedValueString creates a new Value initialized to the interned string
+// value v. Emphasis on "interned": if there is already some other string value
+// equal to v on this VM, we'll reuse that same memory in the returned value.
+func (cg *codeGenerator) newInternedValueString(v string) bytecode.Value {
+	s := cg.currentChunk().Strings.Intern(v)
+	return bytecode.NewValueString(s)
 }
