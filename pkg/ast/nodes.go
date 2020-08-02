@@ -137,13 +137,19 @@ type Binary struct {
 	RHS Node
 }
 
-// TODO: Fixme! Take bnums and int/float operations into account!
-func (n *Binary) Type() Type {
+func (n *Binary) Type() Type { // nolint: gocognit
 	switch n.Operator {
 	case "==", "!=", "<", "<=", ">", ">=":
 		return Type{TypeBool}
-	case "+":
-		return n.LHS.Type()
+	case "+", "-", "*":
+		if n.LHS.Type().Tag == TypeString || n.LHS.Type().Tag == TypeBNum {
+			return n.LHS.Type()
+		}
+		if n.LHS.Type().Tag == TypeInt && n.RHS.Type().Tag == TypeInt {
+			return n.LHS.Type()
+		}
+		return Type{TypeFloat}
+
 	default:
 		return Type{TypeFloat}
 	}
