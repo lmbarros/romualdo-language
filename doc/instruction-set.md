@@ -182,6 +182,17 @@ numeric value.
 
 AKA exponentiation.
 
+### `PRINT`
+
+**Purpose:** Prints a value.  
+**Immediate Operands:** None.  
+**Pops:** One value, the one to be printed.  
+**Pushes:** Nothing.
+
+Printing exists primarily for debugging or demo purposes. VM implementations
+should try to provide a meaningful implementation, but it would not be a sin for
+an implementation to make this a no-op.
+
 ### `RETURN`
 
 TODO

@@ -40,6 +40,7 @@ const (
 	OpToFloat
 	OpToBNum
 	OpToString
+	OpPrint
 )
 
 const (
@@ -210,6 +211,9 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 
 	case OpToString:
 		return c.disassembleSimpleInstruction(out, "TO_STRING", offset)
+
+	case OpPrint:
+		return c.disassembleSimpleInstruction(out, "PRINT", offset)
 
 	default:
 		fmt.Fprintf(out, "Unknown opcode %d\n", instruction)

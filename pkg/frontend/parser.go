@@ -80,15 +80,21 @@ func newParser(source string) *parser {
 
 // parse parses source and returns the root of the resulting AST. Returns nil in
 // case of error.
-func (p *parser) parse() ast.Node {
+func (p *parser) parse() *ast.Storyworld {
+
+	sw := ast.Storyworld{}
+
 	p.advance()
-	node := p.expression()
-	p.consume(tokenKindEOF, "Expect end of expression.")
-	if p.hadError {
-		return nil
+
+	for !p.match(tokenKindEOF) {
+		node := p.declaration()
+		if p.hadError {
+			return nil
+		}
+		sw.Declarations = append(sw.Declarations, node)
 	}
 
-	return node
+	return &sw
 }
 
 // parsePrecedence parses and generates code for expressions with a precedence
@@ -118,6 +124,36 @@ func (p *parser) parsePrecedence(prec precedence) ast.Node {
 
 // rules is the table of parsing rules for our Pratt parser.
 var rules []parseRule
+
+// declaration parses a declaration.
+func (p *parser) declaration() ast.Node {
+	return p.statement()
+}
+
+// statement parses a statement.
+func (p *parser) statement() ast.Node {
+	if p.match(tokenKindDot) && p.match(tokenKindPrint) && p.match(tokenKindLeftParen) {
+		return p.printStatement()
+	}
+
+	return p.expression()
+}
+
+// printStatement parses a print statement. This is temporary and will
+// eventually be replaced by a general syntax for built-in function calls.
+func (p *parser) printStatement() ast.Node {
+	bif := &ast.BuiltInFunction{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+		Function: "print",
+		Args:     []ast.Node{p.expression()},
+	}
+
+	p.consume(tokenKindRightParen, "Expect ')' after expression.")
+
+	return bif
+}
 
 // expression parses an expression.
 func (p *parser) expression() ast.Node {
@@ -369,6 +405,21 @@ func (p *parser) consume(kind tokenKind, message string) {
 	}
 
 	p.errorAtCurrent(message)
+}
+
+// check checks if the current token is of a given kind.
+func (p *parser) check(kind tokenKind) bool {
+	return p.currentToken.kind == kind
+}
+
+// match consumes the current token if it is of a given type and returns true;
+// otherwise, it simply returns false without consuming any token.
+func (p *parser) match(kind tokenKind) bool {
+	if !p.check(kind) {
+		return false
+	}
+	p.advance()
+	return true
 }
 
 // errorAtCurrent reports an error at the current (c.currentToken) token.

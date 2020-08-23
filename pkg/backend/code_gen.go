@@ -68,6 +68,9 @@ func (cg *codeGenerator) Enter(node ast.Node) {
 
 func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	switch n := node.(type) {
+	case *ast.Storyworld:
+		break
+
 	case *ast.FloatLiteral:
 		cg.emitConstant(bytecode.NewValueFloat(n.Value))
 
@@ -154,6 +157,12 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		default:
 			cg.ice("unknown type conversion operator: %v", n.Operator)
 		}
+
+	case *ast.BuiltInFunction:
+		if n.Function != "print" {
+			cg.ice("only %q is supported, got %q", "print", n.Function)
+		}
+		cg.emitBytes(bytecode.OpPrint)
 
 	default:
 		cg.ice("unknown node type: %T", n)

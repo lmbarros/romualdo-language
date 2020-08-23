@@ -17,6 +17,27 @@ func (n *BaseNode) Line() int {
 	return n.LineNumber
 }
 
+// Storyworld is an AST node representing the whole storyworld. It is the root
+// of the AST.
+type Storyworld struct {
+	BaseNode
+
+	// Declarations stores all the declarations that make up the Storyworld.
+	Declarations []Node
+}
+
+func (n *Storyworld) Type() Type {
+	return Type{TypeVoid}
+}
+
+func (n *Storyworld) Walk(v Visitor) {
+	v.Enter(n)
+	for _, decl := range n.Declarations {
+		decl.Walk(v)
+	}
+	v.Leave(n)
+}
+
 // FloatLiteral is an AST node representing a floating point number literal.
 type FloatLiteral struct {
 	BaseNode
@@ -224,6 +245,34 @@ func (n *TypeConversion) Walk(v Visitor) {
 	n.Value.Walk(v)
 	if n.Operator != "string" {
 		n.Default.Walk(v)
+	}
+	v.Leave(n)
+}
+
+// BuiltInFunction is an AST node representing a Romualdo built-in function.
+type BuiltInFunction struct {
+	BaseNode
+
+	// Function contains the name of the built-in function used here.
+	Function string
+
+	// Args contains the arguments passed to the build-in function.
+	Args []Node
+}
+
+func (n *BuiltInFunction) Type() Type {
+	switch n.Function {
+	case "print":
+		return Type{TypeVoid}
+	default:
+		return Type{TypeInvalid}
+	}
+}
+
+func (n *BuiltInFunction) Walk(v Visitor) {
+	v.Enter(n)
+	for _, arg := range n.Args {
+		arg.Walk(v)
 	}
 	v.Leave(n)
 }

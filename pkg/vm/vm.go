@@ -253,7 +253,6 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpReturn:
-			fmt.Println(vm.pop())
 			return true
 
 		case bytecode.OpToInt:
@@ -356,6 +355,10 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			default:
 				panic(fmt.Sprintf("Unexpected type on conversion to float: %T", v))
 			}
+
+		case bytecode.OpPrint:
+			v := vm.pop()
+			fmt.Printf("%v", v)
 
 		default:
 			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))
