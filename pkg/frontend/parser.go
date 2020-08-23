@@ -127,7 +127,13 @@ var rules []parseRule
 
 // declaration parses a declaration.
 func (p *parser) declaration() ast.Node {
-	return p.statement()
+	n := p.statement()
+
+	if p.panicMode {
+		p.synchronize()
+	}
+
+	return n
 }
 
 // statement parses a statement.
@@ -153,6 +159,34 @@ func (p *parser) printStatement() ast.Node {
 	p.consume(tokenKindRightParen, "Expect ')' after expression.")
 
 	return bif
+}
+
+// synchronize skips tokens until we find something that looks like a statement
+// boundary. This is used to recover from panic mode.
+func (p *parser) synchronize() {
+	p.panicMode = false
+
+	// TODO: This is basically the same as in Lox. Must adapt to Romualdo
+	// more properly.
+	for p.currentToken.kind != tokenKindEOF {
+		switch p.currentToken.kind {
+		case tokenKindClass:
+		case tokenKindFunction:
+		case tokenKindVars:
+		case tokenKindPassage:
+		case tokenKindFor:
+		case tokenKindIf:
+		case tokenKindWhile:
+		case tokenKindPrint:
+		case tokenKindReturn:
+			return
+
+		default:
+			// Do nothing.
+		}
+
+		p.advance()
+	}
 }
 
 // expression parses an expression.
