@@ -138,22 +138,34 @@ func (p *parser) declaration() ast.Node {
 
 // statement parses a statement.
 func (p *parser) statement() ast.Node {
-	if p.match(tokenKindDot) && p.match(tokenKindPrint) && p.match(tokenKindLeftParen) {
-		return p.printStatement()
+	// For now at least, built-in functions are called with a leading dot, like
+	// this: .funcName(args).
+	if p.match(tokenKindDot) {
+		if p.match(tokenKindIdentifier) {
+			funcName := p.previousToken.lexeme
+			return p.builtInFunction(funcName)
+		}
+		p.errorAtCurrent("Expect built-in function name.")
 	}
 
 	return p.expression()
 }
 
-// printStatement parses a print statement. This is temporary and will
-// eventually be replaced by a general syntax for built-in function calls.
-func (p *parser) printStatement() ast.Node {
+// builtInFunction parses a built-in function named funcName. The current token
+// should be the opening parenthesis after the function name.
+func (p *parser) builtInFunction(funcName string) ast.Node {
+	if funcName != "print" {
+		p.errorAt(p.previousToken, "Unknown built-in function.")
+	}
+
+	p.consume(tokenKindLeftParen, "Expect '(' after function name.")
+
 	bif := &ast.BuiltInFunction{
 		BaseNode: ast.BaseNode{
 			LineNumber: p.previousToken.line,
 		},
-		Function: "print",
-		Args:     []ast.Node{p.expression()},
+		Function: funcName,
+		Args:     []ast.Node{p.expression()}, // For now, support only funcs with arity 1
 	}
 
 	p.consume(tokenKindRightParen, "Expect ')' after expression.")
@@ -177,7 +189,6 @@ func (p *parser) synchronize() {
 		case tokenKindFor:
 		case tokenKindIf:
 		case tokenKindWhile:
-		case tokenKindPrint:
 		case tokenKindReturn:
 			return
 
@@ -559,7 +570,6 @@ func initRules() { // nolint:funlen
 	rules[tokenKindNot] = /*           */ parseRule{(*parser).unary /*            */, nil /*                     */, precNone}
 	rules[tokenKindOr] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindPassage] = /*       */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindPrint] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindReturn] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindSay] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindString] = /*        */ parseRule{(*parser).typeConversion /*   */, nil /*                     */, precNone}

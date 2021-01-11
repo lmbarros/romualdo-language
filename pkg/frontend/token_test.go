@@ -75,7 +75,6 @@ func TestKindString(t *testing.T) { // nolint:funlen
 	assert.Equal(t, "tokenKindNot", tokenKindNot.String())
 	assert.Equal(t, "tokenKindOr", tokenKindOr.String())
 	assert.Equal(t, "tokenKindPassage", tokenKindPassage.String())
-	assert.Equal(t, "tokenKindPrint", tokenKindPrint.String())
 	assert.Equal(t, "tokenKindReturn", tokenKindReturn.String())
 	assert.Equal(t, "tokenKindSay", tokenKindSay.String())
 	assert.Equal(t, "tokenKindString", tokenKindString.String())

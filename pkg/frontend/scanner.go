@@ -380,14 +380,7 @@ func (s *scanner) identifierKind() tokenKind { // nolint:funlen,gocognit,gocyclo
 	case 'o':
 		return s.checkKeyword(1, "r", tokenKindOr)
 	case 'p':
-		if len(lexeme) > 1 {
-			switch s.source[s.start+1] {
-			case 'r':
-				return s.checkKeyword(2, "int", tokenKindPrint)
-			case 'a':
-				return s.checkKeyword(2, "ssage", tokenKindPassage)
-			}
-		}
+		return s.checkKeyword(1, "assage", tokenKindPassage)
 	case 'r':
 		return s.checkKeyword(1, "eturn", tokenKindReturn)
 	case 's':

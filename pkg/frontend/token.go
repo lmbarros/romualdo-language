@@ -76,7 +76,6 @@ const (
 	tokenKindNot      // not
 	tokenKindOr       // or
 	tokenKindPassage  // passage
-	tokenKindPrint    // print (temporary?!)
 	tokenKindReturn   // return
 	tokenKindSay      // say
 	tokenKindString   // string
@@ -217,8 +216,6 @@ func (kind tokenKind) String() string { // nolint:funlen,gocyclo
 		return "tokenKindString"
 	case tokenKindPassage:
 		return "tokenKindPassage"
-	case tokenKindPrint:
-		return "tokenKindPrint"
 	case tokenKindReturn:
 		return "tokenKindReturn"
 	case tokenKindSay:

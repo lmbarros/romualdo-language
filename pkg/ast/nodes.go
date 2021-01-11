@@ -256,7 +256,7 @@ type BuiltInFunction struct {
 	// Function contains the name of the built-in function used here.
 	Function string
 
-	// Args contains the arguments passed to the build-in function.
+	// Args contains the arguments passed to the built-in function.
 	Args []Node
 }
 
