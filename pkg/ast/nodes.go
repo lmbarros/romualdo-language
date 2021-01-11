@@ -132,10 +132,17 @@ type Unary struct {
 
 	// Operand is the expression on which the operator is applied.
 	Operand Node
+
+	// cachedType caches the type of this node. Used to memoize Type().
+	cachedType *Type
 }
 
 func (n *Unary) Type() Type {
-	return n.Operand.Type()
+	if n.cachedType == nil {
+		t := n.Operand.Type()
+		n.cachedType = &t
+	}
+	return *n.cachedType
 }
 
 func (n *Unary) Walk(v Visitor) {
@@ -156,24 +163,33 @@ type Binary struct {
 
 	// RHS is the expression on the right-hand side of the operator.
 	RHS Node
+
+	// cachedType caches the type of this node. Used to memoize Type().
+	cachedType *Type
 }
 
 func (n *Binary) Type() Type { // nolint: gocognit
-	switch n.Operator {
-	case "==", "!=", "<", "<=", ">", ">=":
-		return Type{TypeBool}
-	case "+", "-", "*":
-		if n.LHS.Type().Tag == TypeString || n.LHS.Type().Tag == TypeBNum {
-			return n.LHS.Type()
-		}
-		if n.LHS.Type().Tag == TypeInt && n.RHS.Type().Tag == TypeInt {
-			return n.LHS.Type()
-		}
-		return Type{TypeFloat}
 
-	default:
-		return Type{TypeFloat}
+	if n.cachedType == nil {
+		switch n.Operator {
+		case "==", "!=", "<", "<=", ">", ">=":
+			n.cachedType = &Type{TypeBool}
+		case "+", "-", "*":
+			if n.LHS.Type().Tag == TypeString || n.LHS.Type().Tag == TypeBNum {
+				t := n.LHS.Type()
+				n.cachedType = &t
+			} else if n.LHS.Type().Tag == TypeInt && n.RHS.Type().Tag == TypeInt {
+				t := n.LHS.Type()
+				n.cachedType = &t
+			} else {
+				n.cachedType = &Type{TypeFloat}
+			}
+		default:
+			n.cachedType = &Type{TypeFloat}
+		}
 	}
+
+	return *n.cachedType
 }
 
 func (n *Binary) Walk(v Visitor) {
