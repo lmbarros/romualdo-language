@@ -105,7 +105,7 @@ func (c *Chunk) SearchConstant(value Value) int {
 	return -1
 }
 
-// Disassemble disassembles the chunk amd resturns a string representation of
+// Disassemble disassembles the chunk and returns a string representation of
 // it. The chunk name (passed as name) is included in the disassembly.
 func (c *Chunk) Disassemble(name string) string {
 	var out strings.Builder
