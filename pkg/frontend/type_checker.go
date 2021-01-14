@@ -19,7 +19,7 @@ type typeChecker struct {
 	errors []string
 
 	// nodeStack is used to keep track of the nodes being processed. The current
-	// on is on the top.
+	// one is on the top.
 	nodeStack []ast.Node
 }
 
@@ -216,7 +216,7 @@ func (tc *typeChecker) error(format string, a ...interface{}) {
 }
 
 // currentLine returns the source code line corresponding to whatever we are
-// currently compiling.
+// currently analyzing.
 func (tc *typeChecker) currentLine() int {
 	if len(tc.nodeStack) == 0 {
 		return -1 // TODO: Hack for that forced RETURN we generate out of no real node.
