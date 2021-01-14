@@ -24,7 +24,7 @@ type semanticChecker struct {
 
 	// firstGlobalVars contains the first vars block found at global level. This
 	// is used to detect multiple of these blocks (which is forbidden).
-	firstGlobalVars *ast.Vars
+	firstGlobalVars *ast.VarsBlock
 
 	// globalVariables maps the global variable names already declared to the
 	// line where they were declared. Used to detect duplicates.
@@ -41,14 +41,14 @@ func (sc *semanticChecker) Enter(node ast.Node) {
 	case *ast.Storyworld:
 		sc.globalVariables = map[string]int{}
 
-	case *ast.Vars:
+	case *ast.VarsBlock:
 		// At the base of the stack we have the Storyworld itself, so a global
 		// vars block would be the second node on the stack.
 		if len(sc.nodeStack) == 2 {
 			sc.checkDuplicateGlobalVarsBlock(n)
 		}
 
-	case *ast.Var:
+	case *ast.VarDecl:
 		sc.checkVarInitializer(n)
 
 		// At the base of the stack we have the Storyworld itself, then we have
@@ -69,7 +69,7 @@ func (sc *semanticChecker) Leave(ast.Node) {
 
 // checkDuplicateGlobalVarsBlock checks if another global vars block was already
 // declared (which is forbidden).
-func (sc *semanticChecker) checkDuplicateGlobalVarsBlock(node *ast.Vars) {
+func (sc *semanticChecker) checkDuplicateGlobalVarsBlock(node *ast.VarsBlock) {
 	if sc.firstGlobalVars != nil {
 		sc.error(
 			"Only one 'vars' block allowed at global level. Found another one at line %v.",
@@ -81,7 +81,7 @@ func (sc *semanticChecker) checkDuplicateGlobalVarsBlock(node *ast.Vars) {
 }
 
 // checkVarInitializer checks if the variable initializer is some literal value.
-func (sc *semanticChecker) checkVarInitializer(node *ast.Var) {
+func (sc *semanticChecker) checkVarInitializer(node *ast.VarDecl) {
 	switch node.Initializer.(type) {
 	case *ast.StringLiteral, *ast.BoolLiteral, *ast.IntLiteral,
 		*ast.FloatLiteral, *ast.BNumLiteral:
@@ -93,7 +93,7 @@ func (sc *semanticChecker) checkVarInitializer(node *ast.Var) {
 
 // checkDuplicateGlobalVariable checks if another global variable with the same
 // name was already declared.
-func (sc *semanticChecker) checkDuplicateGlobalVariable(node *ast.Var) {
+func (sc *semanticChecker) checkDuplicateGlobalVariable(node *ast.VarDecl) {
 	line, found := sc.globalVariables[node.Name]
 	if found {
 		sc.error("There is already a global variable named '%v' declared at line %v.",

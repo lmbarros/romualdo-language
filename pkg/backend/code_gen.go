@@ -164,10 +164,10 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		}
 		cg.emitBytes(bytecode.OpPrint)
 
-	case *ast.Vars:
+	case *ast.VarsBlock:
 		break
 
-	case *ast.Var:
+	case *ast.VarDecl:
 		// We are interested only in global variables.
 		if len(cg.nodeStack) > 3 {
 			break

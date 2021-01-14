@@ -214,7 +214,7 @@ func (p *parser) expression() ast.Node {
 // varsDeclaration parses a vars block.
 func (p *parser) varsDeclaration() ast.Node {
 
-	vars := &ast.Vars{
+	vars := &ast.VarsBlock{
 		BaseNode: ast.BaseNode{
 			LineNumber: p.previousToken.line,
 		},
@@ -253,7 +253,7 @@ func (p *parser) varsDeclaration() ast.Node {
 
 		initializer := p.expression()
 
-		v := ast.NewVar(baseNode, name, varType, initializer)
+		v := ast.NewVarDecl(baseNode, name, varType, initializer)
 		v.BaseNode = ast.BaseNode{
 			LineNumber: p.previousToken.line,
 		}

@@ -38,7 +38,7 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkBlend(n)
 	case *ast.TypeConversion:
 		tc.checkTypeConversion(n)
-	case *ast.Var:
+	case *ast.VarDecl:
 		tc.checkVarType(n)
 	}
 
@@ -201,7 +201,7 @@ func (tc *typeChecker) checkTypeConversion(node *ast.TypeConversion) {
 }
 
 // checkVarType performs type checking on a variable declaration.
-func (tc *typeChecker) checkVarType(node *ast.Var) {
+func (tc *typeChecker) checkVarType(node *ast.VarDecl) {
 	if node.Type().Tag != node.Initializer.Type().Tag {
 		tc.error("Cannot initialize variable of type '%v' with a value of type '%v'.",
 			node.Type(),
