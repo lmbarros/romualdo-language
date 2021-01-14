@@ -15,6 +15,8 @@
 * Testing
     * Add some kind of end-to-end testing: if we run this Storyworld with this
       input, the output must be this one.
+        * A language specification in prose, with examples that can be
+          automatically extracted and used as test cases would be cool.
     * I am sure there are more things that can be unit tested.
 * Implement smarter storage of line numbers in the Chunk. Something more
   efficient than storing one line number per instruction.
