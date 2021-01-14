@@ -23,9 +23,17 @@ func Parse(source string) ast.Node {
 		return nil
 	}
 
+	sc := &semanticChecker{}
+	root.Walk(sc)
+	if len(sc.errors) > 0 {
+		for _, e := range sc.errors {
+			fmt.Fprintf(os.Stderr, "%v\n", e)
+		}
+		return nil
+	}
+
 	tc := &typeChecker{}
 	root.Walk(tc)
-
 	if len(tc.errors) > 0 {
 		for _, e := range tc.errors {
 			fmt.Fprintf(os.Stderr, "%v\n", e)

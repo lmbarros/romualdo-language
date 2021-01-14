@@ -127,7 +127,13 @@ var rules []parseRule
 
 // declaration parses a declaration.
 func (p *parser) declaration() ast.Node {
-	n := p.statement()
+	var n ast.Node
+
+	if p.match(tokenKindVars) {
+		n = p.varsDeclaration()
+	} else {
+		n = p.statement()
+	}
 
 	if p.panicMode {
 		p.synchronize()
@@ -203,6 +209,62 @@ func (p *parser) synchronize() {
 // expression parses an expression.
 func (p *parser) expression() ast.Node {
 	return p.parsePrecedence(precAssignment)
+}
+
+// varsDeclaration parses a vars block.
+func (p *parser) varsDeclaration() ast.Node {
+
+	vars := &ast.Vars{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+	}
+
+	for p.currentToken.kind != tokenKindEnd {
+		p.consume(tokenKindIdentifier, "Expect identifier (the variable name).")
+		name := p.previousToken.lexeme
+
+		baseNode := ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		}
+
+		p.consume(tokenKindColon, "Expect ':' after variable name.")
+
+		varType := ast.Type{ast.TypeInvalid}
+		switch p.currentToken.kind {
+		case tokenKindInt:
+			varType.Tag = ast.TypeInt
+		case tokenKindFloat:
+			varType.Tag = ast.TypeFloat
+		case tokenKindBNum:
+			varType.Tag = ast.TypeBNum
+		case tokenKindString:
+			varType.Tag = ast.TypeString
+		case tokenKindBool:
+			varType.Tag = ast.TypeBool
+		default:
+			p.errorAtCurrent("Expect variable type.")
+		}
+
+		p.advance()
+
+		// TODO: Make initializer optional (use default value if not provided).
+		p.consume(tokenKindEqual, "Expect '=' after variable type.")
+
+		initializer := p.expression()
+
+		v := ast.NewVar(baseNode, name, varType, initializer)
+		v.BaseNode = ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		}
+
+		vars.Vars = append(vars.Vars, v)
+	}
+
+	// TODO: A kind compiler would tell the line where the block started.
+	p.consume(tokenKindEnd, "Expect 'end' to close 'vars' block")
+
+	return vars
 }
 
 // numberLiteral parses a number literal (int, float, or bnum). The number

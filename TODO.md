@@ -21,9 +21,12 @@
 * On the VM, I currently use floats to represent bnums. Works nicely, except
   when converting a bnum to a string, in which case I'd like to have something
   like "0.1b" instead of just "0.1".
+* Handling of globals: I might be able to refer to them by a in integer index
+  instead of by name. (Which would be faster.)
 
 ## Smallish improvements
 
+* Remove duplication between `typeChecker` and `semanticChecker`.
 * Should accept bnums for comparison operators
 * Move the common visitor stuff (like keeping the current node) to some reusable
   `struct`.

@@ -69,12 +69,17 @@ type Chunk struct {
 
 	// Strings contains all the strings used in this
 	Strings *StringInterner
+
+	// Globals contains all the global variables. It maps variable names to
+	// their respective values.
+	Globals map[string]Value
 }
 
 // NewChunk creates and returns a new Chunk.
 func NewChunk() *Chunk {
 	return &Chunk{
 		Strings: NewStringInterner(),
+		Globals: map[string]Value{},
 	}
 }
 
@@ -111,6 +116,10 @@ func (c *Chunk) Disassemble(name string) string {
 	var out strings.Builder
 
 	fmt.Fprintf(&out, "== %v ==\n", name)
+
+	for varName, varValue := range c.Globals {
+		fmt.Fprintf(&out, "GLOBAL    %-20s%-10T%v\n", varName, varValue.Value, varValue)
+	}
 
 	for offset := 0; offset < len(c.Code); {
 		offset = c.DisassembleInstruction(&out, offset)

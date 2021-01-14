@@ -292,3 +292,57 @@ func (n *BuiltInFunction) Walk(v Visitor) {
 	}
 	v.Leave(n)
 }
+
+// Vars is an AST node representing a vars block.
+type Vars struct {
+	BaseNode
+
+	// Vars contains the variables defined in this block.
+	Vars []*Var
+}
+
+func (n *Vars) Type() Type {
+	return Type{TypeVoid}
+}
+
+func (n *Vars) Walk(v Visitor) {
+	v.Enter(n)
+	for _, varDecl := range n.Vars {
+		varDecl.Walk(v)
+	}
+	v.Leave(n)
+}
+
+// Var is an AST node representing a single variable declaration.
+type Var struct {
+	BaseNode
+
+	// Name is teh variable name.
+	Name string
+
+	// Initializer is the expression used to initialize thr variable.
+	Initializer Node
+
+	// varType is the variable type. Use Type() to get it.
+	varType Type
+}
+
+// NewVar creates a new Var, with the given name, type and initializer.
+func NewVar(baseNode BaseNode, name string, varType Type, initializer Node) *Var {
+	return &Var{
+		BaseNode:    baseNode,
+		Name:        name,
+		varType:     varType,
+		Initializer: initializer,
+	}
+}
+
+func (n *Var) Type() Type {
+	return n.varType
+}
+
+func (n *Var) Walk(v Visitor) {
+	v.Enter(n)
+	n.Initializer.Walk(v)
+	v.Leave(n)
+}

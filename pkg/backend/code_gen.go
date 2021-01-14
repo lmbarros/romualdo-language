@@ -164,6 +164,16 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		}
 		cg.emitBytes(bytecode.OpPrint)
 
+	case *ast.Vars:
+		break
+
+	case *ast.Var:
+		// We are interested only in global variables.
+		if len(cg.nodeStack) > 3 {
+			break
+		}
+		cg.chunk.Globals[n.Name] = cg.valueFromNode(n.Initializer)
+
 	default:
 		cg.ice("unknown node type: %T", n)
 	}
@@ -246,4 +256,22 @@ func (cg *codeGenerator) ice(format string, a ...interface{}) {
 func (cg *codeGenerator) newInternedValueString(v string) bytecode.Value {
 	s := cg.currentChunk().Strings.Intern(v)
 	return bytecode.NewValueString(s)
+}
+
+func (cg *codeGenerator) valueFromNode(node ast.Node) bytecode.Value {
+	switch n := node.(type) {
+	case *ast.StringLiteral:
+		return bytecode.Value{Value: n.Value}
+	case *ast.BoolLiteral:
+		return bytecode.Value{Value: n.Value}
+	case *ast.IntLiteral:
+		return bytecode.Value{Value: n.Value}
+	case *ast.FloatLiteral:
+		return bytecode.Value{Value: n.Value}
+	case *ast.BNumLiteral:
+		return bytecode.Value{Value: n.Value}
+	default:
+		cg.ice("Unexpected node of type %T", node)
+	}
+	return bytecode.Value{}
 }

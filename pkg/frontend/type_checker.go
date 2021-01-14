@@ -38,6 +38,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkBlend(n)
 	case *ast.TypeConversion:
 		tc.checkTypeConversion(n)
+	case *ast.Var:
+		tc.checkVarType(n)
 	}
 
 }
@@ -195,6 +197,15 @@ func (tc *typeChecker) checkTypeConversion(node *ast.TypeConversion) {
 			tc.error("The default value for a conversion to string must be a string; got a %v",
 				node.Default.Type())
 		}
+	}
+}
+
+// checkVarType performs type checking on a variable declaration.
+func (tc *typeChecker) checkVarType(node *ast.Var) {
+	if node.Type().Tag != node.Initializer.Type().Tag {
+		tc.error("Cannot initialize variable of type '%v' with a value of type '%v'.",
+			node.Type(),
+			node.Initializer.Type())
 	}
 }
 
