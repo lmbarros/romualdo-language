@@ -358,7 +358,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 
 		case bytecode.OpPrint:
 			v := vm.pop()
-			fmt.Printf("%v", v)
+			fmt.Printf("%v\n", v)
 
 		default:
 			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))
