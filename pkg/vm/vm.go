@@ -360,6 +360,10 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			v := vm.pop()
 			fmt.Printf("%v\n", v)
 
+		case bytecode.OpReadGlobal:
+			value := vm.readGlobal()
+			vm.push(value)
+
 		default:
 			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))
 		}
@@ -384,6 +388,14 @@ func (vm *VM) readLongConstant() bytecode.Value {
 	constant := vm.chunk.Constants[index]
 	vm.ip += 3
 	return constant
+}
+
+// readGlobal reads a single-byte global index from the chunk bytecode and
+// returns the corresponding global variable value.
+func (vm *VM) readGlobal() bytecode.Value {
+	value := vm.chunk.Globals[vm.chunk.Code[vm.ip]]
+	vm.ip++
+	return value.Value
 }
 
 // push pushes a value into the VM stack.

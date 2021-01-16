@@ -41,6 +41,7 @@ const (
 	OpToBNum
 	OpToString
 	OpPrint
+	OpReadGlobal
 )
 
 const (
@@ -54,6 +55,15 @@ const (
 	// indices between: 0 to 16777215 (=2^24-1).
 	MaxConstantsPerChunk = 16777216
 )
+
+// GlobalVar represents a global variable.
+type GlobalVar struct {
+	// Name is the name of the global variable.
+	Name string
+
+	// Value is the value of the global variable.
+	Value Value
+}
 
 // A Chunk is a chunk of bytecode.
 type Chunk struct {
@@ -70,16 +80,15 @@ type Chunk struct {
 	// Strings contains all the strings used in this
 	Strings *StringInterner
 
-	// Globals contains all the global variables. It maps variable names to
-	// their respective values.
-	Globals map[string]Value
+	// Globals contains all the global variables.
+	Globals []GlobalVar
 }
 
 // NewChunk creates and returns a new Chunk.
 func NewChunk() *Chunk {
 	return &Chunk{
 		Strings: NewStringInterner(),
-		Globals: map[string]Value{},
+		Globals: []GlobalVar{},
 	}
 }
 
@@ -110,6 +119,32 @@ func (c *Chunk) SearchConstant(value Value) int {
 	return -1
 }
 
+// GetGlobalIndex returns the index into c.Globals where the global variable
+// named name is stored. If no such variable exists, returns a negative value.
+func (c *Chunk) GetGlobalIndex(name string) int {
+	for i, v := range c.Globals {
+		if v.Name == name {
+			return i
+		}
+	}
+
+	return -1
+}
+
+// SetGlobal sets the global variable name to value, creating it if it doesn't
+// exist yet. Returns a value telling if the variable was created on this call
+// or not.
+func (c *Chunk) SetGlobal(name string, value Value) bool {
+	i := c.GetGlobalIndex(name)
+	if i < 0 {
+		c.Globals = append(c.Globals, GlobalVar{Name: name, Value: value})
+		return true
+	}
+
+	c.Globals[i].Value = value
+	return false
+}
+
 // Disassemble disassembles the chunk and returns a string representation of
 // it. The chunk name (passed as name) is included in the disassembly.
 func (c *Chunk) Disassemble(name string) string {
@@ -117,9 +152,14 @@ func (c *Chunk) Disassemble(name string) string {
 
 	fmt.Fprintf(&out, "== %v ==\n", name)
 
-	for varName, varValue := range c.Globals {
-		fmt.Fprintf(&out, "GLOBAL    %-20s%-10T%v\n", varName, varValue.Value, varValue)
+	for _, global := range c.Globals {
+		name := global.Name
+		value := global.Value.Value
+		// TODO: This is showing the Go type. OK for now, but should be the Romualdo type.
+		fmt.Fprintf(&out, "Global  %v '%v' (%T)\n", name, value, value)
 	}
+
+	fmt.Fprint(&out, "\n")
 
 	for offset := 0; offset < len(c.Code); {
 		offset = c.DisassembleInstruction(&out, offset)
@@ -224,6 +264,9 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 	case OpPrint:
 		return c.disassembleSimpleInstruction(out, "PRINT", offset)
 
+	case OpReadGlobal:
+		return c.disassembleReadGlobalInstruction(out, "READ_GLOBAL", offset)
+
 	default:
 		fmt.Fprintf(out, "Unknown opcode %d\n", instruction)
 		return offset + 1
@@ -259,6 +302,16 @@ func (c *Chunk) disassembleConstantLongInstruction(out io.Writer, name string, o
 	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Constants[index])
 
 	return offset + 4
+}
+
+// disassembleReadGlobalInstruction disassembles an OpReadGlobal instruction at
+// a given offset. name is the instruction name, and the output is written to
+// out. Returns the offset to the next instruction.
+func (c *Chunk) disassembleReadGlobalInstruction(out io.Writer, name string, offset int) int {
+	index := c.Code[offset+1]
+	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Globals[index].Name)
+
+	return offset + 2
 }
 
 // Converts three bytes to a 24-bit unsigned integer. a is the least significant

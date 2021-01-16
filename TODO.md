@@ -8,6 +8,14 @@
   within blend.
     * Must also think about its precedence. I just used anything that didn't
       felt too wrong.
+* Right now, `Chunk.SetGlobal()` and `Chunk.GetGlobalIndex()` look linearly into
+  the array of globals. I might want to add a map from names to indices at some
+  point. In this case, would not need to store the global name in
+  `Chunk.Globals`.
+    * Or, if possible: store globals on the stack (they would be created and
+      initialized by some new opcode that would be called at the start of the
+      generated code), in which case I guess globals and locals would be pretty
+      much the same thing from the VM point-of-view.
 
 ## Not so big, but not small either
 
@@ -29,6 +37,11 @@
 ## Smallish improvements
 
 * Remove duplication between `typeChecker` and `semanticChecker`.
+* Allow more than 255 globals. 2^24 should be enough, as with constants.
+* I don't like the discrepancy in the naming of opcodes `READ_GLOBAL` and
+  `CONSTANT`. They are both doing kind of the same thing, but only one has the
+  `READ` prefix. (On the other hand, I guess there will never be an opcode to
+  write a constant, so this is not really wrong.)
 * Should accept bnums for comparison operators
 * Move the common visitor stuff (like keeping the current node) to some reusable
   `struct`.

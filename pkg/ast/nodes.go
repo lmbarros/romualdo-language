@@ -346,3 +346,24 @@ func (n *VarDecl) Walk(v Visitor) {
 	n.Initializer.Walk(v)
 	v.Leave(n)
 }
+
+// VarRef is an AST node representing a reference to a variable. (I mean, a
+// variable being used in the code.)
+type VarRef struct {
+	BaseNode
+
+	// Name is the variable name.
+	Name string
+
+	// VarType is the variable type.
+	VarType Type
+}
+
+func (n *VarRef) Type() Type {
+	return n.VarType
+}
+
+func (n *VarRef) Walk(v Visitor) {
+	v.Enter(n)
+	v.Leave(n)
+}

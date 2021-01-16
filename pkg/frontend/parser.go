@@ -330,6 +330,18 @@ func (p *parser) stringLiteral() ast.Node {
 	}
 }
 
+// variable parses a variable reference in the source code. The identifier token
+// with the variable name is expected to have been just consumed.
+func (p *parser) variable() ast.Node {
+	return &ast.VarRef{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+		Name:    p.previousToken.lexeme,
+		VarType: ast.Type{Tag: ast.TypeInvalid}, // Filled in a later pass
+	}
+}
+
 // grouping parses a parenthesized expression. The left paren token is expected
 // to have been just consumed.
 func (p *parser) grouping() ast.Node {
@@ -598,7 +610,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindGreaterEqual] = /*  */ parseRule{nil /*                        */, (*parser).binary /*        */, precComparison}
 	rules[tokenKindLess] = /*          */ parseRule{nil /*                        */, (*parser).binary /*        */, precComparison}
 	rules[tokenKindLessEqual] = /*     */ parseRule{nil /*                        */, (*parser).binary /*        */, precComparison}
-	rules[tokenKindIdentifier] = /*    */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindIdentifier] = /*    */ parseRule{(*parser).variable /*         */, nil /*                     */, precNone}
 	rules[tokenKindStringLiteral] = /* */ parseRule{(*parser).stringLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindFloatLiteral] = /*  */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindAlias] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}

@@ -23,6 +23,7 @@ func Parse(source string) ast.Node {
 		return nil
 	}
 
+	// Assorted semantic checks (but no type checks)
 	sc := &semanticChecker{}
 	root.Walk(sc)
 	if len(sc.errors) > 0 {
@@ -32,6 +33,20 @@ func Parse(source string) ast.Node {
 		return nil
 	}
 
+	// Look for undeclared variables, set types of global variables references
+	globalTypes := extractGlobalTypes(root)
+	vts := &globalTypeSetter{
+		GlobalTypes: globalTypes,
+	}
+	root.Walk(vts)
+	if len(vts.errors) > 0 {
+		for _, e := range vts.errors {
+			fmt.Fprintf(os.Stderr, "%v\n", e)
+		}
+		return nil
+	}
+
+	// Type checking
 	tc := &typeChecker{}
 	root.Walk(tc)
 	if len(tc.errors) > 0 {

@@ -172,7 +172,23 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		if len(cg.nodeStack) > 3 {
 			break
 		}
-		cg.chunk.Globals[n.Name] = cg.valueFromNode(n.Initializer)
+		created := cg.chunk.SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
+		if !created {
+			cg.ice(
+				"duplicate definiton of global variable '%v' on code generation",
+				n.Name)
+		}
+
+	case *ast.VarRef:
+		// For now, all variables are globals.
+		i := cg.chunk.GetGlobalIndex(n.Name)
+		if i < 0 {
+			cg.ice("global variable '%v' not found in the globals pool", n.Name)
+		}
+		if i > 255 {
+			cg.error("Currently only up to 255 global variables are supported.")
+		}
+		cg.emitBytes(bytecode.OpReadGlobal, byte(i))
 
 	default:
 		cg.ice("unknown node type: %T", n)

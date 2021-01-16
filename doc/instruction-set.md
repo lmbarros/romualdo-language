@@ -193,6 +193,15 @@ Printing exists primarily for debugging or demo purposes. VM implementations
 should try to provide a meaningful implementation, but it would not be a sin for
 an implementation to make this a no-op.
 
+### `READ_GLOBAL`
+
+**Purpose:** Reads the value of a global variable.  
+**Immediate Operands:** One byte *A*, interpreted as an index into the globals
+pool.  
+**Pops:** Nothing.  
+**Pushes:** One value, the value of the global variable taken at the index *A*
+of the globals pool.
+
 ### `RETURN`
 
 TODO
