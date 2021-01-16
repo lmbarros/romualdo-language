@@ -144,7 +144,7 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 
 	switch instruction {
 	case OpNop:
-		return c.disassembleConstantInstruction(out, "NOP", offset)
+		return c.disassembleSimpleInstruction(out, "NOP", offset)
 
 	case OpConstant:
 		return c.disassembleConstantInstruction(out, "CONSTANT", offset)
