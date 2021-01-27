@@ -52,7 +52,7 @@ func (tc *typeChecker) Leave(ast.Node) {
 // Type checking
 //
 
-// checkBinary checks for typing errors in a binary operator.
+// checkBinary type checks a binary operator.
 func (tc *typeChecker) checkBinary(node *ast.Binary) {
 	switch node.Operator {
 	case "<", "<=", ">", ">=":
@@ -127,7 +127,7 @@ func (tc *typeChecker) checkBinary(node *ast.Binary) {
 	}
 }
 
-// checkUnary checks for typing errors in a unary operator.
+// checkUnary type checks a unary operator.
 func (tc *typeChecker) checkUnary(node *ast.Unary) {
 	switch node.Operator {
 	case "not":
@@ -144,7 +144,7 @@ func (tc *typeChecker) checkUnary(node *ast.Unary) {
 	}
 }
 
-// checkBlend checks for typing errors in a blend operator.
+// checkBlend type checks a blend operator.
 func (tc *typeChecker) checkBlend(node *ast.Blend) {
 	if node.X.Type().Tag != ast.TypeBNum {
 		tc.error("The blend Operator expects bnum operands; got a %v as the first one",
@@ -161,7 +161,7 @@ func (tc *typeChecker) checkBlend(node *ast.Blend) {
 	}
 }
 
-// checkTypeConversion checks for typing errors in a type conversion operator.
+// checkTypeConversion type checks type conversion operator.
 func (tc *typeChecker) checkTypeConversion(node *ast.TypeConversion) {
 	switch node.Operator {
 	case "int":
@@ -200,7 +200,7 @@ func (tc *typeChecker) checkTypeConversion(node *ast.TypeConversion) {
 	}
 }
 
-// checkVarType performs type checking on a variable declaration.
+// checkVarType type checks a variable declaration.
 func (tc *typeChecker) checkVarType(node *ast.VarDecl) {
 	if node.Type().Tag != node.Initializer.Type().Tag {
 		tc.error("Cannot initialize variable of type '%v' with a value of type '%v'.",
