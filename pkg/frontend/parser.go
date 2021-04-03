@@ -230,7 +230,7 @@ func (p *parser) varsDeclaration() ast.Node {
 
 		p.consume(tokenKindColon, "Expect ':' after variable name.")
 
-		varType := ast.Type{ast.TypeInvalid}
+		varType := ast.Type{Tag: ast.TypeInvalid}
 		switch p.currentToken.kind {
 		case tokenKindInt:
 			varType.Tag = ast.TypeInt
