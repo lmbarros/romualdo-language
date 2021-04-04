@@ -42,6 +42,7 @@ const (
 	OpToString
 	OpPrint
 	OpReadGlobal
+	OpWriteGlobal
 )
 
 const (
@@ -265,7 +266,10 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 		return c.disassembleSimpleInstruction(out, "PRINT", offset)
 
 	case OpReadGlobal:
-		return c.disassembleReadGlobalInstruction(out, "READ_GLOBAL", offset)
+		return c.disassembleGlobalInstruction(out, "READ_GLOBAL", offset)
+
+	case OpWriteGlobal:
+		return c.disassembleGlobalInstruction(out, "WRITE_GLOBAL", offset)
 
 	default:
 		fmt.Fprintf(out, "Unknown opcode %d\n", instruction)
@@ -304,10 +308,10 @@ func (c *Chunk) disassembleConstantLongInstruction(out io.Writer, name string, o
 	return offset + 4
 }
 
-// disassembleReadGlobalInstruction disassembles an OpReadGlobal instruction at
-// a given offset. name is the instruction name, and the output is written to
-// out. Returns the offset to the next instruction.
-func (c *Chunk) disassembleReadGlobalInstruction(out io.Writer, name string, offset int) int {
+// disassembleGlobalInstruction disassembles an OpReadGlobal or opWriteGlobal
+// instruction at a given offset. name is the instruction name, and the output
+// is written to out. Returns the offset to the next instruction.
+func (c *Chunk) disassembleGlobalInstruction(out io.Writer, name string, offset int) int {
 	index := c.Code[offset+1]
 	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Globals[index].Name)
 

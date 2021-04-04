@@ -35,6 +35,11 @@ Most arithmetic operations between ints result in ints. The exceptions are
 
 Instructions are listed in alphabetical order.
 
+The fields "Pops" and "Pushes" describe the effects as perceived by the user,
+not necessarily how the implementation works. For example, if you see some
+instruction that pops a value and then pushes the same value back to the stack,
+the implementation is free to leave the stack untouched.
+
 ### `ADD`
 
 **Purpose:** Adds two unbounded numeric values.  
@@ -272,3 +277,12 @@ TODO: Define semantics.
 **Immediate Operands:** None.  
 **Pops:** Nothing.  
 **Pushes:** One Boolean value: `true`.
+
+### `WRITE_GLOBAL`
+
+**Purpose:** Writes the value of a global variable.  
+**Immediate Operands:** One byte *A*, interpreted as an index into the globals
+pool.  
+**Pops:** One value, the new value the global variable value at the
+index *A* will be set to.  
+**Pushes:** One value, the same that was popped.

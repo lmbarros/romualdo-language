@@ -35,12 +35,14 @@ const (
 )
 
 // prefixParseFn is a function used to parse code for a certain kind of prefix
-// expression.
-type prefixParseFn = func(c *parser) ast.Node
+// expression. canAssign tells if the expression we parsing accepts to be the
+// target of an assignment.
+type prefixParseFn = func(c *parser, canAssign bool) ast.Node
 
 // infixParseFn is a function used to parse code for a certain kind of infix
-// expression. lhs is the left-hand side expression previously parsed.
-type infixParseFn = func(c *parser, lhs ast.Node) ast.Node
+// expression. lhs is the left-hand side expression previously parsed. canAssign
+// tells if the expression we parsing accepts to be the target of an assignment.
+type infixParseFn = func(c *parser, lhs ast.Node, canAssign bool) ast.Node
 
 // parseRule encodes one rule of our Pratt parser.
 type parseRule struct {
@@ -107,12 +109,17 @@ func (p *parser) parsePrecedence(prec precedence) ast.Node {
 		return nil
 	}
 
-	node := prefixRule(p)
+	canAssign := prec <= precAssignment
+	node := prefixRule(p, canAssign)
 
 	for prec <= rules[p.currentToken.kind].precedence {
 		p.advance()
 		infixRule := rules[p.previousToken.kind].infix
-		node = infixRule(p, node)
+		node = infixRule(p, node, canAssign)
+	}
+
+	if canAssign && p.match(tokenKindEqual) {
+		p.error("Invalid assignment target.")
 	}
 
 	return node
@@ -269,7 +276,7 @@ func (p *parser) varsDeclaration() ast.Node {
 
 // numberLiteral parses a number literal (int, float, or bnum). The number
 // literal token is expected to have been just consumed.
-func (p *parser) numberLiteral() ast.Node {
+func (p *parser) numberLiteral(canAssign bool) ast.Node {
 	baseNode := ast.BaseNode{
 		LineNumber: p.previousToken.line,
 	}
@@ -319,7 +326,7 @@ func (p *parser) numberLiteral() ast.Node {
 
 // stringLiteral parses a string literal. The string literal token is expected
 // to have been just consumed.
-func (p *parser) stringLiteral() ast.Node {
+func (p *parser) stringLiteral(canAssign bool) ast.Node {
 	value := p.previousToken.lexeme[1 : len(p.previousToken.lexeme)-1] // remove the quotes
 
 	return &ast.StringLiteral{
@@ -330,21 +337,39 @@ func (p *parser) stringLiteral() ast.Node {
 	}
 }
 
-// variable parses a variable reference in the source code. The identifier token
-// with the variable name is expected to have been just consumed.
-func (p *parser) variable() ast.Node {
+// variable parses a variable reference or (if canAssign == true) assignment in
+// the source code. The identifier token with the variable name is expected to
+// have been just consumed.
+//
+// TODO: In the book, this just calls a function namedVariable, that does the
+// actual work. I skipped this intermediary call that is useless for now, but I
+// might need to add it later on, when it will start to be useful somehow.
+func (p *parser) variable(canAssign bool) ast.Node {
+	varName := p.previousToken.lexeme
+
+	if canAssign && p.match(tokenKindEqual) {
+		rhs := p.expression()
+		return &ast.Assignment{
+			BaseNode: ast.BaseNode{
+				LineNumber: p.previousToken.line,
+			},
+			VarName: varName,
+			Value:   rhs,
+		}
+	}
+
 	return &ast.VarRef{
 		BaseNode: ast.BaseNode{
 			LineNumber: p.previousToken.line,
 		},
-		Name:    p.previousToken.lexeme,
+		Name:    varName,
 		VarType: ast.Type{Tag: ast.TypeInvalid}, // Filled in a later pass
 	}
 }
 
 // grouping parses a parenthesized expression. The left paren token is expected
 // to have been just consumed.
-func (p *parser) grouping() ast.Node {
+func (p *parser) grouping(canAssign bool) ast.Node {
 	expr := p.expression()
 	p.consume(tokenKindRightParen, "Expect ')' after expression.")
 	return expr
@@ -352,7 +377,7 @@ func (p *parser) grouping() ast.Node {
 
 // unary parses a unary expression. The operator token is expected to have been
 // just consumed.
-func (p *parser) unary() ast.Node {
+func (p *parser) unary(canAssign bool) ast.Node {
 	operatorKind := p.previousToken.kind
 	operatorLexeme := p.previousToken.lexeme
 	operatorLine := p.previousToken.line
@@ -377,7 +402,7 @@ func (p *parser) unary() ast.Node {
 
 // binary parses a binary operator expression. The left operand and the operator
 // token are expected to have been just consumed.
-func (p *parser) binary(lhs ast.Node) ast.Node {
+func (p *parser) binary(lhs ast.Node, canAssign bool) ast.Node {
 	// Remember the operator.
 	operatorKind := p.previousToken.kind
 	operatorLexeme := p.previousToken.lexeme
@@ -404,7 +429,7 @@ func (p *parser) binary(lhs ast.Node) ast.Node {
 
 // blend parses a blend operator expression. The first operand (parameter x)
 // and the first tilde token are expected to have been just consumed.
-func (p *parser) blend(x ast.Node) ast.Node {
+func (p *parser) blend(x ast.Node, canAssign bool) ast.Node {
 	// Remember the operator
 	operatorKind := p.previousToken.kind // always a ast.tokenKindTilde
 	operatorLine := p.previousToken.line
@@ -427,7 +452,7 @@ func (p *parser) blend(x ast.Node) ast.Node {
 
 // boolLiteral parses a literal Boolean value. The corresponding keyword is
 // expected to have been just consumed.
-func (p *parser) boolLiteral() ast.Node {
+func (p *parser) boolLiteral(canAssign bool) ast.Node {
 	switch p.previousToken.kind {
 	case tokenKindTrue:
 		return &ast.BoolLiteral{
@@ -450,7 +475,7 @@ func (p *parser) boolLiteral() ast.Node {
 
 // typeConversion parses a type conversion expression. The corresponding keyword
 // is expected to have been just consumed.
-func (p *parser) typeConversion() ast.Node {
+func (p *parser) typeConversion(canAssign bool) ast.Node {
 	conversionLexeme := p.previousToken.lexeme
 
 	// Consume the open paren and parse the expression to be converted

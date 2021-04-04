@@ -367,3 +367,26 @@ func (n *VarRef) Walk(v Visitor) {
 	v.Enter(n)
 	v.Leave(n)
 }
+
+// Assignment is an AST node representing an assignment.
+type Assignment struct {
+	BaseNode
+
+	// VarName is the left-hand side of the assignment. Contains the name of the
+	// global variable we are assigning to.
+	VarName string
+
+	// Value is the right-hand side of the assignment. Contains the value we are
+	// assigning to the variable.
+	Value Node
+}
+
+func (n *Assignment) Type() Type {
+	return n.Value.Type()
+}
+
+func (n *Assignment) Walk(v Visitor) {
+	v.Enter(n)
+	n.Value.Walk(v)
+	v.Leave(n)
+}

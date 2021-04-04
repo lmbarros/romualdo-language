@@ -364,6 +364,10 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			value := vm.readGlobal()
 			vm.push(value)
 
+		case bytecode.OpWriteGlobal:
+			value := vm.top()
+			vm.writeGlobal(value)
+
 		default:
 			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))
 		}
@@ -398,16 +402,29 @@ func (vm *VM) readGlobal() bytecode.Value {
 	return value.Value
 }
 
+// writeGlobal sets the value of a global variable to value. For the variable,
+// reads a single-byte from the chunk bytecode and uses it as the index into the
+// globals table.
+func (vm *VM) writeGlobal(value bytecode.Value) {
+	vm.chunk.Globals[vm.chunk.Code[vm.ip]].Value = value
+	vm.ip++
+}
+
 // push pushes a value into the VM stack.
 func (vm *VM) push(value bytecode.Value) {
 	vm.stack = append(vm.stack, value)
 }
 
+// top returns the value on the top of the VM stack (without removing it).
+// Panics on underflow.
+func (vm *VM) top() bytecode.Value {
+	return vm.stack[len(vm.stack)-1]
+}
+
 // pop pops a value from the VM stack and returns it. Panics on underflow.
 func (vm *VM) pop() bytecode.Value {
-	top := vm.stack[len(vm.stack)-1]
+	top := vm.top()
 	vm.stack = vm.stack[:len(vm.stack)-1]
-
 	return top
 }
 

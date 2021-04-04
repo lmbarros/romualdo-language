@@ -190,6 +190,17 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		}
 		cg.emitBytes(bytecode.OpReadGlobal, byte(i))
 
+	case *ast.Assignment:
+		// For now, all assignments are to globals.
+		i := cg.chunk.GetGlobalIndex(n.VarName)
+		if i < 0 {
+			cg.error("Global variable '%v' not declared.", n.VarName)
+		}
+		if i > 255 {
+			cg.error("Currently only up to 255 global variables are supported.")
+		}
+		cg.emitBytes(bytecode.OpWriteGlobal, byte(i))
+
 	default:
 		cg.ice("unknown node type: %T", n)
 	}
