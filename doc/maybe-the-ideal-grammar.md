@@ -320,7 +320,7 @@ Notes:
 * Identifiers that start with an upper case Unicode letter (LU category) are
   public (accessible everywhere in the storyworld). Other identifiers are
   visible only locally (in the file where they are declared).
-* Strings will probably be extended. On thing I want to add are localized
+* Strings will probably be extended. One thing I want to add are localized
   strings. Not sure about the syntax and semantics, but I want them!
 
 ## Final words
