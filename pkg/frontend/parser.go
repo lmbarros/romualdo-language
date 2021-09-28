@@ -522,7 +522,7 @@ func (p *parser) typeConversion(canAssign bool) ast.Node {
 	// supposed to always generate a non-nil default, so we use an empty
 	// string).
 	case conversionLexeme == "string":
-		d = &ast.StringLiteral{BaseNode: bn, Value: "xxxx"}
+		d = &ast.StringLiteral{BaseNode: bn, Value: ""}
 
 	// If not string, we may have an explicit default value
 	case p.currentToken.kind == tokenKindComma:
