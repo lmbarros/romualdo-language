@@ -159,6 +159,8 @@ func (p *parser) statement() ast.Node {
 			return p.builtInFunction(funcName)
 		}
 		p.errorAtCurrent("Expect built-in function name.")
+	} else if p.match(tokenKindDo) {
+		return p.block()
 	}
 
 	return p.expression()
@@ -216,6 +218,27 @@ func (p *parser) synchronize() {
 // expression parses an expression.
 func (p *parser) expression() ast.Node {
 	return p.parsePrecedence(precAssignment)
+}
+
+// block parses a block, as in "block of code". What other block could it be?!
+// This is a compiler! (My comments are usually more polite than this.)
+//
+// TODO: Blocks are currently implemented as a sequence of statements. This
+// might change as I add local variables. Will a local variable declaration and
+// definition be a statement, too?
+func (p *parser) block() ast.Node {
+	block := &ast.Block{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+	}
+
+	for !p.check(tokenKindEnd) && !p.check(tokenKindEOF) {
+		stmt := p.statement()
+		block.Statements = append(block.Statements, stmt)
+	}
+	p.consume(tokenKindEnd, "Expect 'end' after block.")
+	return block
 }
 
 // varsDeclaration parses a vars block.

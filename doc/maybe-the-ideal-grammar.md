@@ -170,11 +170,16 @@ Statements are language constructs that do stuff. They don't have a value.
 
 ```ebnf
 statement = expression
+          | blockStmt
           | whileStmt
           | ifStmt
           | returnStmt
           | gotoStmt
           | sayStmt ;
+
+blockStmt = "do"
+            statement*
+            "end" ;
 
 whileStmt = "while" expression "do"
             statement*
@@ -199,6 +204,11 @@ arguments = expression ( "," expression )* ;
 Some notes about the statements:
 
 * Expressions can be used as statements. Depending on the expression this can be
+* The only purpose of `do`...`end` statements is to create blocks, which allow
+  to control the lifetime of the enclosed local variables. I honestly didn't
+  intend to have this on the language, but I added them to allow me having local
+  variables before I have other block-defining statements. Maybe I'll remove it
+  in the future.
   useful (an assignment often is used by itself) or useless (an expression like
   `1 + 1` by itself serves no purpose -- but is considered valid nevertheless).
 * Nothing surprising about `while` loops: execute a sequence of statements as

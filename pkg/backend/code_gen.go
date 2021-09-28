@@ -56,6 +56,12 @@ type codeGenerator struct {
 	// nodeStack is used to keep track of the nodes being processed. The current
 	// on is on the top.
 	nodeStack []ast.Node
+
+	// scopeDepth keeps track of the current scope depth we are in.
+	//
+	// TODO: How to interpret it? What is level zero? Global? Right at the start
+	// of  a function declaration, is it at level one then?
+	scopeDepth int
 }
 
 //
@@ -64,6 +70,10 @@ type codeGenerator struct {
 
 func (cg *codeGenerator) Enter(node ast.Node) {
 	cg.nodeStack = append(cg.nodeStack, node)
+
+	if _, ok := node.(*ast.Block); ok {
+		cg.beginScope()
+	}
 }
 
 func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
@@ -201,6 +211,9 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		}
 		cg.emitBytes(bytecode.OpWriteGlobal, byte(i))
 
+	case *ast.Block:
+		cg.endScope()
+
 	default:
 		cg.ice("unknown node type: %T", n)
 	}
@@ -260,6 +273,16 @@ func (cg *codeGenerator) makeConstant(value bytecode.Value) int {
 	}
 
 	return constantIndex
+}
+
+// beginScope gets called when we enter into a new scope.
+func (cg *codeGenerator) beginScope() {
+	cg.scopeDepth++
+}
+
+// endScope gets called when we leave a scope.
+func (cg *codeGenerator) endScope() {
+	cg.scopeDepth--
 }
 
 // error panics, reporting an error on the current node with a given error

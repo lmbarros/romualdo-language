@@ -390,3 +390,23 @@ func (n *Assignment) Walk(v Visitor) {
 	n.Value.Walk(v)
 	v.Leave(n)
 }
+
+// Block is an AST node representing a block (specificilly, a block of code).
+type Block struct {
+	BaseNode
+
+	// The statements that make up this block.
+	Statements []Node
+}
+
+func (n *Block) Type() Type {
+	return Type{TypeVoid}
+}
+
+func (n *Block) Walk(v Visitor) {
+	v.Enter(n)
+	for _, stmt := range n.Statements {
+		stmt.Walk(v)
+	}
+	v.Leave(n)
+}
