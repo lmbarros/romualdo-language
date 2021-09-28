@@ -133,6 +133,11 @@ func (p *parser) parsePrecedence(prec precedence) ast.Node {
 var rules []parseRule
 
 // declaration parses a declaration.
+//
+// TODO: This does not match the Romualdo grammar! For instance, Romualdo does
+// not support statements at the top level of a file/module (which is what we
+// are effectively parsing here). We need to leave it as is for now, at least
+// until we have functions.
 func (p *parser) declaration() ast.Node {
 	var n ast.Node
 
