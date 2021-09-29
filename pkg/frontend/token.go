@@ -64,6 +64,7 @@ const (
 	tokenKindFloat    // float
 	tokenKindFor      // for
 	tokenKindFunction // function
+	tokenKindGlobals  // globals
 	tokenKindGosub    // gosub
 	tokenKindGoto     // goto
 	tokenKindIf       // if
@@ -84,7 +85,7 @@ const (
 	tokenKindSwitch   // switch
 	tokenKindThen     // then
 	tokenKindTrue     // true
-	tokenKindVars     // vars
+	tokenKindVar      // var
 	tokenKindVoid     // void
 	tokenKindWhile    // while
 
@@ -188,6 +189,8 @@ func (kind tokenKind) String() string { // nolint:funlen,gocyclo
 		return "tokenKindFunction"
 	case tokenKindGosub:
 		return "tokenKindGosub"
+	case tokenKindGlobals:
+		return "tokenKindGlobals"
 	case tokenKindGoto:
 		return "tokenKindGoto"
 	case tokenKindIf:
@@ -230,8 +233,8 @@ func (kind tokenKind) String() string { // nolint:funlen,gocyclo
 		return "tokenKindThen"
 	case tokenKindTrue:
 		return "tokenKindTrue"
-	case tokenKindVars:
-		return "tokenKindVars"
+	case tokenKindVar:
+		return "tokenKindVar"
 	case tokenKindVoid:
 		return "tokenKindVoid"
 	case tokenKindWhile:

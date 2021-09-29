@@ -337,11 +337,20 @@ func (s *scanner) identifierKind() tokenKind { // nolint:funlen,gocognit,gocyclo
 			}
 		}
 	case 'g':
-		switch lexeme {
-		case "gosub":
-			return tokenKindGosub
-		case "goto":
-			return tokenKindGoto
+		if len(lexeme) > 1 {
+			switch s.source[s.start+1] {
+			case 'l':
+				return s.checkKeyword(2, "obals", tokenKindGlobals)
+			case 'o':
+				if len(lexeme) > 2 {
+					switch s.source[s.start+2] {
+					case 's':
+						return s.checkKeyword(3, "ub", tokenKindGosub)
+					case 't':
+						return s.checkKeyword(3, "o", tokenKindGoto)
+					}
+				}
+			}
 		}
 	case 'i':
 		if len(lexeme) > 1 {
@@ -414,7 +423,7 @@ func (s *scanner) identifierKind() tokenKind { // nolint:funlen,gocognit,gocyclo
 		if len(lexeme) > 1 {
 			switch s.source[s.start+1] {
 			case 'a':
-				return s.checkKeyword(2, "rs", tokenKindVars)
+				return s.checkKeyword(2, "r", tokenKindVar)
 			case 'o':
 				return s.checkKeyword(2, "id", tokenKindVoid)
 			}

@@ -12,7 +12,7 @@ storyworld = declaration* ;
 
 ```ebnf
 declaration = metaBlock
-            | varsBlock
+            | globalsBlock
             | aliasDecl
             | enumDecl
             | structDecl ;
@@ -40,23 +40,20 @@ metaBlock = "meta" "@" INTEGER varDecl* "end" ;
 varDecl = IDENTIFIER ":" type ( "=" expression )? ;
 ```
 
-### Variable declarations
+### Globals
 
-For implementation simplicity (*sigh*), all variables must be declared in
-`varBlock`s. They can appear at global scope (that is, as a top-level
-declaration) and at local scope (inside functions or passages).
-
-At global scope they must include a version. There can be only one `varBlock` of
-any given version in the set of files passed to the compiler. A global
-`varBlock` of a given version can add new globals, but cannot remove existing
-ones. It is also OK to redeclare a variable with the same name and type but with
-a possibly changed initializer (the new initializer is used when starting a new
-story).
-
-At local scope, the `varBlock` must not include a version.
+A `globalsBlock` is used to declare and initialize global variables. Each
+`globalsBlock` must include a version and there can be only one `globalsBlock`
+of any given version in the set of files passed to the compiler. When compared
+to a `globalsBlock` of the previous version, a given version can add new
+globals, but cannot remove existing ones. It is also OK to redeclare a variable
+with the same name and type but with a possibly changed initializer (the new
+initializer is used when starting a new story).
 
 ```ebnf
-varsBlock = "vars" ( "@" INTEGER )? varDecl* "end" ;
+globalsBlock = "globals" "@" INTEGER
+            varDecl*
+            "end" ;
 ```
 
 ### Type declarations
@@ -170,12 +167,15 @@ Statements are language constructs that do stuff. They don't have a value.
 
 ```ebnf
 statement = expression
+          | varDeclStmt
           | blockStmt
           | whileStmt
           | ifStmt
           | returnStmt
           | gotoStmt
           | sayStmt ;
+
+varDeclStmt = "var" varDecl ;
 
 blockStmt = "do"
             statement*
@@ -204,13 +204,17 @@ arguments = expression ( "," expression )* ;
 Some notes about the statements:
 
 * Expressions can be used as statements. Depending on the expression this can be
+  useful (an assignment often is used by itself) or useless (an expression like
+  `1 + 1` by itself serves no purpose -- but is considered valid nevertheless).
+* Local variable declarations can appear anywhere (anywhere a statement can
+  appear, *bien entendu*). A local variable exists from the point it is declared
+  until the end of its scope. A local variable cannot shadow an existing local
+  variable.
 * The only purpose of `do`...`end` statements is to create blocks, which allow
   to control the lifetime of the enclosed local variables. I honestly didn't
   intend to have this on the language, but I added them to allow me having local
   variables before I have other block-defining statements. Maybe I'll remove it
   in the future.
-  useful (an assignment often is used by itself) or useless (an expression like
-  `1 + 1` by itself serves no purpose -- but is considered valid nevertheless).
 * Nothing surprising about `while` loops: execute a sequence of statements as
   long as a given expression evaluates to `true`.
 * Nothing surprising with `if`s either.

@@ -91,13 +91,13 @@ func TestScannerTokenSequences(t *testing.T) { // nolint: funlen
 	assert.Equal(t, []string{"while", "true", "do", ""}, tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 1}, tokenLines(tokens))
 
-	tokens = tokenizeString("vars x: int = 1 + 2.0 end")
+	tokens = tokenizeString("var x: int = 1 + 2.0 end")
 	assert.Equal(t, []tokenKind{
-		tokenKindVars, tokenKindIdentifier, tokenKindColon, tokenKindInt,
+		tokenKindVar, tokenKindIdentifier, tokenKindColon, tokenKindInt,
 		tokenKindEqual, tokenKindIntLiteral, tokenKindPlus,
 		tokenKindFloatLiteral, tokenKindEnd, tokenKindEOF},
 		tokenKinds(tokens))
-	assert.Equal(t, []string{"vars", "x", ":", "int", "=", "1", "+", "2.0", "end", ""},
+	assert.Equal(t, []string{"var", "x", ":", "int", "=", "1", "+", "2.0", "end", ""},
 		tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
 
@@ -110,20 +110,20 @@ func TestScannerTokenSequences(t *testing.T) { // nolint: funlen
 		tokenLexemes(tokens))
 	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
 
-	tokens = tokenizeString("(alias{and / or}    super) # ⟨123.2⟩")
+	tokens = tokenizeString("(alias{and / or}    super globals) # ⟨123.2⟩")
 	assert.Equal(t, []tokenKind{
 		tokenKindLeftParen, tokenKindAlias, tokenKindLeftBrace, tokenKindAnd,
 		tokenKindSlash, tokenKindOr, tokenKindRightBrace, tokenKindSuper,
-		tokenKindRightParen, tokenKindEOF},
+		tokenKindGlobals, tokenKindRightParen, tokenKindEOF},
 		tokenKinds(tokens))
-	assert.Equal(t, []string{"(", "alias", "{", "and", "/", "or", "}", "super", ")", ""},
+	assert.Equal(t, []string{"(", "alias", "{", "and", "/", "or", "}", "super", "globals", ")", ""},
 		tokenLexemes(tokens))
-	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
+	assert.Equal(t, []int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, tokenLines(tokens))
 
 }
 
 // Tests Scanner.Token() with multiline input.
-func TestScannerTokenMultiline(t *testing.T) {
+func TestScannerTokenMultiline(t *testing.T) { // nolint: funlen
 	tokens := tokenizeString(
 		`break "starts # goes on
 and continues" [ elseif # now this is a comment

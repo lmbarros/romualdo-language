@@ -141,7 +141,7 @@ var rules []parseRule
 func (p *parser) declaration() ast.Node {
 	var n ast.Node
 
-	if p.match(tokenKindVars) {
+	if p.match(tokenKindGlobals) {
 		n = p.varsDeclaration()
 	} else {
 		n = p.statement()
@@ -204,7 +204,7 @@ func (p *parser) synchronize() {
 		switch p.currentToken.kind {
 		case tokenKindClass:
 		case tokenKindFunction:
-		case tokenKindVars:
+		case tokenKindGlobals:
 		case tokenKindPassage:
 		case tokenKindFor:
 		case tokenKindIf:
@@ -684,6 +684,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindFloat] = /*         */ parseRule{(*parser).typeConversion /*   */, nil /*                     */, precNone}
 	rules[tokenKindFor] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindFunction] = /*      */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindGlobals] = /*       */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindGosub] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindGoto] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindIf] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
@@ -706,7 +707,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindThen] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindTilde] = /*         */ parseRule{nil /*                        */, (*parser).blend /*         */, precBlend}
 	rules[tokenKindTrue] = /*          */ parseRule{(*parser).boolLiteral /*      */, nil /*                     */, precNone}
-	rules[tokenKindVars] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindVar] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindVoid] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindWhile] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindError] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}

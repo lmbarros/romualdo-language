@@ -33,6 +33,14 @@
   like "0.1b" instead of just "0.1".
 * Handling of globals: I might be able to refer to them by a in integer index
   instead of by name. (Which would be faster.)
+* This is about the spec: to avoid confusing users, I say that a local variable
+  cannot shadow a previously declared local. But what about global variables?
+  I'd like to be consistent, but it's weird if creating a new global breaks
+  previously working functions because of name clashes. Would also make
+  impractical using function libraries, because a function in a library may or
+  may not work depending on the globals I have on my storyworld. But if locals
+  can shadow globals, maybe I'll want some syntax to "force access" the global
+  one. Must think about this.
 
 ## Smallish improvements
 
