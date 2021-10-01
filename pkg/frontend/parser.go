@@ -135,15 +135,18 @@ var rules []parseRule
 // declaration parses a declaration.
 //
 // TODO: This does not match the Romualdo grammar! For instance, Romualdo does
-// not support statements at the top level of a file/module (which is what we
-// are effectively parsing here). We need to leave it as is for now, at least
-// until we have functions.
+// not support statements or variable declarations at the top level of a
+// file/module (which is what we are effectively parsing here). We need to leave
+// it as is for now, at least until we have functions.
 func (p *parser) declaration() ast.Node {
 	var n ast.Node
 
-	if p.match(tokenKindGlobals) {
+	switch {
+	case p.match(tokenKindGlobals):
 		n = p.globalsDeclaration()
-	} else {
+	case p.match(tokenKindVar):
+		n = p.varDeclaration()
+	default:
 		n = p.statement()
 	}
 
@@ -156,19 +159,27 @@ func (p *parser) declaration() ast.Node {
 
 // statement parses a statement.
 func (p *parser) statement() ast.Node {
+	switch {
 	// For now at least, built-in functions are called with a leading dot, like
 	// this: .funcName(args).
-	if p.match(tokenKindDot) {
+	case p.match(tokenKindDot):
 		if p.match(tokenKindIdentifier) {
 			funcName := p.previousToken.lexeme
 			return p.builtInFunction(funcName)
 		}
 		p.errorAtCurrent("Expect built-in function name.")
-	} else if p.match(tokenKindDo) {
+
+	case p.match(tokenKindDo):
 		return p.block()
+
+	case p.match(tokenKindVar):
+		return p.varDeclaration()
+
+	default:
+		return p.expression()
 	}
 
-	return p.expression()
+	return nil // can't happen
 }
 
 // builtInFunction parses a built-in function named funcName. The current token
