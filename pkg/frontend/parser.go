@@ -248,7 +248,6 @@ func (p *parser) block() ast.Node {
 
 // globalsDeclaration parses a globals block.
 func (p *parser) globalsDeclaration() ast.Node {
-
 	globals := &ast.GlobalsBlock{
 		BaseNode: ast.BaseNode{
 			LineNumber: p.previousToken.line,
@@ -256,43 +255,7 @@ func (p *parser) globalsDeclaration() ast.Node {
 	}
 
 	for p.currentToken.kind != tokenKindEnd {
-		p.consume(tokenKindIdentifier, "Expect identifier (the variable name).")
-		name := p.previousToken.lexeme
-
-		baseNode := ast.BaseNode{
-			LineNumber: p.previousToken.line,
-		}
-
-		p.consume(tokenKindColon, "Expect ':' after variable name.")
-
-		varType := ast.Type{Tag: ast.TypeInvalid}
-		switch p.currentToken.kind {
-		case tokenKindInt:
-			varType.Tag = ast.TypeInt
-		case tokenKindFloat:
-			varType.Tag = ast.TypeFloat
-		case tokenKindBNum:
-			varType.Tag = ast.TypeBNum
-		case tokenKindString:
-			varType.Tag = ast.TypeString
-		case tokenKindBool:
-			varType.Tag = ast.TypeBool
-		default:
-			p.errorAtCurrent("Expect variable type.")
-		}
-
-		p.advance()
-
-		// TODO: Make initializer optional (use default value if not provided).
-		p.consume(tokenKindEqual, "Expect '=' after variable type.")
-
-		initializer := p.expression()
-
-		v := ast.NewVarDecl(baseNode, name, varType, initializer)
-		v.BaseNode = ast.BaseNode{
-			LineNumber: p.previousToken.line,
-		}
-
+		v := p.varDeclaration()
 		globals.Vars = append(globals.Vars, v)
 	}
 
@@ -300,6 +263,50 @@ func (p *parser) globalsDeclaration() ast.Node {
 	p.consume(tokenKindEnd, "Expect 'end' to close 'globals' block")
 
 	return globals
+}
+
+// varDeclaration parses a variable declaration. The next token is supposed to
+// be the variable name.
+func (p *parser) varDeclaration() *ast.VarDecl {
+	p.consume(tokenKindIdentifier, "Expect identifier (the variable name).")
+	name := p.previousToken.lexeme
+
+	baseNode := ast.BaseNode{
+		LineNumber: p.previousToken.line,
+	}
+
+	// TODO: Make type optional if initializer is present.
+	p.consume(tokenKindColon, "Expect ':' after variable name.")
+
+	varType := ast.Type{Tag: ast.TypeInvalid}
+	switch p.currentToken.kind {
+	case tokenKindInt:
+		varType.Tag = ast.TypeInt
+	case tokenKindFloat:
+		varType.Tag = ast.TypeFloat
+	case tokenKindBNum:
+		varType.Tag = ast.TypeBNum
+	case tokenKindString:
+		varType.Tag = ast.TypeString
+	case tokenKindBool:
+		varType.Tag = ast.TypeBool
+	default:
+		p.errorAtCurrent("Expect variable type.")
+	}
+
+	p.advance()
+
+	// TODO: Make initializer optional (use default value if not provided).
+	p.consume(tokenKindEqual, "Expect '=' after variable type.")
+
+	initializer := p.expression()
+
+	v := ast.NewVarDecl(baseNode, name, varType, initializer)
+	v.BaseNode = ast.BaseNode{
+		LineNumber: p.previousToken.line,
+	}
+
+	return v
 }
 
 // numberLiteral parses a number literal (int, float, or bnum). The number
