@@ -293,19 +293,19 @@ func (n *BuiltInFunction) Walk(v Visitor) {
 	v.Leave(n)
 }
 
-// VarsBlock is an AST node representing a vars block.
-type VarsBlock struct {
+// GlobalsBlock is an AST node representing a globals block.
+type GlobalsBlock struct {
 	BaseNode
 
 	// Vars contains the variables defined in this block.
 	Vars []*VarDecl
 }
 
-func (n *VarsBlock) Type() Type {
+func (n *GlobalsBlock) Type() Type {
 	return Type{TypeVoid}
 }
 
-func (n *VarsBlock) Walk(v Visitor) {
+func (n *GlobalsBlock) Walk(v Visitor) {
 	v.Enter(n)
 	for _, varDecl := range n.Vars {
 		varDecl.Walk(v)

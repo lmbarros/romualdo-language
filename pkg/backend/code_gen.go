@@ -174,7 +174,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		}
 		cg.emitBytes(bytecode.OpPrint)
 
-	case *ast.VarsBlock:
+	case *ast.GlobalsBlock:
 		break
 
 	case *ast.VarDecl:

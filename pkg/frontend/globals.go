@@ -18,8 +18,8 @@ import (
 func extractGlobalTypes(sw *ast.Storyworld) map[string]ast.Type {
 	types := map[string]ast.Type{}
 	for _, decl := range sw.Declarations {
-		if vars, ok := decl.(*ast.VarsBlock); ok {
-			for _, v := range vars.Vars {
+		if globals, ok := decl.(*ast.GlobalsBlock); ok {
+			for _, v := range globals.Vars {
 				types[v.Name] = v.Type()
 			}
 		}

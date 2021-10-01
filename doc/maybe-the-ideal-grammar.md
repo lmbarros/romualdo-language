@@ -232,9 +232,8 @@ Some notes about the statements:
   `for i in range(0, 10) do ... end` and `for t in arrayOfThings do ... end`,
   but then I'd have to store some additional state (the `range()` result, the
   current pointer into `arrayOfThings`) somewhere and don't know where this
-  somewhere would be. Maybe to implement `for` loops I'll need to relax my
-  variable declaration rules (now I require them to be all declared in a single
-  `vars` block). Anyway, for now, `for` loops are not available at all.
+  somewhere would be. Probably in a local variable. Anyway, for now, `for` loops
+  are not available at all.
 
 ## Expressions
 

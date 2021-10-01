@@ -142,7 +142,7 @@ func (p *parser) declaration() ast.Node {
 	var n ast.Node
 
 	if p.match(tokenKindGlobals) {
-		n = p.varsDeclaration()
+		n = p.globalsDeclaration()
 	} else {
 		n = p.statement()
 	}
@@ -246,10 +246,10 @@ func (p *parser) block() ast.Node {
 	return block
 }
 
-// varsDeclaration parses a vars block.
-func (p *parser) varsDeclaration() ast.Node {
+// globalsDeclaration parses a globals block.
+func (p *parser) globalsDeclaration() ast.Node {
 
-	vars := &ast.VarsBlock{
+	globals := &ast.GlobalsBlock{
 		BaseNode: ast.BaseNode{
 			LineNumber: p.previousToken.line,
 		},
@@ -293,13 +293,13 @@ func (p *parser) varsDeclaration() ast.Node {
 			LineNumber: p.previousToken.line,
 		}
 
-		vars.Vars = append(vars.Vars, v)
+		globals.Vars = append(globals.Vars, v)
 	}
 
 	// TODO: A kind compiler would tell the line where the block started.
-	p.consume(tokenKindEnd, "Expect 'end' to close 'vars' block")
+	p.consume(tokenKindEnd, "Expect 'end' to close 'globals' block")
 
-	return vars
+	return globals
 }
 
 // numberLiteral parses a number literal (int, float, or bnum). The number

@@ -22,9 +22,9 @@ type semanticChecker struct {
 	// on is on the top.
 	nodeStack []ast.Node
 
-	// firstGlobalVars contains the first vars block found at global level. This
-	// is used to detect multiple of these blocks (which is forbidden).
-	firstGlobalVars *ast.VarsBlock
+	// firstGlobalsBlock contains the first globals block found. This is used to
+	// detect multiple of these blocks (which is forbidden).
+	firstGlobalsBlock *ast.GlobalsBlock
 
 	// globalVariables maps the global variable names already declared to the
 	// line where they were declared. Used to detect duplicates.
@@ -41,18 +41,18 @@ func (sc *semanticChecker) Enter(node ast.Node) {
 	case *ast.Storyworld:
 		sc.globalVariables = map[string]int{}
 
-	case *ast.VarsBlock:
-		// At the base of the stack we have the Storyworld itself, so a global
-		// vars block would be the second node on the stack.
+	case *ast.GlobalsBlock:
+		// At the base of the stack we have the Storyworld itself, so a globals
+		// block would be the second node on the stack.
 		if len(sc.nodeStack) == 2 {
-			sc.checkDuplicateGlobalVarsBlock(n)
+			sc.checkDuplicateGlobalsBlock(n)
 		}
 
 	case *ast.VarDecl:
 		sc.checkVarInitializer(n)
 
 		// At the base of the stack we have the Storyworld itself, then we have
-		// a vars block. So a global variable is the third node on the stack.
+		// a globals block. So a global variable is the third node on the stack.
 		if len(sc.nodeStack) == 3 {
 			sc.checkDuplicateGlobalVariable(n)
 		}
@@ -67,17 +67,17 @@ func (sc *semanticChecker) Leave(ast.Node) {
 // Semantic checking
 //
 
-// checkDuplicateGlobalVarsBlock checks if another global vars block was already
+// checkDuplicateGlobalsBlock checks if another globals block was already
 // declared (which is forbidden).
-func (sc *semanticChecker) checkDuplicateGlobalVarsBlock(node *ast.VarsBlock) {
-	if sc.firstGlobalVars != nil {
+func (sc *semanticChecker) checkDuplicateGlobalsBlock(node *ast.GlobalsBlock) {
+	if sc.firstGlobalsBlock != nil {
 		sc.error(
-			"Only one 'vars' block allowed at global level. Found another one at line %v.",
-			sc.firstGlobalVars.Line())
+			"Only one 'globals' block is allowed. Found another one at line %v.",
+			sc.firstGlobalsBlock.Line())
 		return
 	}
 
-	sc.firstGlobalVars = node
+	sc.firstGlobalsBlock = node
 }
 
 // checkVarInitializer checks if the variable initializer is some literal value.
