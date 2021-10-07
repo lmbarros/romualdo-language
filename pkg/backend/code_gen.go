@@ -185,7 +185,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		created := cg.chunk.SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
 		if !created {
 			cg.ice(
-				"duplicate definiton of global variable '%v' on code generation",
+				"duplicate definition of global variable '%v' on code generation",
 				n.Name)
 		}
 
