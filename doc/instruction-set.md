@@ -177,6 +177,13 @@ have of `NOP` in the x86 architecture. Whatever.
 **Pops:** Two values, *B* and *A*.  
 **Pushes:** One Boolean value, telling if *A* ≠ *B*.
 
+### `POP`
+
+**Purpose:** Pops the value on the top of the stack.  
+**Immediate Operands:** None.  
+**Pops:** One values.  
+**Pushes:** Nothing.
+
 ### `POWER`
 
 **Purpose:** Raises an unbounded numeric value to the power of another unbounded

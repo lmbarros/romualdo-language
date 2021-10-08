@@ -99,6 +99,9 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 		case bytecode.OpFalse:
 			vm.push(bytecode.NewValueBool(false))
 
+		case bytecode.OpPop:
+			vm.pop()
+
 		case bytecode.OpEqual:
 			b := vm.pop()
 			a := vm.pop()

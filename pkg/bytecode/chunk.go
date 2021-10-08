@@ -31,6 +31,7 @@ const (
 	OpSubtractBNum
 	OpMultiply
 	OpDivide
+	OpPop
 	OpPower
 	OpNot
 	OpNegate
@@ -198,6 +199,9 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 
 	case OpFalse:
 		return c.disassembleSimpleInstruction(out, "FALSE", offset)
+
+	case OpPop:
+		return c.disassembleSimpleInstruction(out, "POP", offset)
 
 	case OpEqual:
 		return c.disassembleSimpleInstruction(out, "EQUAL", offset)
