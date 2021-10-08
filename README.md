@@ -10,7 +10,7 @@ different.
 ## Notes to self
 
 In order to not have to relearn this for the next I spend 5 months without
-looking at this code, here are some common steps to make a change:
+looking at this code, here are some common steps to make a language change:
 
 * Add a new AST `Node` subtype at `pkg/ast/nodes.go`.
 * Change the parser at `pkg/frontend/parser.go`; some new function will return a
@@ -22,6 +22,13 @@ looking at this code, here are some common steps to make a change:
     * Add it at `pkg/bytecode/chunk.go`.
     * Generate code for this new opcode at `pkg/backend/code_gen.go`.
     * Add code to interpret it at `pkg/vm/vm.go`.
+
+And to add a new opcode:
+
+* Document the new opcode in `doc/instruction-set.md`.
+* Add the opcode constant to `pkg/bytecode/chunk.go`
+* Implement the opcode runtime behavior in `pkg/vm/vm.go`.
+* Implement the disassembling of the opcode in `pkg/bytecode/chunk.go`.
 
 ## Credits
 
