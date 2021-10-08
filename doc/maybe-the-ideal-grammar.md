@@ -204,8 +204,9 @@ arguments = expression ( "," expression )* ;
 Some notes about the statements:
 
 * Expressions can be used as statements. Depending on the expression this can be
-  useful (an assignment often is used by itself) or useless (an expression like
-  `1 + 1` by itself serves no purpose -- but is considered valid nevertheless).
+  useful (a function call is often be used for its side-effects only) or useless
+  (an expression like `1 + 1` by itself serves no purpose -- but is considered
+  valid nevertheless).
 * Local variable declarations can appear anywhere (anywhere a statement can
   appear, *bien entendu*). A local variable exists from the point it is declared
   until the end of its scope. A local variable cannot shadow an existing local
@@ -290,6 +291,8 @@ mapEntry = IDENTIFIER "=" expression ;
 
 Notes about expressions:
 
+* TODO: Do I really want assignments as expressions? Maybe they should be
+  assignments, for an arguably cleaner language.
 * In the `call` rule, I am using `qualifiedIdentifier` in a way that is not
   semantically correct: it will match both real qualified identifiers and
   chains of `struct`member accesses.
