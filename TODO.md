@@ -22,6 +22,7 @@
       initialized by some new opcode that would be called at the start of the
       generated code), in which case I guess globals and locals would be pretty
       much the same thing from the VM point-of-view.
+* I'd like to add constants to the language at some point.
 
 ## Not so big, but not small either
 
@@ -46,12 +47,17 @@
   impractical using function libraries, because a function in a library may or
   may not work depending on the globals I have on my storyworld. But if locals
   can shadow globals, maybe I'll want some syntax to "force access" the global
-  one. Must think about this.
+  one. Must think about this. (Also relevant: [section
+  22.4.2](http://www.craftinginterpreters.com/local-variables.html#another-scope-edge-case).)
+* Add a `POPN` instruction to pop *n* values from the stack at once. Use it to
+  optimize the cleanup of locals when exiting of scopes.
+* Avoid that linear search when resolving local variables.
 
 ## Smallish improvements
 
 * Remove duplication between `typeChecker` and `semanticChecker`.
 * Allow more than 255 globals. 2^24 should be enough, as with constants.
+* Allow more than 255 locals. 2^24 should be enough, as with constants.
 * I don't like the discrepancy in the naming of opcodes `READ_GLOBAL` and
   `CONSTANT`. They are both doing kind of the same thing, but only one has the
   `READ` prefix. (On the other hand, I guess there will never be an opcode to

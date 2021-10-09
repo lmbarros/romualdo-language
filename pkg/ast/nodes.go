@@ -373,7 +373,7 @@ type Assignment struct {
 	BaseNode
 
 	// VarName is the left-hand side of the assignment. Contains the name of the
-	// global variable we are assigning to.
+	// variable we are assigning to.
 	VarName string
 
 	// Value is the right-hand side of the assignment. Contains the value we are

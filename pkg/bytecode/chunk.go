@@ -44,6 +44,8 @@ const (
 	OpPrint
 	OpReadGlobal
 	OpWriteGlobal
+	OpReadLocal
+	OpWriteLocal
 )
 
 const (
@@ -275,6 +277,12 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 	case OpWriteGlobal:
 		return c.disassembleGlobalInstruction(out, "WRITE_GLOBAL", offset)
 
+	case OpReadLocal:
+		return c.disassembleByteInstruction(out, "READ_LOCAL", offset)
+
+	case OpWriteLocal:
+		return c.disassembleByteInstruction(out, "WRITE_LOCAL", offset)
+
 	default:
 		fmt.Fprintf(out, "Unknown opcode %d\n", instruction)
 		return offset + 1
@@ -320,6 +328,17 @@ func (c *Chunk) disassembleGlobalInstruction(out io.Writer, name string, offset 
 	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Globals[index].Name)
 
 	return offset + 2
+}
+
+// disassembleByteInstruction disassembles an instruction that has a byte
+// immediate argument instruction at a given offset. name is the instruction
+// name, and the output is written to out. Returns the offset to the next
+// instruction.
+func (c *Chunk) disassembleByteInstruction(out io.Writer, name string, offset int) int {
+	arg := c.Code[offset+1]
+	fmt.Fprintf(out, "%-16s %4d\n", name, arg)
+
+	return offset + 1
 }
 
 // Converts three bytes to a 24-bit unsigned integer. a is the least significant

@@ -35,7 +35,7 @@ func Parse(source string) ast.Node {
 
 	// Look for undeclared variables, set types of global variables references
 	globalTypes := extractGlobalTypes(root)
-	vts := &globalTypeSetter{
+	vts := &variableTypeSetter{
 		GlobalTypes: globalTypes,
 	}
 	root.Walk(vts)

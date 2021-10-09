@@ -367,9 +367,20 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			value := vm.readGlobal()
 			vm.push(value)
 
+		case bytecode.OpReadLocal:
+			value := vm.stack[vm.chunk.Code[vm.ip]]
+			vm.ip++
+			vm.push(value)
+
 		case bytecode.OpWriteGlobal:
 			value := vm.top()
 			vm.writeGlobal(value)
+
+		case bytecode.OpWriteLocal:
+			value := vm.top()
+			index := vm.chunk.Code[vm.ip]
+			vm.ip++
+			vm.stack[index] = value
 
 		default:
 			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))

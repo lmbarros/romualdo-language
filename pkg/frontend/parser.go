@@ -238,10 +238,6 @@ func (p *parser) expression() ast.Node {
 
 // block parses a block, as in "block of code". What other block could it be?!
 // This is a compiler! (My comments are usually more polite than this.)
-//
-// TODO: Blocks are currently implemented as a sequence of statements. This
-// might change as I add local variables. Will a local variable declaration and
-// definition be a statement, too?
 func (p *parser) block() ast.Node {
 	block := &ast.Block{
 		BaseNode: ast.BaseNode{

@@ -51,9 +51,7 @@ func (sc *semanticChecker) Enter(node ast.Node) {
 	case *ast.VarDecl:
 		sc.checkVarInitializer(n)
 
-		// At the base of the stack we have the Storyworld itself, then we have
-		// a globals block. So a global variable is the third node on the stack.
-		if len(sc.nodeStack) == 3 {
+		if sc.isInsideGlobalsBlock() {
 			sc.checkDuplicateGlobalVariable(n)
 		}
 	}
@@ -117,4 +115,15 @@ func (sc *semanticChecker) currentLine() int {
 		return -1 // TODO: Hack for that forced RETURN we generate out of no real node.
 	}
 	return sc.nodeStack[len(sc.nodeStack)-1].Line()
+}
+
+// isInsideGlobalsBlock checks if we are currently inside a globals block.
+func (sc *semanticChecker) isInsideGlobalsBlock() bool {
+	for _, node := range sc.nodeStack {
+		_, ok := node.(*ast.GlobalsBlock)
+		if ok {
+			return true
+		}
+	}
+	return false
 }

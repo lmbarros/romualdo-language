@@ -57,6 +57,9 @@ type codeGenerator struct {
 	// on is on the top.
 	nodeStack []ast.Node
 
+	// locals holds the local variables currently in scope.
+	locals []local
+
 	// scopeDepth keeps track of the current scope depth we are in.
 	//
 	// TODO: How to interpret it? What is level zero? Global? Right at the start
@@ -178,39 +181,67 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		break
 
 	case *ast.VarDecl:
-		// We are interested only in global variables.
-		if len(cg.nodeStack) > 3 {
-			break
-		}
-		created := cg.chunk.SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
-		if !created {
-			cg.ice(
-				"duplicate definition of global variable '%v' on code generation",
-				n.Name)
+		if cg.isInsideGlobalsBlock() {
+			// Global variable
+			created := cg.chunk.SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
+			if !created {
+				cg.ice(
+					"duplicate definition of global variable '%v' on code generation",
+					n.Name)
+			}
+			// Pop the global value that now is stored in cg.chunk.Globals:
+			cg.emitBytes(bytecode.OpPop)
+		} else {
+			// Local variable
+			if len(cg.locals) == 256 {
+				cg.error("Currently only up to 255 global variables are supported.")
+			}
+
+			for _, local := range cg.locals {
+				if local.name == n.Name {
+					cg.error("Local variable %q already defined. Shadowing not allowed.", n.Name)
+				}
+			}
+
+			cg.locals = append(cg.locals, local{name: n.Name, depth: cg.scopeDepth})
 		}
 
 	case *ast.VarRef:
-		// For now, all variables are globals.
-		i := cg.chunk.GetGlobalIndex(n.Name)
-		if i < 0 {
-			cg.ice("global variable '%v' not found in the globals pool", n.Name)
+		localIndex := cg.resolveLocal(n.Name)
+		if localIndex < 0 {
+			// It's a global
+			i := cg.chunk.GetGlobalIndex(n.Name)
+			if i < 0 {
+				cg.ice("global variable '%v' not found in the globals pool", n.Name)
+			}
+			if i > 255 {
+				// TODO: Can this even happen? I guess GetGlobalIndex will never return
+				// anything over 255.
+				cg.error("Currently only up to 255 global variables are supported.")
+			}
+			cg.emitBytes(bytecode.OpReadGlobal, byte(i))
+		} else {
+			// It's a local
+			cg.emitBytes(bytecode.OpReadLocal, byte(localIndex))
 		}
-		if i > 255 {
-			cg.error("Currently only up to 255 global variables are supported.")
-		}
-		cg.emitBytes(bytecode.OpReadGlobal, byte(i))
-
 	case *ast.Assignment:
-		// For now, all assignments are to globals.
-		i := cg.chunk.GetGlobalIndex(n.VarName)
-		if i < 0 {
-			cg.error("Global variable '%v' not declared.", n.VarName)
+		localIndex := cg.resolveLocal(n.VarName)
+		if localIndex < 0 {
+			// It's a global
+			i := cg.chunk.GetGlobalIndex(n.VarName)
+			if i < 0 {
+				cg.error("Global variable '%v' not declared.", n.VarName)
+			}
+			if i > 255 {
+				// TODO: Can this even happen? I guess GetGlobalIndex will never return
+				// anything over 255.
+				cg.error("Currently only up to 255 global variables are supported.")
+			}
+			cg.emitBytes(bytecode.OpWriteGlobal, byte(i))
+		} else {
+			// It's a local
+			cg.emitBytes(bytecode.OpWriteLocal, byte(localIndex))
 		}
-		if i > 255 {
-			cg.error("Currently only up to 255 global variables are supported.")
-		}
-		cg.emitBytes(bytecode.OpWriteGlobal, byte(i))
-
 	case *ast.Block:
 		cg.endScope()
 
@@ -283,6 +314,11 @@ func (cg *codeGenerator) beginScope() {
 // endScope gets called when we leave a scope.
 func (cg *codeGenerator) endScope() {
 	cg.scopeDepth--
+
+	for len(cg.locals) > 0 && cg.locals[len(cg.locals)-1].depth > cg.scopeDepth {
+		cg.emitBytes(bytecode.OpPop)
+		cg.locals = cg.locals[:len(cg.locals)-1]
+	}
 }
 
 // error panics, reporting an error on the current node with a given error
@@ -324,4 +360,27 @@ func (cg *codeGenerator) valueFromNode(node ast.Node) bytecode.Value {
 		cg.ice("Unexpected node of type %T", node)
 	}
 	return bytecode.Value{}
+}
+
+// isInsideGlobalsBlock checks if we are currently inside a globals block.
+func (cg *codeGenerator) isInsideGlobalsBlock() bool {
+	for _, node := range cg.nodeStack {
+		_, ok := node.(*ast.GlobalsBlock)
+		if ok {
+			return true
+		}
+	}
+	return false
+}
+
+// resolveLocal finds the index into the locals array of the local variable
+// named name.
+func (cg *codeGenerator) resolveLocal(name string) int {
+	for i, local := range cg.locals {
+		if local.name == name {
+			return i
+		}
+	}
+
+	return -1
 }

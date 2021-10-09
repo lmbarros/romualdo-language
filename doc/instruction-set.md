@@ -214,6 +214,15 @@ pool.
 **Pushes:** One value, the value of the global variable taken at the index *A*
 of the globals pool.
 
+### `READ_LOCAL`
+
+**Purpose:** Reads the value of a local variable.  
+**Immediate Operands:** One byte *A*, interpreted as the index into the stack
+where the desired variable is stored.  
+**Pops:** Nothing.  
+**Pushes:** One value, the value of the local variable taken at the index *A*
+of the stack.
+
 ### `RETURN`
 
 TODO
@@ -292,4 +301,12 @@ TODO: Define semantics.
 pool.  
 **Pops:** One value, the new value the global variable value at the
 index *A* will be set to.  
+**Pushes:** One value, the same that was popped.
+
+### `WRITE_LOCAL`
+
+**Purpose:** Writes the value of a local variable.  
+**Immediate Operands:** One byte *A*, interpreted as an index into the stack
+where the variable to be written is located at.  
+**Pops:** One value, the new value the local variable.  
 **Pushes:** One value, the same that was popped.
