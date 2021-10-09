@@ -65,8 +65,22 @@ func (ap *ASTPrinter) Enter(node ast.Node) {
 	ap.builder.WriteString(indent(ap.indentLevel))
 
 	switch n := node.(type) {
+	case *ast.Storyworld:
+		ap.builder.WriteString("Storyworld\n")
+	case *ast.GlobalsBlock:
+		ap.builder.WriteString("GlobalsBlock\n")
+	case *ast.Block:
+		ap.builder.WriteString("Block\n")
+	case *ast.VarDecl:
+		ap.builder.WriteString(fmt.Sprintf("VarDecl [%v: %v]\n", n.Name, n.Type()))
+	case *ast.BuiltInFunction:
+		ap.builder.WriteString(fmt.Sprintf("BuildInFunction [%v]\n", n.Function))
+	case *ast.VarRef:
+		ap.builder.WriteString(fmt.Sprintf("VarRef [%v: %v]\n", n.Name, n.Type()))
 	case *ast.FloatLiteral:
 		ap.builder.WriteString(fmt.Sprintf("FloatLiteral [%v]\n", n.Value))
+	case *ast.BNumLiteral:
+		ap.builder.WriteString(fmt.Sprintf("BNumLiteral [%v]\n", n.Value))
 	case *ast.IntLiteral:
 		ap.builder.WriteString(fmt.Sprintf("IntLiteral [%v]\n", n.Value))
 	case *ast.BoolLiteral:

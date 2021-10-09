@@ -5,6 +5,7 @@
 * Pop the result of expression statements. They are currently left on the stack.
   The way to do this, I think, is to wrap those expressions on a new
   `ExpressionStmt` node type, then emit a `POP` when the vistor leaves it.
+* Cannot initialize a variable with a negative value!
 
 ## Big things
 
