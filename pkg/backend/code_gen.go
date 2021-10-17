@@ -274,10 +274,7 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 		case ast.EventAfterThenBlock:
 			addressToPatch := n.IfJumpAddress
 			jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
-			if jumpOffset > math.MaxInt8 || jumpOffset < math.MinInt8 {
-				cg.error("Jump offset of %v is longer than supported.", jumpOffset)
-			}
-			cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+			cg.patchJump(addressToPatch, jumpOffset)
 
 		case ast.EventBeforeElse:
 			n.ElseJumpAddress = len(cg.chunk.Code)
@@ -287,18 +284,12 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 			// generate an additional jump (which takes two bytes).
 			addressToPatch := n.IfJumpAddress
 			jumpOffset := int(cg.chunk.Code[addressToPatch+1]) + 2
-			if jumpOffset > math.MaxInt8 || jumpOffset < math.MinInt8 {
-				cg.error("Jump offset of %v is longer than supported.", jumpOffset)
-			}
-			cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+			cg.patchJump(addressToPatch, jumpOffset)
 
 		case ast.EventAfterElse:
 			addressToPatch := n.ElseJumpAddress
 			jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
-			if jumpOffset > math.MaxInt8 || jumpOffset < math.MinInt8 {
-				cg.error("Jump offset of %v is longer than supported.", jumpOffset)
-			}
-			cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+			cg.patchJump(addressToPatch, jumpOffset)
 		}
 	}
 }
@@ -435,4 +426,13 @@ func (cg *codeGenerator) resolveLocal(name string) int {
 	}
 
 	return -1
+}
+
+// patchJump patches a jump instruction. This means setting the operand of the
+// jump instruction at addressToPatch to jumpOffset.
+func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
+	if jumpOffset > math.MaxInt8 || jumpOffset < math.MinInt8 {
+		cg.error("Jump offset of %v is longer than supported.", jumpOffset)
+	}
+	cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
 }
