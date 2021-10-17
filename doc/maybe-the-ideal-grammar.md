@@ -338,6 +338,11 @@ Notes:
   visible only locally (in the file where they are declared).
 * Strings will probably be extended. One thing I want to add are localized
   strings. Not sure about the syntax and semantics, but I want them!
+    * Simple unorthodox idea: use only backticks to enclose strings. This way,
+      single and double quotes (often useful in storytelling!) are always
+      available inside strings.
+    * Or: backtick-delimited strings are the special ones, that are
+      automatically exported to a translatable file and whatnot.
 
 ## Final words
 

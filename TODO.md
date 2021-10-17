@@ -1,15 +1,34 @@
 # TODO
 
-## Bug Fix
+## Plan
 
-* Cannot initialize a variable with a negative value!
+* Follow the book to:
+    * Add logical operators
+    * Add while loops, including break and continue
+    * Add passages, maybe functions.
+    * Implement `say`, `listen`, `goto` and `gosub`.
+* Leave the book aside for a while and focus on tooling as I envision it:
+    * Separate compilation and execution.
+    * Split debugging information to a separate file.
+    * Use command-line arguments or "commands" to:
+        * Compile to bytecode.
+        * Run bytecode.
+        * Enable or disable trace execution.
+        * Disassemble a binary.
+    * Some side-by-side display of source code and assembly would be nice.
+    * Allow to split the storyworld into multiple files.
+    * Add a proper test suite.
+    * Romualdo syntax highlighting for VS Code would be cool.
+* The we can go back to the book and finish the language, adding more tests as
+  we go.
 
-## Big things
+## TODOs
 
-* Given some thought to the blend operator syntax. I am currently using `a~b~c`
-  to blends from `a` to `b` weighted by `c`, but this doesn't look good for
-  something like `-0.4b~0.3b~-0.15b`. It would require parentheses for blend
-  within blend.
+* Bug: Cannot initialize a variable with a negative constant!
+* Give some thought to the blend operator syntax. I am currently using `a~b~c`
+  to blends from `a` to `b` weighted by `c`, but:
+    * It doesn't look good with negative numbers: `-0.4b~0.3b~-0.15b`.
+    * It would require parentheses for blend within blend.
     * Must also think about its precedence. I just used anything that didn't
       felt too wrong.
 * Right now, `Chunk.SetGlobal()` and `Chunk.GetGlobalIndex()` look linearly into
@@ -21,9 +40,6 @@
       generated code), in which case I guess globals and locals would be pretty
       much the same thing from the VM point-of-view.
 * I'd like to add constants to the language at some point.
-
-## Not so big, but not small either
-
 * Implement serialization and deserialization of `CompiledStoryworld`.
 * Testing
     * Add some kind of end-to-end testing: if we run this Storyworld with this
@@ -50,12 +66,9 @@
 * Add a `POPN` instruction to pop *n* values from the stack at once. Use it to
   optimize the cleanup of locals when exiting of scopes.
 * Avoid that linear search when resolving local variables.
-
-## Smallish improvements
-
 * Remove duplication between `typeChecker` and `semanticChecker`.
-* Allow more than 255 globals. 2^24 should be enough, as with constants.
-* Allow more than 255 locals. 2^24 should be enough, as with constants.
+* Allow more than 255 globals. 2^32 should be the way to go.
+* Allow more than 255 locals. 2^32 should be the way to go.
 * I don't like the discrepancy in the naming of opcodes `READ_GLOBAL` and
   `CONSTANT`. They are both doing kind of the same thing, but only one has the
   `READ` prefix. (On the other hand, I guess there will never be an opcode to
