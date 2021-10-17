@@ -171,6 +171,9 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 			cg.ice("unknown type conversion operator: %v", n.Operator)
 		}
 
+	case *ast.IfStmt:
+		break
+
 	case *ast.BuiltInFunction:
 		if n.Function != "print" {
 			cg.ice("only %q is supported, got %q", "print", n.Function)
@@ -224,6 +227,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 			// It's a local
 			cg.emitBytes(bytecode.OpReadLocal, byte(localIndex))
 		}
+
 	case *ast.Assignment:
 		localIndex := cg.resolveLocal(n.VarName)
 		if localIndex < 0 {
@@ -242,6 +246,10 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 			// It's a local
 			cg.emitBytes(bytecode.OpWriteLocal, byte(localIndex))
 		}
+
+	case *ast.ExpressionStmt:
+		cg.emitBytes(bytecode.OpPop)
+
 	case *ast.Block:
 		cg.endScope()
 
@@ -250,6 +258,49 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	}
 
 	cg.nodeStack = cg.nodeStack[:len(cg.nodeStack)-1]
+}
+
+func (cg *codeGenerator) Event(node ast.Node, event int) {
+	if n, ok := node.(*ast.IfStmt); ok {
+		switch event {
+
+		// We initially emit a short jumps with placeholder jump offsets. We
+		// update the jump offsets once we know the size of the code block that
+		// will be jumped over.
+		case ast.EventAfterIfCondition:
+			n.IfJumpAddress = len(cg.chunk.Code)
+			cg.emitBytes(bytecode.OpJumpIfFalse, 0x00)
+
+		case ast.EventAfterThenBlock:
+			addressToPatch := n.IfJumpAddress
+			jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
+			if jumpOffset > math.MaxInt8 || jumpOffset < math.MinInt8 {
+				cg.error("Jump offset of %v is longer than supported.", jumpOffset)
+			}
+			cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+
+		case ast.EventBeforeElse:
+			n.ElseJumpAddress = len(cg.chunk.Code)
+			cg.emitBytes(bytecode.OpJump, 0x00)
+
+			// Re-patch the "if" jump address, because the "else" block will
+			// generate an additional jump (which takes two bytes).
+			addressToPatch := n.IfJumpAddress
+			jumpOffset := int(cg.chunk.Code[addressToPatch+1]) + 2
+			if jumpOffset > math.MaxInt8 || jumpOffset < math.MinInt8 {
+				cg.error("Jump offset of %v is longer than supported.", jumpOffset)
+			}
+			cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+
+		case ast.EventAfterElse:
+			addressToPatch := n.ElseJumpAddress
+			jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
+			if jumpOffset > math.MaxInt8 || jumpOffset < math.MinInt8 {
+				cg.error("Jump offset of %v is longer than supported.", jumpOffset)
+			}
+			cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+		}
+	}
 }
 
 //
@@ -283,7 +334,7 @@ func (cg *codeGenerator) emitConstant(value bytecode.Value) {
 	if constantIndex <= math.MaxUint8 {
 		cg.emitBytes(bytecode.OpConstant, byte(constantIndex))
 	} else {
-		b0, b1, b2 := bytecode.IntToThreeBytes(constantIndex)
+		b0, b1, b2 := bytecode.UIntToThreeBytes(constantIndex)
 		cg.emitBytes(bytecode.OpConstantLong, b0, b1, b2)
 	}
 }

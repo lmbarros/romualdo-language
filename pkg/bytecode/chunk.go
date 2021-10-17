@@ -36,6 +36,8 @@ const (
 	OpNot
 	OpNegate
 	OpBlend
+	OpJump
+	OpJumpIfFalse
 	OpReturn
 	OpToInt
 	OpToFloat
@@ -253,6 +255,12 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 	case OpBlend:
 		return c.disassembleSimpleInstruction(out, "BLEND", offset)
 
+	case OpJump:
+		return c.disassembleSByteInstruction(out, "JUMP", offset)
+
+	case OpJumpIfFalse:
+		return c.disassembleSByteInstruction(out, "JUMP_IF_FALSE", offset)
+
 	case OpReturn:
 		return c.disassembleSimpleInstruction(out, "RETURN", offset)
 
@@ -278,10 +286,10 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 		return c.disassembleGlobalInstruction(out, "WRITE_GLOBAL", offset)
 
 	case OpReadLocal:
-		return c.disassembleByteInstruction(out, "READ_LOCAL", offset)
+		return c.disassembleUByteInstruction(out, "READ_LOCAL", offset)
 
 	case OpWriteLocal:
-		return c.disassembleByteInstruction(out, "WRITE_LOCAL", offset)
+		return c.disassembleUByteInstruction(out, "WRITE_LOCAL", offset)
 
 	default:
 		fmt.Fprintf(out, "Unknown opcode %d\n", instruction)
@@ -314,7 +322,7 @@ func (c *Chunk) disassembleConstantInstruction(out io.Writer, name string, offse
 // at a given offset. name is the instruction name, and the output is written to
 // out. Returns the offset to the next instruction.
 func (c *Chunk) disassembleConstantLongInstruction(out io.Writer, name string, offset int) int {
-	index := ThreeBytesToInt(c.Code[offset+1], c.Code[offset+2], c.Code[offset+3])
+	index := ThreeBytesToUInt(c.Code[offset+1], c.Code[offset+2], c.Code[offset+3])
 	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Constants[index])
 
 	return offset + 4
@@ -330,11 +338,22 @@ func (c *Chunk) disassembleGlobalInstruction(out io.Writer, name string, offset 
 	return offset + 2
 }
 
-// disassembleByteInstruction disassembles an instruction that has a byte
-// immediate argument instruction at a given offset. name is the instruction
-// name, and the output is written to out. Returns the offset to the next
-// instruction.
-func (c *Chunk) disassembleByteInstruction(out io.Writer, name string, offset int) int {
+// disassembleSByteInstruction disassembles an instruction that has a signed
+// byte immediate argument instruction at a given offset. name is the
+// instruction name, and the output is written to out. Returns the offset to the
+// next instruction.
+func (c *Chunk) disassembleSByteInstruction(out io.Writer, name string, offset int) int {
+	arg := int8(c.Code[offset+1])
+	fmt.Fprintf(out, "%-16s %4d\n", name, arg)
+
+	return offset + 1
+}
+
+// disassembleUByteInstruction disassembles an instruction that has an unsigned
+// byte immediate argument instruction at a given offset. name is the
+// instruction name, and the output is written to out. Returns the offset to the
+// next instruction.
+func (c *Chunk) disassembleUByteInstruction(out io.Writer, name string, offset int) int {
 	arg := c.Code[offset+1]
 	fmt.Fprintf(out, "%-16s %4d\n", name, arg)
 
@@ -343,13 +362,13 @@ func (c *Chunk) disassembleByteInstruction(out io.Writer, name string, offset in
 
 // Converts three bytes to a 24-bit unsigned integer. a is the least significant
 // byte; c is the most significant byte.
-func ThreeBytesToInt(a, b, c byte) int {
+func ThreeBytesToUInt(a, b, c byte) int {
 	return (int(c) << 16) | (int(b) << 8) | int(a)
 }
 
 // Converts a 24-bit unsigned integer to three bytes. The least significant byte
 // is returned in a; the most significant byte is returned in c.
-func IntToThreeBytes(v int) (a, b, c byte) {
+func UIntToThreeBytes(v int) (a, b, c byte) {
 	a = byte(v & 0x000000FF)
 	b = byte((v & 0x0000FF00) >> 8)
 	c = byte((v & 0x00FF0000) >> 16)

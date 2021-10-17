@@ -391,6 +391,26 @@ func (n *Assignment) Walk(v Visitor) {
 	v.Leave(n)
 }
 
+// ExpressionStmt is an AST node representing an expression when used as a
+// statement. The important point about it is that the expression value is
+// discarded.
+type ExpressionStmt struct {
+	BaseNode
+
+	// Expr is the expression used as a statement.
+	Expr Node
+}
+
+func (n *ExpressionStmt) Type() Type {
+	return Type{TypeVoid}
+}
+
+func (n *ExpressionStmt) Walk(v Visitor) {
+	v.Enter(n)
+	n.Expr.Walk(v)
+	v.Leave(n)
+}
+
 // Block is an AST node representing a block (specificilly, a block of code).
 type Block struct {
 	BaseNode
@@ -407,6 +427,51 @@ func (n *Block) Walk(v Visitor) {
 	v.Enter(n)
 	for _, stmt := range n.Statements {
 		stmt.Walk(v)
+	}
+	v.Leave(n)
+}
+
+// IfStmt is an AST node representing an if statement.
+type IfStmt struct {
+	BaseNode
+
+	// Condition is the if condition.
+	Condition Node
+
+	// Then is the block of code executed if the condition is true.
+	Then Block
+
+	// Else is the code executed if the condition is false. Can be either a
+	// proper block or an `if` statement (in the case of an `elseif`). Might
+	// also be nil (when no `else` block is present).
+	Else Node
+
+	//
+	// Field used for code generation
+	//
+
+	// IfJumpAddress is the address of the jump instruction used for the "if".
+	IfJumpAddress int
+
+	// ElseJumpAddress is the address of the jump instruction emitted right
+	// before the "else" block.
+	ElseJumpAddress int
+}
+
+func (n *IfStmt) Type() Type {
+	return Type{TypeVoid}
+}
+
+func (n *IfStmt) Walk(v Visitor) {
+	v.Enter(n)
+	n.Condition.Walk(v)
+	v.Event(n, EventAfterIfCondition)
+	n.Then.Walk(v)
+	v.Event(n, EventAfterThenBlock)
+	if n.Else != nil {
+		v.Event(n, EventBeforeElse)
+		n.Else.Walk(v)
+		v.Event(n, EventAfterElse)
 	}
 	v.Leave(n)
 }

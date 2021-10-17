@@ -118,6 +118,9 @@ func (ts *variableTypeSetter) Leave(node ast.Node) {
 	ts.nodeStack = ts.nodeStack[:len(ts.nodeStack)-1]
 }
 
+func (ts *variableTypeSetter) Event(node ast.Node, event int) {
+}
+
 // error reports an error.
 func (ts *variableTypeSetter) error(format string, a ...interface{}) {
 	ts.errors = append(ts.errors,

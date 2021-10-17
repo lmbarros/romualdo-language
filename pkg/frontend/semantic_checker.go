@@ -61,6 +61,9 @@ func (sc *semanticChecker) Leave(ast.Node) {
 	sc.nodeStack = sc.nodeStack[:len(sc.nodeStack)-1]
 }
 
+func (sc *semanticChecker) Event(node ast.Node, event int) {
+}
+
 //
 // Semantic checking
 //

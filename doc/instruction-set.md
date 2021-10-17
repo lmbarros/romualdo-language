@@ -31,6 +31,31 @@ All arithmetic operations between bnums result in a bnum.
 Most arithmetic operations between ints result in ints. The exceptions are
 `DIVIDE` and `POWER`, which always yield float results.
 
+### Immediate operands
+
+Each instruction that has immediate operands interpret them in one of the few
+possible ways described below. The description of each instruction tells which
+of these interpretations it uses.
+
+* **Unsigned byte.** The operand is a single byte, interpreted as an unsigned
+  number.
+* **Signed byte.** The operand is a single byte, interpreted as a signed number.
+  It is stored as signal/magnitude (_not_ two's complement): if the
+  most-significant bit is 0, the number is positive, otherwise it's negative.
+* **Unsigned 24-bit integer.** The operand is a 24-bit unsigned integer. It is
+  stored as three bytes, *A*, *B*, *C* in a little endian format (in other
+  words, *A* is the least significant byte, *C* is the most significant one).
+* **Signed 24-bit integer.** The operand is a 24-bit signed integer. It is
+  stored as three bytes, *A*, *B*, *C* in a little endian format (in other
+  words, *A* is the least significant byte, *C* is the most significant one). It
+  uses a signal/magnitude representation (_not_ two's complement): the most
+  significant bit of *C* contains the sign: 0 is positive, 1 is negative.
+
+TODO: It's probably a better idea to just make those 24-bit integers
+fully-fledged 32-bit integers in two's complement. Code should be simpler and
+that extra byte would not make much of a practical difference (for the better or
+worse).
+
 ## The Instructions
 
 Instructions are listed in alphabetical order.
@@ -120,6 +145,26 @@ The result is always a float, even if the result is a whole number.
 **Immediate Operands:** None.  
 **Pops:** Two values, *B* and *A*.  
 **Pushes:** One Boolean value telling if *A* ≥ *B*.
+
+### `JUMP`
+
+**Purpose:** Jumps to a different location unconditionally.  
+**Immediate Operands:** One signed byte, interpreted as the offset to jump.  
+**Pops:** Nothing.  
+**Pushes:** Nothing.  
+**Other Effects:** Increments the instruction pointer by the amount taken as an
+immediate operand. (The increment happens after this instruction and its operand
+were fully read.)
+
+### `JUMP_IF_FALSE`
+
+**Purpose:** Jumps to a different location maybe.  
+**Immediate Operands:** One signed byte, interpreted as the offset to jump.  
+**Pops:** One Boolean value *A*.  
+**Pushes:** Nothing.  
+**Other Effects:** If *A* is a Boolean value and is false, increments the
+instruction pointer by the amount taken as an immediate operand. (The increment
+happens after this instruction and its operand were fully read.)
 
 ### `LESS`
 

@@ -48,6 +48,9 @@ func (tc *typeChecker) Leave(ast.Node) {
 	tc.nodeStack = tc.nodeStack[:len(tc.nodeStack)-1]
 }
 
+func (tc *typeChecker) Event(node ast.Node, event int) {
+}
+
 //
 // Type checking
 //

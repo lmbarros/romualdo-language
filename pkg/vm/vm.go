@@ -48,7 +48,8 @@ func New() *VM {
 func (vm *VM) Interpret(chunk *bytecode.Chunk) bool {
 	vm.chunk = chunk
 	vm.strings = chunk.Strings
-	return vm.run()
+	r := vm.run()
+	return r
 }
 
 // NewInternedValueString creates a new Value initialized to the interned string
@@ -235,6 +236,18 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			result := y*uWeight + x*(1-uWeight)
 			vm.push(bytecode.NewValueFloat(result))
 
+		case bytecode.OpJump:
+			jumpOffset := vm.chunk.Code[vm.ip]
+			vm.ip += int(jumpOffset + 1)
+
+		case bytecode.OpJumpIfFalse:
+			jumpOffset := vm.chunk.Code[vm.ip]
+			vm.ip++
+			cond := vm.pop()
+			if cond.IsBool() && !cond.AsBool() {
+				vm.ip += int(jumpOffset)
+			}
+
 		case bytecode.OpNot:
 			if !vm.peek(0).IsBool() {
 				vm.runtimeError("Operand must be a Boolean value.")
@@ -400,7 +413,7 @@ func (vm *VM) readConstant() bytecode.Value {
 // readConstant reads a three-byte constant index from the chunk bytecode and
 // returns the corresponding constant value.
 func (vm *VM) readLongConstant() bytecode.Value {
-	index := bytecode.ThreeBytesToInt(
+	index := bytecode.ThreeBytesToUInt(
 		vm.chunk.Code[vm.ip], vm.chunk.Code[vm.ip+1], vm.chunk.Code[vm.ip+2])
 
 	constant := vm.chunk.Constants[index]

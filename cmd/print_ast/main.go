@@ -71,6 +71,10 @@ func (ap *ASTPrinter) Enter(node ast.Node) {
 		ap.builder.WriteString("GlobalsBlock\n")
 	case *ast.Block:
 		ap.builder.WriteString("Block\n")
+	case *ast.IfStmt:
+		ap.builder.WriteString("If\n")
+	case *ast.ExpressionStmt:
+		ap.builder.WriteString("ExpressionStmt\n")
 	case *ast.VarDecl:
 		ap.builder.WriteString(fmt.Sprintf("VarDecl [%v: %v]\n", n.Name, n.Type()))
 	case *ast.BuiltInFunction:
@@ -101,6 +105,9 @@ func (ap *ASTPrinter) Enter(node ast.Node) {
 
 func (ap *ASTPrinter) Leave(ast.Node) {
 	ap.indentLevel--
+}
+
+func (ap *ASTPrinter) Event(node ast.Node, event int) {
 }
 
 // indent returns a string good for indenting code level levels deep.

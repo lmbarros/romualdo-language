@@ -22,6 +22,7 @@ looking at this code, here are some common steps to make a language change:
     * Add it at `pkg/bytecode/chunk.go`.
     * Generate code for this new opcode at `pkg/backend/code_gen.go`.
     * Add code to interpret it at `pkg/vm/vm.go`.
+* Add the new AST node to the AST printer.
 
 And to add a new opcode:
 

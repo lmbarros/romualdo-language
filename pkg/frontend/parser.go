@@ -169,6 +169,9 @@ func (p *parser) statement() ast.Node {
 		}
 		p.errorAtCurrent("Expect built-in function name.")
 
+	case p.match(tokenKindIf):
+		return p.ifStatement()
+
 	case p.match(tokenKindDo):
 		return p.block()
 
@@ -176,10 +179,16 @@ func (p *parser) statement() ast.Node {
 		return p.varDeclaration()
 
 	default:
-		return p.expression()
+		expr := p.expression()
+		return &ast.ExpressionStmt{
+			BaseNode: ast.BaseNode{
+				LineNumber: p.previousToken.line,
+			},
+			Expr: expr,
+		}
 	}
 
-	return nil // can't happen
+	panic("Can't happen")
 }
 
 // builtInFunction parses a built-in function named funcName. The current token
@@ -314,6 +323,56 @@ func (p *parser) varDeclaration() *ast.VarDecl {
 	}
 
 	return v
+}
+
+// ifStatement parses an if statement. The if keyword is expected to have just
+// been consumed.
+func (p *parser) ifStatement() ast.Node {
+	n := &ast.IfStmt{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+	}
+
+	n.Condition = p.expression()
+	p.consume(tokenKindThen, "Expect 'then' after condition.")
+
+	thenBlock := &ast.Block{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+	}
+
+	for !(p.check(tokenKindEnd) || p.check(tokenKindElse) || p.check(tokenKindElseif)) && !p.check(tokenKindEOF) {
+		stmt := p.statement()
+		thenBlock.Statements = append(thenBlock.Statements, stmt)
+	}
+	n.Then = *thenBlock
+
+	switch {
+	case p.match(tokenKindEnd):
+		n.Else = nil
+
+	case p.match(tokenKindElse):
+		elseBlock := &ast.Block{
+			BaseNode: ast.BaseNode{
+				LineNumber: p.previousToken.line,
+			},
+		}
+		for !p.check(tokenKindEnd) && !p.check(tokenKindEOF) {
+			stmt := p.statement()
+			elseBlock.Statements = append(elseBlock.Statements, stmt)
+		}
+		p.consume(tokenKindEnd, fmt.Sprintf("Expect: 'end' to close 'if' statement started at line %v'.", n.LineNumber))
+		n.Else = elseBlock
+
+	case p.match(tokenKindElseif):
+		n.Else = p.ifStatement()
+
+	default:
+		p.error(fmt.Sprintf("Unterminated 'if' statement at line %v.", n.LineNumber))
+	}
+	return n
 }
 
 // numberLiteral parses a number literal (int, float, or bnum). The number
