@@ -447,7 +447,7 @@ type IfStmt struct {
 	Else Node
 
 	//
-	// Field used for code generation
+	// Fields used for code generation
 	//
 
 	// IfJumpAddress is the address of the jump instruction used for the "if".
