@@ -243,12 +243,24 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			jumpOffset := vm.chunk.Code[vm.ip]
 			vm.ip += int(jumpOffset + 1)
 
+		case bytecode.OpJumpLong:
+			jumpOffset := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
+			vm.ip += jumpOffset + 4
+
 		case bytecode.OpJumpIfFalse:
 			jumpOffset := vm.chunk.Code[vm.ip]
 			vm.ip++
 			cond := vm.pop()
 			if cond.IsBool() && !cond.AsBool() {
 				vm.ip += int(jumpOffset)
+			}
+
+		case bytecode.OpJumpIfFalseLong:
+			jumpOffset := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
+			vm.ip += 4
+			cond := vm.pop()
+			if cond.IsBool() && !cond.AsBool() {
+				vm.ip += jumpOffset
 			}
 
 		case bytecode.OpNot:

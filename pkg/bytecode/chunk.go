@@ -38,7 +38,9 @@ const (
 	OpNegate
 	OpBlend
 	OpJump
+	OpJumpLong // Must be right after OpJump
 	OpJumpIfFalse
+	OpJumpIfFalseLong // Must be right after OpJumpIfFalse
 	OpReturn
 	OpToInt
 	OpToFloat
@@ -260,8 +262,14 @@ func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolin
 	case OpJump:
 		return c.disassembleSByteInstruction(out, "JUMP", offset)
 
+	case OpJumpLong:
+		return c.disassembleSIntInstruction(out, "JUMP_LONG", offset)
+
 	case OpJumpIfFalse:
 		return c.disassembleSByteInstruction(out, "JUMP_IF_FALSE", offset)
+
+	case OpJumpIfFalseLong:
+		return c.disassembleSIntInstruction(out, "JUMP_IF_FALSE_LONG", offset)
 
 	case OpReturn:
 		return c.disassembleSimpleInstruction(out, "RETURN", offset)
@@ -340,9 +348,8 @@ func (c *Chunk) disassembleGlobalInstruction(out io.Writer, name string, offset 
 }
 
 // disassembleSByteInstruction disassembles an instruction that has a signed
-// byte immediate argument instruction at a given offset. name is the
-// instruction name, and the output is written to out. Returns the offset to the
-// next instruction.
+// byte immediate argument at a given offset. name is the instruction name, and
+// the output is written to out. Returns the offset to the next instruction.
 func (c *Chunk) disassembleSByteInstruction(out io.Writer, name string, offset int) int {
 	arg := int8(c.Code[offset+1])
 	fmt.Fprintf(out, "%-16s %4d\n", name, arg)
@@ -359,6 +366,17 @@ func (c *Chunk) disassembleUByteInstruction(out io.Writer, name string, offset i
 	fmt.Fprintf(out, "%-16s %4d\n", name, arg)
 
 	return offset + 1
+}
+
+// disassembleSIntInstruction disassembles an instruction that has a 32-bit
+// signed integer immediate argument at a given offset. name is the
+// instruction name, and the output is written to out. Returns the offset to the
+// next instruction.
+func (c *Chunk) disassembleSIntInstruction(out io.Writer, name string, offset int) int {
+	arg := DecodeSInt32(c.Code[offset+1:])
+	fmt.Fprintf(out, "%-16s %4d\n", name, arg)
+
+	return offset + 4
 }
 
 // Decodes the first four bytes in bytecode into an unsigned 31-bit integer.
@@ -378,4 +396,10 @@ func EncodeUInt31(bytecode []byte, v int) {
 		panic("Value does not fit into 31 bits")
 	}
 	binary.LittleEndian.PutUint32(bytecode, uint32(v))
+}
+
+// Decodes the first four bytes in bytecode into a signed 32-bit integer.
+func DecodeSInt32(bytecode []byte) int {
+	v := binary.LittleEndian.Uint32(bytecode)
+	return int(v)
 }

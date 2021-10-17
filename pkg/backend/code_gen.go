@@ -428,11 +428,53 @@ func (cg *codeGenerator) resolveLocal(name string) int {
 	return -1
 }
 
-// patchJump patches a jump instruction. This means setting the operand of the
-// jump instruction at addressToPatch to jumpOffset.
+// patchJump patches a jump instruction. This means two things. First, setting
+// the operand of the jump instruction at addressToPatch to jumpOffset. Second,
+// if a short jump instruction is currently used and the requested jump offset
+// is larger than what a short jump supports, we "upgrade" the intruction to a
+// long jump.
+//
+// The "upgrade to a long jump" does some memory copying to open up space for
+// the longer operand used by long jumps, which is a bit unfortunate, but at
+// least this is a compile-time, not a run-time cost. Also, this works because
+// all jump offsets are relative, and the language doesn't support arbitrary
+// jumps that could be broken when parts of the bytecode shift to give space for
+// longer jump offsets.
 func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
-	if jumpOffset > math.MaxInt8 || jumpOffset < math.MinInt8 {
-		cg.error("Jump offset of %v is longer than supported.", jumpOffset)
+	if jumpOffset > math.MaxInt32 || jumpOffset < math.MinInt32 {
+		cg.error("Jump offset of %v is larger than supported.", jumpOffset)
 	}
-	cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+
+	if cg.isShortJumpOpcode(cg.chunk.Code[addressToPatch]) {
+		// Short jump instruction with short offset: just patch the offset
+		if jumpOffset >= math.MinInt8 && jumpOffset <= math.MaxInt8 {
+			cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+			return
+		}
+
+		// Short jump instruction with a long offset: upgrade to a long jump.
+		// The opcode of the long version is always one larger than the opcode
+		// of the short version.
+		cg.chunk.Code[addressToPatch]++
+
+		// Move all bytecode starting from just after the jump instruction three
+		// bytes "downslice", to open space for the longer jump offset.
+		end := len(cg.chunk.Code)
+		cg.chunk.Code = append(cg.chunk.Code, 0x00, 0x00, 0x00)
+		copy(cg.chunk.Code[addressToPatch+4:], cg.chunk.Code[addressToPatch+1:end])
+		cg.chunk.Lines = append(cg.chunk.Lines, 0x00, 0x00, 0x00)
+		copy(cg.chunk.Lines[addressToPatch+4:], cg.chunk.Lines[addressToPatch+1:end])
+
+		// Don't return yet, we'll patch the jump offset right after this if
+		// block.
+	}
+
+	// Already using a long jump instruction, simply patch the jump offset.
+	bytecode.EncodeUInt31(cg.chunk.Code[addressToPatch+1:], jumpOffset)
+}
+
+// Checks if opcode is one the jump instruction variations that use a single
+// signed byte to represent the jump offset.
+func (cg *codeGenerator) isShortJumpOpcode(opcode uint8) bool {
+	return opcode == bytecode.OpJump || opcode == bytecode.OpJumpIfFalse
 }

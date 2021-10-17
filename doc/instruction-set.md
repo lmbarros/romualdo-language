@@ -143,6 +143,21 @@ The result is always a float, even if the result is a whole number.
 immediate operand. (The increment happens after this instruction and its operand
 were fully read.)
 
+### `JUMP_LONG`
+
+**Purpose:** Jumps to a different location unconditionally, even if it is far
+away.  
+**Immediate Operands:** One signed 32-bit integer, interpreted as the offset to
+jump.  
+**Pops:** Nothing.  
+**Pushes:** Nothing.  
+**Other Effects:** Increments the instruction pointer by the amount taken as an
+immediate operand. (The increment happens after this instruction and its operand
+were fully read.)
+
+If the jump offset fits into a signed 8-bit value, it is more efficient to use
+`JUMP` instead.
+
 ### `JUMP_IF_FALSE`
 
 **Purpose:** Jumps to a different location maybe.  
@@ -152,6 +167,20 @@ were fully read.)
 **Other Effects:** If *A* is a Boolean value and is false, increments the
 instruction pointer by the amount taken as an immediate operand. (The increment
 happens after this instruction and its operand were fully read.)
+
+### `JUMP_IF_FALSE_LONG`
+
+**Purpose:** Jumps to a different location maybe, even if it is far away.  
+**Immediate Operands:** One signed 32-bit integer, interpreted as the offset to
+jump.  
+**Pops:** One Boolean value *A*.  
+**Pushes:** Nothing.  
+**Other Effects:** If *A* is a Boolean value and is false, increments the
+instruction pointer by the amount taken as an immediate operand. (The increment
+happens after this instruction and its operand were fully read.)
+
+If the jump offset fits into a signed 8-bit value, it is more efficient to use
+`JUMP_IF_FALSE` instead.
 
 ### `LESS`
 
