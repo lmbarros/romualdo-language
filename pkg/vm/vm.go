@@ -416,11 +416,9 @@ func (vm *VM) readConstant() bytecode.Value {
 // readConstant reads a three-byte constant index from the chunk bytecode and
 // returns the corresponding constant value.
 func (vm *VM) readLongConstant() bytecode.Value {
-	index := bytecode.ThreeBytesToUInt(
-		vm.chunk.Code[vm.ip], vm.chunk.Code[vm.ip+1], vm.chunk.Code[vm.ip+2])
-
+	index := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
 	constant := vm.chunk.Constants[index]
-	vm.ip += 3
+	vm.ip += 4
 	return constant
 }
 

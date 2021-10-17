@@ -8,6 +8,7 @@
 package bytecode
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"strings"
@@ -51,15 +52,16 @@ const (
 )
 
 const (
-	// MaxConstantIndex is the maximum number of constants we can have on a
-	// single chunk. This is equals to 2^24.
+	// MaxConstantsPerChunk is the maximum number of constants we can have on a
+	// single chunk. This is equal to 2^31, so that it fits on an int even on
+	// platforms that use 32-bit ints.
 	//
-	// To establish the relationship with bytecode, we have two opcodes for
-	// reading constants: bytecode.OpConstant is the faster one and supports
-	// indices between 0 and 255; when this is not enough, we also have
-	// bytecode.OpConstantLong, which can deal with the whole range of supported
-	// indices between: 0 to 16777215 (=2^24-1).
-	MaxConstantsPerChunk = 16777216
+	// To establish the relationship of this constant with our bytecode: we have
+	// two opcodes for reading constants. bytecode.OpConstant is the faster one
+	// and supports indices between 0 and 255. When this is not enough, we also
+	// have bytecode.OpConstantLong, which can deal with the whole range of
+	// supported indices between: 0 to 2_147_483_647 (=2^31-1).
+	MaxConstantsPerChunk = 2_147_483_648
 )
 
 // GlobalVar represents a global variable.
@@ -322,10 +324,9 @@ func (c *Chunk) disassembleConstantInstruction(out io.Writer, name string, offse
 // at a given offset. name is the instruction name, and the output is written to
 // out. Returns the offset to the next instruction.
 func (c *Chunk) disassembleConstantLongInstruction(out io.Writer, name string, offset int) int {
-	index := ThreeBytesToUInt(c.Code[offset+1], c.Code[offset+2], c.Code[offset+3])
+	index := DecodeUInt31(c.Code[offset+1:])
 	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, c.Constants[index])
-
-	return offset + 4
+	return offset + 5
 }
 
 // disassembleGlobalInstruction disassembles an OpReadGlobal or opWriteGlobal
@@ -360,17 +361,21 @@ func (c *Chunk) disassembleUByteInstruction(out io.Writer, name string, offset i
 	return offset + 1
 }
 
-// Converts three bytes to a 24-bit unsigned integer. a is the least significant
-// byte; c is the most significant byte.
-func ThreeBytesToUInt(a, b, c byte) int {
-	return (int(c) << 16) | (int(b) << 8) | int(a)
+// Decodes the first four bytes in bytecode into an unsigned 31-bit integer.
+// Panics if the value read does not fit into 31 bits.
+func DecodeUInt31(bytecode []byte) int {
+	v := binary.LittleEndian.Uint32(bytecode)
+	if v > 2_147_483_647 {
+		panic("Value does not fit into 31 bits")
+	}
+	return int(v)
 }
 
-// Converts a 24-bit unsigned integer to three bytes. The least significant byte
-// is returned in a; the most significant byte is returned in c.
-func UIntToThreeBytes(v int) (a, b, c byte) {
-	a = byte(v & 0x000000FF)
-	b = byte((v & 0x0000FF00) >> 8)
-	c = byte((v & 0x00FF0000) >> 16)
-	return
+// Encodes an unsigned 31-bit integer into the four first bytes of bytecode.
+// Panics if v does not fit into 31 bits.
+func EncodeUInt31(bytecode []byte, v int) {
+	if v < 0 || v > 2_147_483_647 {
+		panic("Value does not fit into 31 bits")
+	}
+	binary.LittleEndian.PutUint32(bytecode, uint32(v))
 }

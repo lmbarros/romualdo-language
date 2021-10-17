@@ -334,8 +334,9 @@ func (cg *codeGenerator) emitConstant(value bytecode.Value) {
 	if constantIndex <= math.MaxUint8 {
 		cg.emitBytes(bytecode.OpConstant, byte(constantIndex))
 	} else {
-		b0, b1, b2 := bytecode.UIntToThreeBytes(constantIndex)
-		cg.emitBytes(bytecode.OpConstantLong, b0, b1, b2)
+		operandStart := len(cg.chunk.Code) + 1
+		cg.emitBytes(bytecode.OpConstantLong, 0, 0, 0, 0)
+		bytecode.EncodeUInt31(cg.chunk.Code[operandStart:], constantIndex)
 	}
 }
 
