@@ -49,6 +49,9 @@ func (vm *VM) Interpret(chunk *bytecode.Chunk) bool {
 	vm.chunk = chunk
 	vm.strings = chunk.Strings
 	r := vm.run()
+	if len(vm.stack) != 0 {
+		panic(fmt.Sprintf("Stack size should be zero after execution, was %v.", len(vm.stack)))
+	}
 	return r
 }
 
