@@ -18,6 +18,8 @@
     * Some side-by-side display of source code and assembly would be nice.
     * Allow to split the storyworld into multiple files.
     * Add a proper test suite.
+    * Review wording of error messages. Maybe include an error code always (good
+      to add test cases that are expected to fail in some particular way).
     * Romualdo syntax highlighting for VS Code would be cool.
 * The we can go back to the book and finish the language, adding more tests as
   we go.
