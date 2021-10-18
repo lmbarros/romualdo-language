@@ -475,3 +475,34 @@ func (n *IfStmt) Walk(v Visitor) {
 	}
 	v.Leave(n)
 }
+
+// And is an AST node representing an and expression.
+type And struct {
+	BaseNode
+
+	// LHS is the expression on the left-hand-side of the expression.
+	LHS Node
+
+	// RHS is the expression on the right-hand-side of the expression.
+	RHS Node
+
+	//
+	// Fields used for code generation
+	//
+
+	// JumpAddress is the address of the jump instruction used short-circuiting
+	// the execution of the "and".
+	JumpAddress int
+}
+
+func (n *And) Type() Type {
+	return Type{TypeBool}
+}
+
+func (n *And) Walk(v Visitor) {
+	v.Enter(n)
+	n.LHS.Walk(v)
+	v.Event(n, EventAfterAnd)
+	n.RHS.Walk(v)
+	v.Leave(n)
+}

@@ -154,6 +154,11 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 			cg.ice("unknown binary operator: %v", n.Operator)
 		}
 
+	case *ast.And:
+		addressToPatch := n.JumpAddress
+		jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
+		cg.patchJump(addressToPatch, jumpOffset)
+
 	case *ast.Blend:
 		cg.emitBytes(bytecode.OpBlend)
 
@@ -261,12 +266,13 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 }
 
 func (cg *codeGenerator) Event(node ast.Node, event int) {
-	if n, ok := node.(*ast.IfStmt); ok {
-		switch event {
-
+	switch n := node.(type) {
+	case *ast.IfStmt:
 		// We initially emit a short jumps with placeholder jump offsets. We
 		// update the jump offsets once we know the size of the code block that
 		// will be jumped over.
+		switch event {
+
 		case ast.EventAfterIfCondition:
 			n.IfJumpAddress = len(cg.chunk.Code)
 			cg.emitBytes(bytecode.OpJumpIfFalse, 0x00)
@@ -291,6 +297,14 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 			jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
 			cg.patchJump(addressToPatch, jumpOffset)
 		}
+
+	case *ast.And:
+		if event != ast.EventAfterAnd {
+			cg.ice("Unexpected event while generating code for 'and' expression: %v", event)
+		}
+		n.JumpAddress = len(cg.chunk.Code)
+		cg.emitBytes(bytecode.OpJumpIfFalseNoPop, 0x00)
+		cg.emitBytes(bytecode.OpPop)
 	}
 }
 
@@ -476,5 +490,7 @@ func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
 // Checks if opcode is one the jump instruction variations that use a single
 // signed byte to represent the jump offset.
 func (cg *codeGenerator) isShortJumpOpcode(opcode uint8) bool {
-	return opcode == bytecode.OpJump || opcode == bytecode.OpJumpIfFalse
+	return opcode == bytecode.OpJump ||
+		opcode == bytecode.OpJumpIfFalse ||
+		opcode == bytecode.OpJumpIfFalseNoPop
 }

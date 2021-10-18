@@ -528,6 +528,20 @@ func (p *parser) binary(lhs ast.Node, canAssign bool) ast.Node {
 	}
 }
 
+// and parses an "and" expression. The left-hand-side argument and the "and"
+// operator are expected to have been just consumed.
+func (p *parser) and(lhs ast.Node, canAssign bool) ast.Node {
+	rhs := p.parsePrecedence(precAnd)
+	return &ast.And{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+		LHS: lhs,
+		RHS: rhs,
+	}
+
+}
+
 // blend parses a blend operator expression. The first operand (parameter x)
 // and the first tilde token are expected to have been just consumed.
 func (p *parser) blend(x ast.Node, canAssign bool) ast.Node {
@@ -740,7 +754,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindStringLiteral] = /* */ parseRule{(*parser).stringLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindFloatLiteral] = /*  */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindAlias] = /*         */ parseRule{nil /*                        */, nil /*                     */, precNone}
-	rules[tokenKindAnd] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindAnd] = /*           */ parseRule{nil /*                        */, (*parser).and /*           */, precAnd}
 	rules[tokenKindBNum] = /*          */ parseRule{(*parser).typeConversion /*   */, nil /*                     */, precNone}
 	rules[tokenKindBNumLiteral] = /*   */ parseRule{(*parser).numberLiteral /*    */, nil /*                     */, precNone}
 	rules[tokenKindBool] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}

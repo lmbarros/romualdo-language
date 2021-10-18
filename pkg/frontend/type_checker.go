@@ -40,6 +40,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkTypeConversion(n)
 	case *ast.VarDecl:
 		tc.checkVarType(n)
+	case *ast.And:
+		tc.checkAnd(n)
 	}
 
 }
@@ -127,6 +129,18 @@ func (tc *typeChecker) checkBinary(node *ast.Binary) {
 			tc.error("Operator %v expects unbounded numeric operands; got a %v on the left-hand side",
 				node.Operator, node.RHS.Type())
 		}
+	}
+}
+
+// checkAnd type checks an "and" operator.
+func (tc *typeChecker) checkAnd(node *ast.And) {
+	if node.LHS.Type().Tag != ast.TypeBool {
+		tc.error("Operator 'and' expects Boolean operands; got a %v on the left-hand side",
+			node.LHS.Type())
+	}
+	if node.RHS.Type().Tag != ast.TypeBool {
+		tc.error("Operator 'and' expects Boolean operands; got a %v on the right-hand side",
+			node.RHS.Type())
 	}
 }
 

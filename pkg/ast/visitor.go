@@ -25,6 +25,10 @@ const (
 	// statement. This is not emitted for "if" statements that don't have an
 	// "else".
 	EventAfterElse
+
+	// EventAfterAnd is emitted right after we visit the left-hand side of and
+	// "and" expression.
+	EventAfterAnd
 )
 
 // A Visitor has all the methods needed to traverse a Romualdo AST.
