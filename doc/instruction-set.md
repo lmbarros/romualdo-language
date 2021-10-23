@@ -168,19 +168,6 @@ If the jump offset fits into a signed 8-bit value, it is more efficient to use
 instruction pointer by the amount taken as an immediate operand. (The increment
 happens after this instruction and its operand were fully read.)
 
-### `JUMP_IF_FALSE_NO_POP`
-
-**Purpose:** Jumps to a different location maybe, leaving the stack intact.  
-**Immediate Operands:** One signed byte, interpreted as the offset to jump.  
-**Pops:** One Boolean value *A*.  
-**Pushes:** The same value popped, *A*.  
-**Other Effects:** If *A* is a Boolean value and is false, increments the
-instruction pointer by the amount taken as an immediate operand. (The increment
-happens after this instruction and its operand were fully read.)
-
-This is equivalent to `JUMP_IF_FALSE`, but doesn't pop the tested value from the
-stack.
-
 ### `JUMP_IF_FALSE_LONG`
 
 **Purpose:** Jumps to a different location maybe, even if it is far away.  
@@ -195,6 +182,19 @@ happens after this instruction and its operand were fully read.)
 If the jump offset fits into a signed 8-bit value, it is more efficient to use
 `JUMP_IF_FALSE` instead.
 
+### `JUMP_IF_FALSE_NO_POP`
+
+**Purpose:** Jumps to a different location maybe, leaving the stack intact.  
+**Immediate Operands:** One signed byte, interpreted as the offset to jump.  
+**Pops:** One Boolean value *A*.  
+**Pushes:** The same value popped, *A*.  
+**Other Effects:** If *A* is a Boolean value and is false, increments the
+instruction pointer by the amount taken as an immediate operand. (The increment
+happens after this instruction and its operand were fully read.)
+
+This is equivalent to `JUMP_IF_FALSE`, but doesn't pop the tested value from the
+stack.
+
 ### `JUMP_IF_FALSE_NO_POP_LONG`
 
 **Purpose:** Jumps to a different location maybe, even if it is far away,
@@ -208,7 +208,7 @@ instruction pointer by the amount taken as an immediate operand. (The increment
 happens after this instruction and its operand were fully read.)
 
 If the jump offset fits into a signed 8-bit value, it is more efficient to use
-`JUMP_IF_FALSE` instead.
+`JUMP_IF_FALSE_NO_POP` instead.
 
 This is equivalent to `JUMP_IF_FALSE_LONG`, but doesn't pop the tested value
 from the stack.
