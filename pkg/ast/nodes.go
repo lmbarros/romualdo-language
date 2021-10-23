@@ -476,7 +476,7 @@ func (n *IfStmt) Walk(v Visitor) {
 	v.Leave(n)
 }
 
-// And is an AST node representing an and expression.
+// And is an AST node representing an "and" expression.
 type And struct {
 	BaseNode
 
