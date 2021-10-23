@@ -502,7 +502,38 @@ func (n *And) Type() Type {
 func (n *And) Walk(v Visitor) {
 	v.Enter(n)
 	n.LHS.Walk(v)
-	v.Event(n, EventAfterAnd)
+	v.Event(n, EventAfterLogicalBinaryOp)
+	n.RHS.Walk(v)
+	v.Leave(n)
+}
+
+// Or is an AST node representing an "or" expression.
+type Or struct {
+	BaseNode
+
+	// LHS is the expression on the left-hand-side of the expression.
+	LHS Node
+
+	// RHS is the expression on the right-hand-side of the expression.
+	RHS Node
+
+	//
+	// Fields used for code generation
+	//
+
+	// JumpAddress is the address of the jump instruction used short-circuiting
+	// the execution of the "or".
+	JumpAddress int
+}
+
+func (n *Or) Type() Type {
+	return Type{TypeBool}
+}
+
+func (n *Or) Walk(v Visitor) {
+	v.Enter(n)
+	n.LHS.Walk(v)
+	v.Event(n, EventAfterLogicalBinaryOp)
 	n.RHS.Walk(v)
 	v.Leave(n)
 }

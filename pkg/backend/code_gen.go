@@ -159,6 +159,11 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
 		cg.patchJump(addressToPatch, jumpOffset)
 
+	case *ast.Or:
+		addressToPatch := n.JumpAddress
+		jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
+		cg.patchJump(addressToPatch, jumpOffset)
+
 	case *ast.Blend:
 		cg.emitBytes(bytecode.OpBlend)
 
@@ -299,11 +304,19 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 		}
 
 	case *ast.And:
-		if event != ast.EventAfterAnd {
+		if event != ast.EventAfterLogicalBinaryOp {
 			cg.ice("Unexpected event while generating code for 'and' expression: %v", event)
 		}
 		n.JumpAddress = len(cg.chunk.Code)
 		cg.emitBytes(bytecode.OpJumpIfFalseNoPop, 0x00)
+		cg.emitBytes(bytecode.OpPop)
+
+	case *ast.Or:
+		if event != ast.EventAfterLogicalBinaryOp {
+			cg.ice("Unexpected event while generating code for 'or' expression: %v", event)
+		}
+		n.JumpAddress = len(cg.chunk.Code)
+		cg.emitBytes(bytecode.OpJumpIfTrueNoPop, 0x00)
 		cg.emitBytes(bytecode.OpPop)
 	}
 }
@@ -492,5 +505,6 @@ func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
 func (cg *codeGenerator) isShortJumpOpcode(opcode uint8) bool {
 	return opcode == bytecode.OpJump ||
 		opcode == bytecode.OpJumpIfFalse ||
-		opcode == bytecode.OpJumpIfFalseNoPop
+		opcode == bytecode.OpJumpIfFalseNoPop ||
+		opcode == bytecode.OpJumpIfTrueNoPop
 }

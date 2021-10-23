@@ -277,6 +277,20 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				vm.ip += jumpOffset
 			}
 
+		case bytecode.OpJumpIfTrueNoPop:
+			jumpOffset := vm.chunk.Code[vm.ip]
+			vm.ip++
+			if vm.peek(0).IsBool() && vm.peek(0).AsBool() {
+				vm.ip += int(jumpOffset)
+			}
+
+		case bytecode.OpJumpIfTrueNoPopLong:
+			jumpOffset := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
+			vm.ip += 4
+			if vm.peek(0).IsBool() && vm.peek(0).AsBool() {
+				vm.ip += jumpOffset
+			}
+
 		case bytecode.OpNot:
 			if !vm.peek(0).IsBool() {
 				vm.runtimeError("Operand must be a Boolean value.")

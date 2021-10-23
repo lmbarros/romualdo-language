@@ -95,9 +95,12 @@ func (ap *ASTPrinter) Enter(node ast.Node) {
 		ap.builder.WriteString(fmt.Sprintf("Unary [%v]\n", n.Operator))
 	case *ast.Binary:
 		ap.builder.WriteString(fmt.Sprintf("Binary [%v]\n", n.Operator))
+	case *ast.And:
+		ap.builder.WriteString("And\n")
+	case *ast.Or:
+		ap.builder.WriteString("Or\n")
 	case *ast.TypeConversion:
 		ap.builder.WriteString(fmt.Sprintf("TypeConversion [%v]\n", n.Type()))
-
 	default:
 		panic(fmt.Sprintf("Unexpected node type: %T", n))
 	}

@@ -43,6 +43,8 @@ const (
 	OpJumpIfFalseLong // Must be right after OpJumpIfFalse
 	OpJumpIfFalseNoPop
 	OpJumpIfFalseNoPopLong // Must be right after OpJumpIfFalseNoPop
+	OpJumpIfTrueNoPop
+	OpJumpIfTrueNoPopLong // Must be right after OpJumpIfTrueNoPop
 	OpReturn
 	OpToInt
 	OpToFloat

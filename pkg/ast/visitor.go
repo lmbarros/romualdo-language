@@ -26,9 +26,9 @@ const (
 	// "else".
 	EventAfterElse
 
-	// EventAfterAnd is emitted right after we visit the left-hand side of and
-	// "and" expression.
-	EventAfterAnd
+	// EventAfterLogicalBinaryOp is emitted right after we visit the left-hand
+	// side of a logical binary operator (namely, "and" or "or").
+	EventAfterLogicalBinaryOp
 )
 
 // A Visitor has all the methods needed to traverse a Romualdo AST.

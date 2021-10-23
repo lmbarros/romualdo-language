@@ -539,7 +539,19 @@ func (p *parser) and(lhs ast.Node, canAssign bool) ast.Node {
 		LHS: lhs,
 		RHS: rhs,
 	}
+}
 
+// or parses an "or" expression. The left-hand-side argument and the "or"
+// operator are expected to have been just consumed.
+func (p *parser) or(lhs ast.Node, canAssign bool) ast.Node {
+	rhs := p.parsePrecedence(precAnd)
+	return &ast.Or{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+		LHS: lhs,
+		RHS: rhs,
+	}
 }
 
 // blend parses a blend operator expression. The first operand (parameter x)
@@ -783,7 +795,7 @@ func initRules() { // nolint:funlen
 	rules[tokenKindMeta] = /*          */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindNil] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindNot] = /*           */ parseRule{(*parser).unary /*            */, nil /*                     */, precNone}
-	rules[tokenKindOr] = /*            */ parseRule{nil /*                        */, nil /*                     */, precNone}
+	rules[tokenKindOr] = /*            */ parseRule{nil /*                        */, (*parser).or /*            */, precOr}
 	rules[tokenKindPassage] = /*       */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindReturn] = /*        */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindSay] = /*           */ parseRule{nil /*                        */, nil /*                     */, precNone}

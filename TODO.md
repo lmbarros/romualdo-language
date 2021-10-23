@@ -3,7 +3,6 @@
 ## Plan
 
 * Follow the book to:
-    * Add logical operators
     * Add while loops, including break and continue
     * Add passages, maybe functions.
     * Implement `say`, `listen`, `goto` and `gosub`.
@@ -33,6 +32,8 @@
     * It would require parentheses for blend within blend.
     * Must also think about its precedence. I just used anything that didn't
       felt too wrong.
+* For completeness, we should have the `JUMP_IF_TRUE` and `JUMP_IF_TRUE_LONG`
+  instructions. (We currently have only the `NO_POP` versions of them).
 * Right now, `Chunk.SetGlobal()` and `Chunk.GetGlobalIndex()` look linearly into
   the array of globals. I might want to add a map from names to indices at some
   point. In this case, would not need to store the global name in
