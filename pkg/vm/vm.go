@@ -60,7 +60,7 @@ func (vm *VM) Interpret(chunk *bytecode.Chunk) bool {
 // equal to v on this VM, we'll reuse that same memory in the returned value.
 //
 // TODO: Someday, when I have more stuff working, do some benchmarking. Remove
-// this call to intern() and see if the performance/memory different is
+// this call to intern() and see if the performance/memory difference is
 // significant in typical usage.
 func (vm *VM) NewInternedValueString(v string) bytecode.Value {
 	s := vm.strings.Intern(v)

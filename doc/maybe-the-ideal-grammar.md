@@ -292,7 +292,7 @@ mapEntry = IDENTIFIER "=" expression ;
 Notes about expressions:
 
 * TODO: Do I really want assignments as expressions? Maybe they should be
-  assignments, for an arguably cleaner language.
+  statements, for an arguably cleaner language.
 * In the `call` rule, I am using `qualifiedIdentifier` in a way that is not
   semantically correct: it will match both real qualified identifiers and
   chains of `struct`member accesses.
