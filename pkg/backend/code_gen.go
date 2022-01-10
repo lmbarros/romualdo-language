@@ -293,6 +293,9 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 
 			// Re-patch the "if" jump address, because the "else" block will
 			// generate an additional jump (which takes two bytes).
+			//
+			// FIXME: Likely to have a bug here. What if this additional jump is
+			// later patched to a long one, which takes 5 bytes?
 			addressToPatch := n.IfJumpAddress
 			jumpOffset := int(cg.chunk.Code[addressToPatch+1]) + 2
 			cg.patchJump(addressToPatch, jumpOffset)
@@ -497,6 +500,9 @@ func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
 	}
 
 	// Already using a long jump instruction, simply patch the jump offset.
+	//
+	// TODO: This could be a signed jump, right? I think all jump offsets are
+	// positive for now, but in general we should allow back jumps.
 	bytecode.EncodeUInt31(cg.chunk.Code[addressToPatch+1:], jumpOffset)
 }
 
