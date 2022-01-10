@@ -500,10 +500,7 @@ func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
 	}
 
 	// Already using a long jump instruction, simply patch the jump offset.
-	//
-	// TODO: This could be a signed jump, right? I think all jump offsets are
-	// positive for now, but in general we should allow back jumps.
-	bytecode.EncodeUInt31(cg.chunk.Code[addressToPatch+1:], jumpOffset)
+	bytecode.EncodeSInt32(cg.chunk.Code[addressToPatch+1:], -jumpOffset)
 }
 
 // Checks if opcode is one the jump instruction variations that use a single

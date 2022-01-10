@@ -407,3 +407,12 @@ func DecodeSInt32(bytecode []byte) int {
 	v := binary.LittleEndian.Uint32(bytecode)
 	return int(v)
 }
+
+// Encodes an signed 32-bit integer into the four first bytes of bytecode.
+// Panics if v does not fit into 32 bits.
+func EncodeSInt32(bytecode []byte, v int) {
+	if v < -2_147_483_648 || v > 2_147_483_647 {
+		panic("Value does not fit into 32 bits")
+	}
+	binary.LittleEndian.PutUint32(bytecode, uint32(v))
+}
