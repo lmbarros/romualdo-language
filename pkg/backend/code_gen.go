@@ -500,7 +500,7 @@ func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
 	}
 
 	// Already using a long jump instruction, simply patch the jump offset.
-	bytecode.EncodeSInt32(cg.chunk.Code[addressToPatch+1:], -jumpOffset)
+	bytecode.EncodeSInt32(cg.chunk.Code[addressToPatch+1:], jumpOffset)
 }
 
 // Checks if opcode is one the jump instruction variations that use a single
