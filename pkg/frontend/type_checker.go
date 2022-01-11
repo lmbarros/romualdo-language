@@ -42,6 +42,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkVarType(n)
 	case *ast.And:
 		tc.checkAnd(n)
+	case *ast.IfStmt:
+		tc.checkIf(n)
 	}
 
 }
@@ -141,6 +143,13 @@ func (tc *typeChecker) checkAnd(node *ast.And) {
 	if node.RHS.Type().Tag != ast.TypeBool {
 		tc.error("Operator 'and' expects Boolean operands; got a %v on the right-hand side",
 			node.RHS.Type())
+	}
+}
+
+// checkIf checks an if statement.
+func (tc *typeChecker) checkIf(node *ast.IfStmt) {
+	if node.Condition.Type().Tag != ast.TypeBool {
+		tc.error("The condition of an 'if' must be Boolean.")
 	}
 }
 
