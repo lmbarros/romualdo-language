@@ -273,7 +273,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 func (cg *codeGenerator) Event(node ast.Node, event int) {
 	switch n := node.(type) {
 	case *ast.IfStmt:
-		// We initially emit a short jumps with placeholder jump offsets. We
+		// We initially emit a short jump with placeholder jump offsets. We
 		// update the jump offsets once we know the size of the code block that
 		// will be jumped over.
 		switch event {
