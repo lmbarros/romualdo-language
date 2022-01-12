@@ -44,6 +44,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkAnd(n)
 	case *ast.IfStmt:
 		tc.checkIf(n)
+	case *ast.WhileStmt:
+		tc.checkWhile(n)
 	}
 
 }
@@ -150,6 +152,13 @@ func (tc *typeChecker) checkAnd(node *ast.And) {
 func (tc *typeChecker) checkIf(node *ast.IfStmt) {
 	if node.Condition.Type().Tag != ast.TypeBool {
 		tc.error("The condition of an 'if' must be Boolean.")
+	}
+}
+
+// checkWhile checks a while statement.
+func (tc *typeChecker) checkWhile(node *ast.WhileStmt) {
+	if node.Condition.Type().Tag != ast.TypeBool {
+		tc.error("The condition of a 'while' must be Boolean.")
 	}
 }
 

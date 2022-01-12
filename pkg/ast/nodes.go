@@ -476,6 +476,41 @@ func (n *IfStmt) Walk(v Visitor) {
 	v.Leave(n)
 }
 
+// WhileStmt is an AST node representing a while statement.
+type WhileStmt struct {
+	BaseNode
+
+	// Condition is the while condition.
+	Condition Node
+
+	// Body is the while statement body.
+	Body Block
+
+	//
+	// Fields used for code generation
+	//
+
+	// SkipJumpAddress is the address of the jump instruction used to skip the
+	// "while" body when the condition is false.
+	SkipJumpAddress int
+
+	// ConditionAddress is the address where the code for condition of the loop
+	// starts. This is where we jump to at the end of the loop.
+	ConditionAddress int
+}
+
+func (n *WhileStmt) Type() Type {
+	return Type{TypeVoid}
+}
+
+func (n *WhileStmt) Walk(v Visitor) {
+	v.Enter(n)
+	n.Condition.Walk(v)
+	v.Event(n, EventAfterWhileCondition)
+	n.Body.Walk(v)
+	v.Leave(n)
+}
+
 // And is an AST node representing an "and" expression.
 type And struct {
 	BaseNode

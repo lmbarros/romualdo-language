@@ -74,8 +74,15 @@ type codeGenerator struct {
 func (cg *codeGenerator) Enter(node ast.Node) {
 	cg.nodeStack = append(cg.nodeStack, node)
 
-	if _, ok := node.(*ast.Block); ok {
+	switch n := node.(type) {
+	case *ast.Block:
 		cg.beginScope()
+
+	case *ast.WhileStmt:
+		n.ConditionAddress = len(cg.chunk.Code)
+
+	default:
+		// nothing
 	}
 }
 
@@ -183,6 +190,24 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 
 	case *ast.IfStmt:
 		break
+
+	case *ast.WhileStmt:
+		// Emit the jump back to the start of the loop
+
+		// FIXME: I think this -2 must be -5 if the patch below upgrades the
+		// jump to a long jump.
+		jumpOffset := n.ConditionAddress - len(cg.chunk.Code) - 2
+		if jumpOffset >= math.MinInt8 {
+			cg.emitBytes(bytecode.OpJump, byte(int8(jumpOffset)))
+		} else {
+			cg.emitBytes(bytecode.OpJumpLong)
+			bytecode.EncodeSInt32(cg.chunk.Code, jumpOffset)
+		}
+
+		// Patch the jump that skips the body when the condition is false
+		addressToPatch := n.SkipJumpAddress
+		jumpOffset = len(cg.chunk.Code) - addressToPatch - 2
+		cg.patchJump(addressToPatch, jumpOffset)
 
 	case *ast.BuiltInFunction:
 		if n.Function != "print" {
@@ -304,7 +329,17 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 			addressToPatch := n.ElseJumpAddress
 			jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
 			cg.patchJump(addressToPatch, jumpOffset)
+
+		default:
+			cg.ice("Unexpected event while generating code for 'if' statement: %v", event)
 		}
+
+	case *ast.WhileStmt:
+		if event != ast.EventAfterWhileCondition {
+			cg.ice("Unexpected event while generating code for 'while' statement: %v", event)
+		}
+		n.SkipJumpAddress = len(cg.chunk.Code)
+		cg.emitBytes(bytecode.OpJumpIfFalse, 0x00)
 
 	case *ast.And:
 		if event != ast.EventAfterLogicalBinaryOp {

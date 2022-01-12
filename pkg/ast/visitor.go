@@ -26,6 +26,10 @@ const (
 	// "else".
 	EventAfterElse
 
+	// EventAfterWhileCondition is emitted right after the condition of a
+	// "while" statement has been visited.
+	EventAfterWhileCondition
+
 	// EventAfterLogicalBinaryOp is emitted right after we visit the left-hand
 	// side of a logical binary operator (namely, "and" or "or").
 	EventAfterLogicalBinaryOp

@@ -172,6 +172,9 @@ func (p *parser) statement() ast.Node {
 	case p.match(tokenKindIf):
 		return p.ifStatement()
 
+	case p.match(tokenKindWhile):
+		return p.whileStatement()
+
 	case p.match(tokenKindDo):
 		return p.block()
 
@@ -372,6 +375,34 @@ func (p *parser) ifStatement() ast.Node {
 	default:
 		p.error(fmt.Sprintf("Unterminated 'if' statement at line %v.", n.LineNumber))
 	}
+	return n
+}
+
+// whileStatement parses a while statement. The while keyword is expected to
+// have just been consumed.
+func (p *parser) whileStatement() ast.Node {
+	n := &ast.WhileStmt{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+	}
+
+	n.Condition = p.expression()
+	p.consume(tokenKindDo, fmt.Sprintf("Expect: 'do' after 'while' condition ar line %v'.", n.LineNumber))
+
+	whileBlock := &ast.Block{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+	}
+
+	for !p.check(tokenKindEnd) && !p.check(tokenKindEOF) {
+		stmt := p.statement()
+		whileBlock.Statements = append(whileBlock.Statements, stmt)
+	}
+	p.consume(tokenKindEnd, fmt.Sprintf("Expect: 'end' to close 'while' statement started at line %v'.", n.LineNumber))
+	n.Body = *whileBlock
+
 	return n
 }
 

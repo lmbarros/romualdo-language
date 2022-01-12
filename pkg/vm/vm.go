@@ -240,11 +240,11 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.push(bytecode.NewValueFloat(result))
 
 		case bytecode.OpJump:
-			jumpOffset := vm.chunk.Code[vm.ip]
+			jumpOffset := int8(vm.chunk.Code[vm.ip])
 			vm.ip += int(jumpOffset + 1)
 
 		case bytecode.OpJumpLong:
-			jumpOffset := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.chunk.Code[vm.ip:])
 			vm.ip += jumpOffset + 4
 
 		case bytecode.OpJumpIfFalse:
@@ -263,7 +263,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpJumpIfFalseLong:
-			jumpOffset := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.chunk.Code[vm.ip:])
 			vm.ip += 4
 			cond := vm.pop()
 			if cond.IsBool() && !cond.AsBool() {
@@ -271,7 +271,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpJumpIfFalseNoPopLong:
-			jumpOffset := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.chunk.Code[vm.ip:])
 			vm.ip += 4
 			if vm.peek(0).IsBool() && !vm.peek(0).AsBool() {
 				vm.ip += jumpOffset
@@ -285,7 +285,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpJumpIfTrueNoPopLong:
-			jumpOffset := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.chunk.Code[vm.ip:])
 			vm.ip += 4
 			if vm.peek(0).IsBool() && vm.peek(0).AsBool() {
 				vm.ip += jumpOffset
