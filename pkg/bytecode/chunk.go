@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 	"strings"
 )
 
@@ -387,7 +388,7 @@ func (c *Chunk) disassembleSIntInstruction(out io.Writer, name string, offset in
 // Panics if the value read does not fit into 31 bits.
 func DecodeUInt31(bytecode []byte) int {
 	v := binary.LittleEndian.Uint32(bytecode)
-	if v > 2_147_483_647 {
+	if v > math.MaxInt32 {
 		panic("Value does not fit into 31 bits")
 	}
 	return int(v)
@@ -396,7 +397,7 @@ func DecodeUInt31(bytecode []byte) int {
 // Encodes an unsigned 31-bit integer into the four first bytes of bytecode.
 // Panics if v does not fit into 31 bits.
 func EncodeUInt31(bytecode []byte, v int) {
-	if v < 0 || v > 2_147_483_647 {
+	if v < 0 || v > math.MaxInt32 {
 		panic("Value does not fit into 31 bits")
 	}
 	binary.LittleEndian.PutUint32(bytecode, uint32(v))
@@ -411,7 +412,7 @@ func DecodeSInt32(bytecode []byte) int {
 // Encodes an signed 32-bit integer into the four first bytes of bytecode.
 // Panics if v does not fit into 32 bits.
 func EncodeSInt32(bytecode []byte, v int) {
-	if v < -2_147_483_648 || v > 2_147_483_647 {
+	if v < math.MinInt32 || v > math.MaxInt32 {
 		panic("Value does not fit into 32 bits")
 	}
 	binary.LittleEndian.PutUint32(bytecode, uint32(v))
