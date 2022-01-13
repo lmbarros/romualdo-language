@@ -3,7 +3,6 @@
 ## Plan
 
 * Follow the book to:
-    * Add while loops, including break and continue
     * Add passages, maybe functions.
     * Implement `say`, `listen`, `goto` and `gosub`.
 * Leave the book aside for a while and focus on tooling as I envision it:
@@ -20,7 +19,7 @@
     * Review wording of error messages. Maybe include an error code always (good
       to add test cases that are expected to fail in some particular way).
     * Romualdo syntax highlighting for VS Code would be cool.
-* The we can go back to the book and finish the language, adding more tests as
+* Then we can go back to the book and finish the language, adding more tests as
   we go.
 
 ## TODOs
@@ -44,6 +43,8 @@
       much the same thing from the VM point-of-view.
 * I'd like to add constants to the language at some point.
 * Implement serialization and deserialization of `CompiledStoryworld`.
+* Add `break` and `continue` to loops. (As I write this, only `while` loops
+  exist, but who knows the future?)
 * Testing
     * Add some kind of end-to-end testing: if we run this Storyworld with this
       input, the output must be this one.
