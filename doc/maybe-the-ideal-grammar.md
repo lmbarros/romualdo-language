@@ -112,6 +112,47 @@ passageDecl = "passage" IDENTIFIER "@" INTEGER "(" parameters? ")" ":" type
               "end" ;
 ```
 
+### Digression: Functions versus Passages
+
+Why having both functions and Passages? Is this really needed? How do they
+differ? I don't know, this area is still a design TODO, but here's what I have
+in mind for the first implementation.
+
+First, I think there's a clear conceptual difference between them; they have
+different purposes. Passages are the structuring element of storyworlds, they
+provide support for storytelling. Functions are for computation. Of course, at
+least on the current design, they behave a lot like each other. But what if I
+want to drift the design towards something significantly different? I think
+there's potential on the idea that Passages and functions should be more
+different, to make each one better in doing its job: either telling stories or
+computing. The limits are not sharp, but to put in Crawfordian terms, a Passage
+is more about talking and listening, while a function is about thinking
+(especially heavy thinking).
+
+Having functions and Passages as separate entities in the language will allow me
+to evolve them in different directions, and this sounds like a good enough
+reason to make them separate things from the start. It's mostly about the
+future.
+
+Back to the present. For now, functions and Passages will be a lot like each
+other. Here are the differences I intend to implement as of now:
+
+* Functions are "more dynamic": we can create anonymous functions on the spot,
+  closures, etc. Passages are pretty much static: we must know at compile-time
+  what are all the Passages. Each passage has possibly mutable metadata
+  associated with it (kinda like `static` variables on a C function), and this
+  metadata must be usable by algorithms that decide what Passage to run next. I
+  think that everything gets much harder to reason about if we allow Passages to
+  be "as dynamic as functions". So:
+    * "Function lambdas" are OK, "Passage lambdas" are not OK.
+    * Function closures are OK, Passage closures are not OK.
+    * Functions don't have a metadata block, Passages do.
+* Passages can use `say` and `listen`; functions can't.
+* Passages are versioned, functions are not.
+    * That's because functions can't use `listen` and therefore they are
+      uninterruptible. We'll never have a function "in progress" in the
+      serializable VM state.
+
 ## Types
 
 Romualdo is strongly-typed (well, mostly).
@@ -161,6 +202,12 @@ The supported types are:
   of types. It is "qualified" instead of a regular `IDENTIFIER` because it may
   contain a namespace.
 
+TODO: About the type-unsafety of `map`s: We need to redesign `map` accesses in
+such a way that the syntax always require a default value to be provided. So, if
+the desired key is not there, we get a default value, not a runtime error. (This
+might be tricky to implement, especially to have a nice syntax for chains of
+nested `map`s.)
+
 ## Statements
 
 Statements are language constructs that do stuff. They don't have a value.
@@ -204,7 +251,7 @@ arguments = expression ( "," expression )* ;
 Some notes about the statements:
 
 * Expressions can be used as statements. Depending on the expression this can be
-  useful (a function call is often be used for its side-effects only) or useless
+  useful (a function call is often used for its side-effects only) or useless
   (an expression like `1 + 1` by itself serves no purpose -- but is considered
   valid nevertheless).
 * Local variable declarations can appear anywhere (anywhere a statement can
