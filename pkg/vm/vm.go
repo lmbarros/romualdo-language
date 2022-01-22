@@ -25,6 +25,12 @@ type VM struct {
 	// chunk is the Chunk containing the code to execute.
 	chunk *bytecode.Chunk
 
+	// lines maps bytecode offsets to the source code lines that originated
+	// them.
+	// TODO: This shouldn't be here, probably. Need to rethink how "trace
+	// execution" is implemented, I guess.
+	lines []int
+
 	// ip is the instruction pointer, which points to the next instruction to be
 	// executed (it's an index into chunk.Code).
 	ip int
@@ -44,10 +50,14 @@ func New() *VM {
 	}
 }
 
-// Interpret interprets a given program, passed as the source code.
-func (vm *VM) Interpret(chunk *bytecode.Chunk) bool {
-	vm.chunk = chunk
-	vm.strings = chunk.Strings
+// Interpret interprets a given compiled Storyworld.
+// TODO: Start from a Passage with a certain name, or the one whose index is
+// stored somewhere in the csw itself.
+// TODO: DebugInfo should be optional.
+func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo) bool {
+	vm.chunk = csw.Chunks[0]
+	vm.strings = csw.Chunks[0].Strings
+	vm.lines = di.ChunksLines[0]
 	r := vm.run()
 	if len(vm.stack) != 0 {
 		panic(fmt.Sprintf("Stack size should be zero after execution, was %v.", len(vm.stack)))
@@ -79,7 +89,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 
 			fmt.Print("\n")
 
-			vm.chunk.DisassembleInstruction(os.Stdout, vm.ip)
+			vm.chunk.DisassembleInstruction(os.Stdout, vm.ip, vm.lines)
 		}
 
 		instruction := vm.chunk.Code[vm.ip]
@@ -507,7 +517,7 @@ func (vm *VM) peek(distance int) bytecode.Value {
 // message and fmt.Printf-like arguments.
 func (vm *VM) runtimeError(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format+"\n", a...)
-	line := vm.chunk.Lines[vm.ip-1]
+	line := vm.lines[vm.ip-1]
 	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
 }
 

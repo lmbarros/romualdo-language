@@ -88,11 +88,7 @@ type Chunk struct {
 	// The constant values used in Code.
 	Constants []Value
 
-	// The source code line that generated each instruction. We have one entry
-	// for each entry in Code. Very space-inefficient, but very simple.
-	Lines []int
-
-	// Strings contains all the strings used in this
+	// Strings contains all the strings used in this Chunk.
 	Strings *StringInterner
 
 	// Globals contains all the global variables.
@@ -109,9 +105,8 @@ func NewChunk() *Chunk {
 
 // Write writes a byte to the chunk. line is the source code line number that
 // generated this byte.
-func (c *Chunk) Write(b uint8, line int) {
+func (c *Chunk) Write(b uint8) {
 	c.Code = append(c.Code, b)
-	c.Lines = append(c.Lines, line)
 }
 
 // AddConstant adds a constant to the chunk and returns the index of the new
@@ -162,7 +157,7 @@ func (c *Chunk) SetGlobal(name string, value Value) bool {
 
 // Disassemble disassembles the chunk and returns a string representation of
 // it. The chunk name (passed as name) is included in the disassembly.
-func (c *Chunk) Disassemble(name string) string {
+func (c *Chunk) Disassemble(name string, lines []int) string {
 	var out strings.Builder
 
 	fmt.Fprintf(&out, "== %v ==\n", name)
@@ -177,7 +172,7 @@ func (c *Chunk) Disassemble(name string) string {
 	fmt.Fprint(&out, "\n")
 
 	for offset := 0; offset < len(c.Code); {
-		offset = c.DisassembleInstruction(&out, offset)
+		offset = c.DisassembleInstruction(&out, offset, lines)
 	}
 
 	return out.String()
@@ -186,13 +181,13 @@ func (c *Chunk) Disassemble(name string) string {
 // DisassembleInstruction disassembles the instruction at a given offset and
 // returns the offset of the next instruction to disassemble. Output is written
 // to out.
-func (c *Chunk) DisassembleInstruction(out io.Writer, offset int) int { // nolint: gocyclo, funlen
+func (c *Chunk) DisassembleInstruction(out io.Writer, offset int, lines []int) int { // nolint: gocyclo, funlen
 	fmt.Fprintf(out, "%04v ", offset)
 
-	if offset > 0 && c.Lines[offset] == c.Lines[offset-1] {
+	if offset > 0 && lines[offset] == lines[offset-1] {
 		fmt.Fprint(out, "   | ")
 	} else {
-		fmt.Fprintf(out, "%4d ", c.Lines[offset])
+		fmt.Fprintf(out, "%4d ", lines[offset])
 	}
 
 	instruction := c.Code[offset]

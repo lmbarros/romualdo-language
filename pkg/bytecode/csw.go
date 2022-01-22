@@ -13,14 +13,16 @@ import (
 )
 
 // CSWMagic is the "magic number" identifying a Romualdo Compiled Storyworld. It
-// is comprised of the "RmldCSW" string followed by a SUB character.
+// is comprised of the "RmldCSW" string followed by a SUB character (which in
+// times long gone used to represent a "soft end-of-file").
 var CSWMagic = []byte{0x52, 0x6D, 0x6C, 0x64, 0x43, 0x53, 0x57, 0x1A}
 
 // CSWVersion is the current version of a Romualdo Compiled Storyworld.
 const CSWVersion byte = 0
 
 // CompiledStoryworld is a compiled, binary version of a Romualdo Language
-// "program". It can be serialized and deserialized.
+// "program". It can be serialized and deserialized. All serialized data is
+// little endian.
 //
 // You probably don't create one manually. Instead, either run the compiler to
 // generate one from source code, or read one from a file.
@@ -29,17 +31,17 @@ const CSWVersion byte = 0
 //
 // - Magic
 //
-// - 8-bit version (currently 0)
+// - 32-bit version (currently 0)
 //
-// - 32-bit size (binary data size in bytes, stored in little endian)
+// - 32-bit size (binary data size in bytes)
 //
-// - 32-bit CRC32 of the binary data (using the IEEE polynomial, stored in
-//   little endian)
+// - 32-bit CRC32 of the binary data (using the IEEE polynomial)
 //
 // - Binary data
 type CompiledStoryworld struct {
-	// Chunk is the Chunk of bytecode containing the compiled data.
-	Chunk *Chunk
+	// Chunks is a slide with all Chunks of bytecode containing the compiled
+	// data. There is one Chunk for each
+	Chunks []*Chunk
 }
 
 // ReadCompiledStoryworld deserializes a CompiledStoryworld, reading the binary

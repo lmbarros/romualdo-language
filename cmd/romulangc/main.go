@@ -45,14 +45,14 @@ func runFile(path string) {
 		os.Exit(exitCodeCompilationError)
 	}
 
-	chunk, err := backend.GenerateCode(root)
+	csw, debugInfo, err := backend.GenerateCode(root)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(exitCodeCompilationError)
 	}
 
 	theVM := vm.New()
-	if !theVM.Interpret(chunk) {
+	if !theVM.Interpret(csw, debugInfo) {
 		os.Exit(exitCodeInterpretationError)
 	}
 

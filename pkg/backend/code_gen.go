@@ -16,11 +16,18 @@ import (
 )
 
 // GenerateCode generates the bytecode for a given AST.
-func GenerateCode(root ast.Node) (chunk *bytecode.Chunk, err error) {
+func GenerateCode(root ast.Node) (
+	chunk *bytecode.CompiledStoryworld,
+	debugInfo *bytecode.DebugInfo,
+	err error) {
+
 	cg := &codeGenerator{
-		chunk:     bytecode.NewChunk(),
+		csw:       &bytecode.CompiledStoryworld{},
+		debugInfo: &bytecode.DebugInfo{},
 		nodeStack: make([]ast.Node, 0, 64),
 	}
+
+	bytecode.AddChunk(cg.csw, cg.debugInfo, "<body>")
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -35,7 +42,7 @@ func GenerateCode(root ast.Node) (chunk *bytecode.Chunk, err error) {
 
 	root.Walk(cg)
 	cg.emitBytes(bytecode.OpReturn)
-	return cg.chunk, nil
+	return cg.csw, cg.debugInfo, nil
 }
 
 // codeGeneratorError is a type used in panics to report an error in code
@@ -50,8 +57,12 @@ func (e *codeGeneratorError) Error() string {
 
 // codeGenerator is a visitor that generates a compiled Chunk from an AST.
 type codeGenerator struct {
-	// Chunk is the chunk of bytecode being generated.
-	chunk *bytecode.Chunk
+	// csw is the CompiledStoryworld being generated.
+	csw *bytecode.CompiledStoryworld
+
+	// debugInfo is the DebugInfo corresponding to the CompiledStoryworld being
+	// generated.
+	debugInfo *bytecode.DebugInfo
 
 	// nodeStack is used to keep track of the nodes being processed. The current
 	// on is on the top.
@@ -79,7 +90,7 @@ func (cg *codeGenerator) Enter(node ast.Node) {
 		cg.beginScope()
 
 	case *ast.WhileStmt:
-		n.ConditionAddress = len(cg.chunk.Code)
+		n.ConditionAddress = len(cg.currentChunk().Code)
 
 	default:
 		// nothing
@@ -163,12 +174,12 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 
 	case *ast.And:
 		addressToPatch := n.JumpAddress
-		jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
+		jumpOffset := len(cg.currentChunk().Code) - addressToPatch - 2
 		cg.patchJump(addressToPatch, jumpOffset)
 
 	case *ast.Or:
 		addressToPatch := n.JumpAddress
-		jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
+		jumpOffset := len(cg.currentChunk().Code) - addressToPatch - 2
 		cg.patchJump(addressToPatch, jumpOffset)
 
 	case *ast.Blend:
@@ -196,17 +207,17 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 
 		// FIXME: I think this -2 must be -5 if the patch below upgrades the
 		// jump to a long jump.
-		jumpOffset := n.ConditionAddress - len(cg.chunk.Code) - 2
+		jumpOffset := n.ConditionAddress - len(cg.currentChunk().Code) - 2
 		if jumpOffset >= math.MinInt8 {
 			cg.emitBytes(bytecode.OpJump, byte(int8(jumpOffset)))
 		} else {
 			cg.emitBytes(bytecode.OpJumpLong)
-			bytecode.EncodeSInt32(cg.chunk.Code, jumpOffset)
+			bytecode.EncodeSInt32(cg.currentChunk().Code, jumpOffset)
 		}
 
 		// Patch the jump that skips the body when the condition is false
 		addressToPatch := n.SkipJumpAddress
-		jumpOffset = len(cg.chunk.Code) - addressToPatch - 2
+		jumpOffset = len(cg.currentChunk().Code) - addressToPatch - 2
 		cg.patchJump(addressToPatch, jumpOffset)
 
 	case *ast.BuiltInFunction:
@@ -221,7 +232,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	case *ast.VarDecl:
 		if cg.isInsideGlobalsBlock() {
 			// Global variable
-			created := cg.chunk.SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
+			created := cg.currentChunk().SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
 			if !created {
 				cg.ice(
 					"duplicate definition of global variable '%v' on code generation",
@@ -248,7 +259,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		localIndex := cg.resolveLocal(n.Name)
 		if localIndex < 0 {
 			// It's a global
-			i := cg.chunk.GetGlobalIndex(n.Name)
+			i := cg.currentChunk().GetGlobalIndex(n.Name)
 			if i < 0 {
 				cg.ice("global variable '%v' not found in the globals pool", n.Name)
 			}
@@ -267,7 +278,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		localIndex := cg.resolveLocal(n.VarName)
 		if localIndex < 0 {
 			// It's a global
-			i := cg.chunk.GetGlobalIndex(n.VarName)
+			i := cg.currentChunk().GetGlobalIndex(n.VarName)
 			if i < 0 {
 				cg.error("Global variable '%v' not declared.", n.VarName)
 			}
@@ -304,16 +315,16 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 		switch event {
 
 		case ast.EventAfterIfCondition:
-			n.IfJumpAddress = len(cg.chunk.Code)
+			n.IfJumpAddress = len(cg.currentChunk().Code)
 			cg.emitBytes(bytecode.OpJumpIfFalse, 0x00)
 
 		case ast.EventAfterThenBlock:
 			addressToPatch := n.IfJumpAddress
-			jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
+			jumpOffset := len(cg.currentChunk().Code) - addressToPatch - 2
 			cg.patchJump(addressToPatch, jumpOffset)
 
 		case ast.EventBeforeElse:
-			n.ElseJumpAddress = len(cg.chunk.Code)
+			n.ElseJumpAddress = len(cg.currentChunk().Code)
 			cg.emitBytes(bytecode.OpJump, 0x00)
 
 			// Re-patch the "if" jump address, because the "else" block will
@@ -322,12 +333,12 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 			// FIXME: Likely to have a bug here. What if this additional jump is
 			// later patched to a long one, which takes 5 bytes?
 			addressToPatch := n.IfJumpAddress
-			jumpOffset := int(cg.chunk.Code[addressToPatch+1]) + 2
+			jumpOffset := int(cg.currentChunk().Code[addressToPatch+1]) + 2
 			cg.patchJump(addressToPatch, jumpOffset)
 
 		case ast.EventAfterElse:
 			addressToPatch := n.ElseJumpAddress
-			jumpOffset := len(cg.chunk.Code) - addressToPatch - 2
+			jumpOffset := len(cg.currentChunk().Code) - addressToPatch - 2
 			cg.patchJump(addressToPatch, jumpOffset)
 
 		default:
@@ -338,14 +349,14 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 		if event != ast.EventAfterWhileCondition {
 			cg.ice("Unexpected event while generating code for 'while' statement: %v", event)
 		}
-		n.SkipJumpAddress = len(cg.chunk.Code)
+		n.SkipJumpAddress = len(cg.currentChunk().Code)
 		cg.emitBytes(bytecode.OpJumpIfFalse, 0x00)
 
 	case *ast.And:
 		if event != ast.EventAfterLogicalBinaryOp {
 			cg.ice("Unexpected event while generating code for 'and' expression: %v", event)
 		}
-		n.JumpAddress = len(cg.chunk.Code)
+		n.JumpAddress = len(cg.currentChunk().Code)
 		cg.emitBytes(bytecode.OpJumpIfFalseNoPop, 0x00)
 		cg.emitBytes(bytecode.OpPop)
 
@@ -353,7 +364,7 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 		if event != ast.EventAfterLogicalBinaryOp {
 			cg.ice("Unexpected event while generating code for 'or' expression: %v", event)
 		}
-		n.JumpAddress = len(cg.chunk.Code)
+		n.JumpAddress = len(cg.currentChunk().Code)
 		cg.emitBytes(bytecode.OpJumpIfTrueNoPop, 0x00)
 		cg.emitBytes(bytecode.OpPop)
 	}
@@ -374,13 +385,20 @@ func (cg *codeGenerator) currentLine() int {
 
 // currentChunk returns the current chunk we are compiling into.
 func (cg *codeGenerator) currentChunk() *bytecode.Chunk {
-	return cg.chunk
+	return cg.csw.Chunks[0]
+}
+
+// currentLines returns the current array mapping instructions to source code lines.
+func (cg *codeGenerator) currentLines() []int {
+	return cg.debugInfo.ChunksLines[0]
 }
 
 // emitBytes writes one or more bytes to the bytecode chunk being generated.
 func (cg *codeGenerator) emitBytes(bytes ...byte) {
 	for _, b := range bytes {
-		cg.currentChunk().Write(b, cg.currentLine())
+		cg.currentChunk().Write(b)
+		lines := cg.currentLines()
+		lines = append(lines, cg.currentLine())
 	}
 }
 
@@ -390,9 +408,9 @@ func (cg *codeGenerator) emitConstant(value bytecode.Value) {
 	if constantIndex <= math.MaxUint8 {
 		cg.emitBytes(bytecode.OpConstant, byte(constantIndex))
 	} else {
-		operandStart := len(cg.chunk.Code) + 1
+		operandStart := len(cg.currentChunk().Code) + 1
 		cg.emitBytes(bytecode.OpConstantLong, 0, 0, 0, 0)
-		bytecode.EncodeUInt31(cg.chunk.Code[operandStart:], constantIndex)
+		bytecode.EncodeUInt31(cg.currentChunk().Code[operandStart:], constantIndex)
 	}
 }
 
@@ -510,32 +528,33 @@ func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
 		cg.error("Jump offset of %v is larger than supported.", jumpOffset)
 	}
 
-	if cg.isShortJumpOpcode(cg.chunk.Code[addressToPatch]) {
+	if cg.isShortJumpOpcode(cg.currentChunk().Code[addressToPatch]) {
 		// Short jump instruction with short offset: just patch the offset
 		if jumpOffset >= math.MinInt8 && jumpOffset <= math.MaxInt8 {
-			cg.chunk.Code[addressToPatch+1] = uint8(jumpOffset)
+			cg.currentChunk().Code[addressToPatch+1] = uint8(jumpOffset)
 			return
 		}
 
 		// Short jump instruction with a long offset: upgrade to a long jump.
 		// The opcode of the long version is always one larger than the opcode
 		// of the short version.
-		cg.chunk.Code[addressToPatch]++
+		cg.currentChunk().Code[addressToPatch]++
 
 		// Move all bytecode starting from just after the jump instruction three
 		// bytes "downslice", to open space for the longer jump offset.
-		end := len(cg.chunk.Code)
-		cg.chunk.Code = append(cg.chunk.Code, 0x00, 0x00, 0x00)
-		copy(cg.chunk.Code[addressToPatch+4:], cg.chunk.Code[addressToPatch+1:end])
-		cg.chunk.Lines = append(cg.chunk.Lines, 0x00, 0x00, 0x00)
-		copy(cg.chunk.Lines[addressToPatch+4:], cg.chunk.Lines[addressToPatch+1:end])
+		end := len(cg.currentChunk().Code)
+		cg.currentChunk().Code = append(cg.currentChunk().Code, 0x00, 0x00, 0x00)
+		copy(cg.currentChunk().Code[addressToPatch+4:], cg.currentChunk().Code[addressToPatch+1:end])
+		lines := cg.currentLines()
+		lines = append(lines, 0x00, 0x00, 0x00)
+		copy(lines[addressToPatch+4:], lines[addressToPatch+1:end])
 
 		// Don't return yet, we'll patch the jump offset right after this if
 		// block.
 	}
 
 	// Already using a long jump instruction, simply patch the jump offset.
-	bytecode.EncodeSInt32(cg.chunk.Code[addressToPatch+1:], jumpOffset)
+	bytecode.EncodeSInt32(cg.currentChunk().Code[addressToPatch+1:], jumpOffset)
 }
 
 // Checks if opcode is one the jump instruction variations that use a single
