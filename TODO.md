@@ -25,6 +25,8 @@
 ## TODOs
 
 * Bug: Cannot initialize a variable with a negative constant!
+* One thing to consider: what's the performance hit of having only `LONG`
+  instructions? It would make many things so much simpler...
 * Give some thought to the blend operator syntax. I am currently using `a~b~c`
   to blends from `a` to `b` weighted by `c`, but:
     * It doesn't look good with negative numbers: `-0.4b~0.3b~-0.15b`.
