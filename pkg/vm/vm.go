@@ -22,14 +22,13 @@ type VM struct {
 	// runs through it.
 	DebugTraceExecution bool
 
-	// chunk is the Chunk containing the code to execute.
-	chunk *bytecode.Chunk
+	// csw is the compiled storyworld we are executing.
+	csw *bytecode.CompiledStoryworld
 
-	// lines maps bytecode offsets to the source code lines that originated
-	// them.
-	// TODO: This shouldn't be here, probably. Need to rethink how "trace
-	// execution" is implemented, I guess.
-	lines []int
+	// debugInfo contains the debug information corresponding to csw.
+	// TODO: Make this optional. If nil, issue less friendly error messages,
+	// etc.
+	debugInfo *bytecode.DebugInfo
 
 	// ip is the instruction pointer, which points to the next instruction to be
 	// executed (it's an index into chunk.Code).
@@ -50,14 +49,28 @@ func New() *VM {
 	}
 }
 
+// currentChunk returns the chunk currently being executed.
+func (vm *VM) currentChunk() *bytecode.Chunk {
+	return vm.csw.Chunks[0] // TODO: hardcoded for now.
+}
+
+// currentLines returns the map from instruction to source code lines for the
+// chunk currently being executed. Returns nil if vm.debugInfo == nil.
+func (vm *VM) currentLines() []int {
+	if vm.debugInfo == nil {
+		return nil
+	}
+	return vm.debugInfo.ChunksLines[0] // TODO: hardcoded for now.
+}
+
 // Interpret interprets a given compiled Storyworld.
 // TODO: Start from a Passage with a certain name, or the one whose index is
 // stored somewhere in the csw itself.
 // TODO: DebugInfo should be optional.
 func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo) bool {
-	vm.chunk = csw.Chunks[0]
-	vm.strings = csw.Chunks[0].Strings
-	vm.lines = di.ChunksLines[0]
+	vm.csw = csw
+	vm.debugInfo = di
+	vm.strings = csw.Chunks[0].Strings // TODO: temporary; Strings will move to csw
 	r := vm.run()
 	if len(vm.stack) != 0 {
 		panic(fmt.Sprintf("Stack size should be zero after execution, was %v.", len(vm.stack)))
@@ -89,10 +102,10 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 
 			fmt.Print("\n")
 
-			vm.chunk.DisassembleInstruction(os.Stdout, vm.ip, vm.lines)
+			vm.csw.DisassembleInstruction(vm.currentChunk(), os.Stdout, vm.ip, vm.currentLines())
 		}
 
-		instruction := vm.chunk.Code[vm.ip]
+		instruction := vm.currentChunk().Code[vm.ip]
 		vm.ip++
 
 		switch instruction {
@@ -250,15 +263,15 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.push(bytecode.NewValueFloat(result))
 
 		case bytecode.OpJump:
-			jumpOffset := int8(vm.chunk.Code[vm.ip])
+			jumpOffset := int8(vm.currentChunk().Code[vm.ip])
 			vm.ip += int(jumpOffset + 1)
 
 		case bytecode.OpJumpLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.chunk.Code[vm.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.ip:])
 			vm.ip += jumpOffset + 4
 
 		case bytecode.OpJumpIfFalse:
-			jumpOffset := vm.chunk.Code[vm.ip]
+			jumpOffset := vm.currentChunk().Code[vm.ip]
 			vm.ip++
 			cond := vm.pop()
 			if cond.IsBool() && !cond.AsBool() {
@@ -266,14 +279,14 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpJumpIfFalseNoPop:
-			jumpOffset := vm.chunk.Code[vm.ip]
+			jumpOffset := vm.currentChunk().Code[vm.ip]
 			vm.ip++
 			if vm.peek(0).IsBool() && !vm.peek(0).AsBool() {
 				vm.ip += int(jumpOffset)
 			}
 
 		case bytecode.OpJumpIfFalseLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.chunk.Code[vm.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.ip:])
 			vm.ip += 4
 			cond := vm.pop()
 			if cond.IsBool() && !cond.AsBool() {
@@ -281,21 +294,21 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpJumpIfFalseNoPopLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.chunk.Code[vm.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.ip:])
 			vm.ip += 4
 			if vm.peek(0).IsBool() && !vm.peek(0).AsBool() {
 				vm.ip += jumpOffset
 			}
 
 		case bytecode.OpJumpIfTrueNoPop:
-			jumpOffset := vm.chunk.Code[vm.ip]
+			jumpOffset := vm.currentChunk().Code[vm.ip]
 			vm.ip++
 			if vm.peek(0).IsBool() && vm.peek(0).AsBool() {
 				vm.ip += int(jumpOffset)
 			}
 
 		case bytecode.OpJumpIfTrueNoPopLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.chunk.Code[vm.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.ip:])
 			vm.ip += 4
 			if vm.peek(0).IsBool() && vm.peek(0).AsBool() {
 				vm.ip += jumpOffset
@@ -434,7 +447,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.push(value)
 
 		case bytecode.OpReadLocal:
-			value := vm.stack[vm.chunk.Code[vm.ip]]
+			value := vm.stack[vm.currentChunk().Code[vm.ip]]
 			vm.ip++
 			vm.push(value)
 
@@ -444,7 +457,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 
 		case bytecode.OpWriteLocal:
 			value := vm.top()
-			index := vm.chunk.Code[vm.ip]
+			index := vm.currentChunk().Code[vm.ip]
 			vm.ip++
 			vm.stack[index] = value
 
@@ -457,7 +470,8 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 // readConstant reads a single-byte constant index from the chunk bytecode and
 // returns the corresponding constant value.
 func (vm *VM) readConstant() bytecode.Value {
-	constant := vm.chunk.Constants[vm.chunk.Code[vm.ip]]
+	chunk := vm.currentChunk()
+	constant := chunk.Constants[chunk.Code[vm.ip]]
 	vm.ip++
 
 	return constant
@@ -466,8 +480,9 @@ func (vm *VM) readConstant() bytecode.Value {
 // readConstant reads a three-byte constant index from the chunk bytecode and
 // returns the corresponding constant value.
 func (vm *VM) readLongConstant() bytecode.Value {
-	index := bytecode.DecodeUInt31(vm.chunk.Code[vm.ip:])
-	constant := vm.chunk.Constants[index]
+	chunk := vm.currentChunk()
+	index := bytecode.DecodeUInt31(chunk.Code[vm.ip:])
+	constant := chunk.Constants[index]
 	vm.ip += 4
 	return constant
 }
@@ -475,7 +490,7 @@ func (vm *VM) readLongConstant() bytecode.Value {
 // readGlobal reads a single-byte global index from the chunk bytecode and
 // returns the corresponding global variable value.
 func (vm *VM) readGlobal() bytecode.Value {
-	value := vm.chunk.Globals[vm.chunk.Code[vm.ip]]
+	value := vm.csw.Globals[vm.currentChunk().Code[vm.ip]]
 	vm.ip++
 	return value.Value
 }
@@ -484,7 +499,7 @@ func (vm *VM) readGlobal() bytecode.Value {
 // reads a single-byte from the chunk bytecode and uses it as the index into the
 // globals table.
 func (vm *VM) writeGlobal(value bytecode.Value) {
-	vm.chunk.Globals[vm.chunk.Code[vm.ip]].Value = value
+	vm.csw.Globals[vm.currentChunk().Code[vm.ip]].Value = value
 	vm.ip++
 }
 
@@ -517,7 +532,7 @@ func (vm *VM) peek(distance int) bytecode.Value {
 // message and fmt.Printf-like arguments.
 func (vm *VM) runtimeError(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format+"\n", a...)
-	line := vm.lines[vm.ip-1]
+	line := vm.currentLines()[vm.ip-1]
 	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
 }
 

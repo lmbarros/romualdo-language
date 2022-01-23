@@ -232,7 +232,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	case *ast.VarDecl:
 		if cg.isInsideGlobalsBlock() {
 			// Global variable
-			created := cg.currentChunk().SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
+			created := cg.csw.SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
 			if !created {
 				cg.ice(
 					"duplicate definition of global variable '%v' on code generation",
@@ -259,7 +259,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		localIndex := cg.resolveLocal(n.Name)
 		if localIndex < 0 {
 			// It's a global
-			i := cg.currentChunk().GetGlobalIndex(n.Name)
+			i := cg.csw.GetGlobalIndex(n.Name)
 			if i < 0 {
 				cg.ice("global variable '%v' not found in the globals pool", n.Name)
 			}
@@ -278,7 +278,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		localIndex := cg.resolveLocal(n.VarName)
 		if localIndex < 0 {
 			// It's a global
-			i := cg.currentChunk().GetGlobalIndex(n.VarName)
+			i := cg.csw.GetGlobalIndex(n.VarName)
 			if i < 0 {
 				cg.error("Global variable '%v' not declared.", n.VarName)
 			}
