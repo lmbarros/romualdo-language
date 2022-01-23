@@ -27,7 +27,7 @@ type Storyworld struct {
 }
 
 func (n *Storyworld) Type() Type {
-	return Type{TypeVoid}
+	return Type{Tag: TypeVoid}
 }
 
 func (n *Storyworld) Walk(v Visitor) {
@@ -47,7 +47,7 @@ type FloatLiteral struct {
 }
 
 func (n *FloatLiteral) Type() Type {
-	return Type{TypeFloat}
+	return Type{Tag: TypeFloat}
 }
 
 func (n *FloatLiteral) Walk(v Visitor) {
@@ -64,7 +64,7 @@ type IntLiteral struct {
 }
 
 func (n *IntLiteral) Type() Type {
-	return Type{TypeInt}
+	return Type{Tag: TypeInt}
 }
 
 func (n *IntLiteral) Walk(v Visitor) {
@@ -81,7 +81,7 @@ type BNumLiteral struct {
 }
 
 func (n *BNumLiteral) Type() Type {
-	return Type{TypeBNum}
+	return Type{Tag: TypeBNum}
 }
 
 func (n *BNumLiteral) Walk(v Visitor) {
@@ -98,7 +98,7 @@ type BoolLiteral struct {
 }
 
 func (n *BoolLiteral) Type() Type {
-	return Type{TypeBool}
+	return Type{Tag: TypeBool}
 }
 
 func (n *BoolLiteral) Walk(v Visitor) {
@@ -115,7 +115,7 @@ type StringLiteral struct {
 }
 
 func (n *StringLiteral) Type() Type {
-	return Type{TypeString}
+	return Type{Tag: TypeString}
 }
 
 func (n *StringLiteral) Walk(v Visitor) {
@@ -173,7 +173,7 @@ func (n *Binary) Type() Type { // nolint: gocognit
 	if n.cachedType == nil {
 		switch n.Operator {
 		case "==", "!=", "<", "<=", ">", ">=":
-			n.cachedType = &Type{TypeBool}
+			n.cachedType = &Type{Tag: TypeBool}
 		case "+", "-", "*":
 			if n.LHS.Type().Tag == TypeString || n.LHS.Type().Tag == TypeBNum {
 				t := n.LHS.Type()
@@ -182,10 +182,10 @@ func (n *Binary) Type() Type { // nolint: gocognit
 				t := n.LHS.Type()
 				n.cachedType = &t
 			} else {
-				n.cachedType = &Type{TypeFloat}
+				n.cachedType = &Type{Tag: TypeFloat}
 			}
 		default:
-			n.cachedType = &Type{TypeFloat}
+			n.cachedType = &Type{Tag: TypeFloat}
 		}
 	}
 
@@ -214,7 +214,7 @@ type Blend struct {
 }
 
 func (n *Blend) Type() Type {
-	return Type{TypeBNum}
+	return Type{Tag: TypeBNum}
 }
 
 func (n *Blend) Walk(v Visitor) {
@@ -244,15 +244,15 @@ type TypeConversion struct {
 func (n *TypeConversion) Type() Type {
 	switch n.Operator {
 	case "int":
-		return Type{TypeInt}
+		return Type{Tag: TypeInt}
 	case "float":
-		return Type{TypeFloat}
+		return Type{Tag: TypeFloat}
 	case "bnum":
-		return Type{TypeBNum}
+		return Type{Tag: TypeBNum}
 	case "string":
-		return Type{TypeString}
+		return Type{Tag: TypeString}
 	default:
-		return Type{TypeInvalid}
+		return Type{Tag: TypeInvalid}
 	}
 }
 
@@ -279,9 +279,9 @@ type BuiltInFunction struct {
 func (n *BuiltInFunction) Type() Type {
 	switch n.Function {
 	case "print":
-		return Type{TypeVoid}
+		return Type{Tag: TypeVoid}
 	default:
-		return Type{TypeInvalid}
+		return Type{Tag: TypeInvalid}
 	}
 }
 
@@ -302,7 +302,7 @@ type GlobalsBlock struct {
 }
 
 func (n *GlobalsBlock) Type() Type {
-	return Type{TypeVoid}
+	return Type{Tag: TypeVoid}
 }
 
 func (n *GlobalsBlock) Walk(v Visitor) {
@@ -310,6 +310,42 @@ func (n *GlobalsBlock) Walk(v Visitor) {
 	for _, varDecl := range n.Vars {
 		varDecl.Walk(v)
 	}
+	v.Leave(n)
+}
+
+// Parameter is a parameter of a function or Passage.
+type Parameter struct {
+	// Name is the parameter name.
+	Name string
+
+	// Type is the parameter type.
+	Type Type
+}
+
+// FunctionDecl is an AST node representing a function declaration.
+type FunctionDecl struct {
+	BaseNode
+
+	// Name contains the function name.
+	Name string
+
+	// Parameters are the function parameters.
+	Parameters []Parameter
+
+	// ReturnType is the function's return type.
+	ReturnType Type
+
+	// The statements comprising the function body.
+	Body Block
+}
+
+func (n *FunctionDecl) Type() Type {
+	return n.ReturnType
+}
+
+func (n *FunctionDecl) Walk(v Visitor) {
+	v.Enter(n)
+	n.Body.Walk(v)
 	v.Leave(n)
 }
 
@@ -402,7 +438,7 @@ type ExpressionStmt struct {
 }
 
 func (n *ExpressionStmt) Type() Type {
-	return Type{TypeVoid}
+	return Type{Tag: TypeVoid}
 }
 
 func (n *ExpressionStmt) Walk(v Visitor) {
@@ -420,7 +456,7 @@ type Block struct {
 }
 
 func (n *Block) Type() Type {
-	return Type{TypeVoid}
+	return Type{Tag: TypeVoid}
 }
 
 func (n *Block) Walk(v Visitor) {
@@ -459,7 +495,7 @@ type IfStmt struct {
 }
 
 func (n *IfStmt) Type() Type {
-	return Type{TypeVoid}
+	return Type{Tag: TypeVoid}
 }
 
 func (n *IfStmt) Walk(v Visitor) {
@@ -500,7 +536,7 @@ type WhileStmt struct {
 }
 
 func (n *WhileStmt) Type() Type {
-	return Type{TypeVoid}
+	return Type{Tag: TypeVoid}
 }
 
 func (n *WhileStmt) Walk(v Visitor) {
@@ -531,7 +567,7 @@ type And struct {
 }
 
 func (n *And) Type() Type {
-	return Type{TypeBool}
+	return Type{Tag: TypeBool}
 }
 
 func (n *And) Walk(v Visitor) {
@@ -562,7 +598,7 @@ type Or struct {
 }
 
 func (n *Or) Type() Type {
-	return Type{TypeBool}
+	return Type{Tag: TypeBool}
 }
 
 func (n *Or) Walk(v Visitor) {

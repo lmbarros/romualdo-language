@@ -7,17 +7,20 @@
 
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // A TypeTag identifies a type as seen by Romulang.
 type TypeTag int
 
 const (
 	// TypeInvalid is used to represend an invalid type.
-	TypeInvalid = -1
+	TypeInvalid TypeTag = -1
 
 	// TypeVoid identifies a void type (or rather nontype).
-	TypeVoid TypeTag = iota
+	TypeVoid = iota
 
 	// TypeInt identifies an integer number type, AKA int.
 	TypeInt
@@ -33,6 +36,10 @@ const (
 
 	// TypeString identifies a string type.
 	TypeString
+
+	// TypeFunction identifies a function type. (The actual complete type of a
+	// function includes its parameter types and return type.)
+	TypeFunction
 )
 
 // Type describes a type. It includes a type tag and all the additional
@@ -43,6 +50,14 @@ const (
 type Type struct {
 	// Tag is the type tag. Think of it as a "high-level" type.
 	Tag TypeTag
+
+	// ParameterTypes is a slice with the types the function parameters. Valid
+	// only of Tag == TypeFunction.
+	ParameterTypes []*Type
+
+	// ReturnType is the type of the function return value. Valid only if
+	// Tag == TypeFunction.
+	ReturnType *Type
 }
 
 // String converts a Type to a string that looks like what a user would see in
@@ -61,6 +76,12 @@ func (t Type) String() string {
 		return "bool"
 	case TypeString:
 		return "string"
+	case TypeFunction:
+		paramTypes := []string{}
+		for _, paramType := range t.ParameterTypes {
+			paramTypes = append(paramTypes, paramType.ReturnType.String())
+		}
+		return "function(" + strings.Join(paramTypes, ",") + "):" + t.ReturnType.String()
 	default:
 		panic(fmt.Sprintf("unexpected type tag: %v", t.Tag))
 	}

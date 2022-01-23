@@ -39,7 +39,18 @@ const (
 
 	// ValueString identifies a string value.
 	ValueString
+
+	// ValueFunction identifies a function value.
+	ValueFunction
 )
+
+// Function is the runtime representation of a function. We don't include any
+// sort of information about return and parameter types because type-checking is
+// all done statically at compile-time.
+type Function struct {
+	// chunk is the Chunk of bytecode with the body of this function.
+	Chunk *Chunk
+}
 
 // Value is a Romualdo language value.
 type Value struct {
@@ -100,6 +111,11 @@ func (v Value) AsString() string {
 	return v.Value.(string)
 }
 
+// AsFunction returns this Value's value, assuming it is a function value.
+func (v Value) AsFunction() Function {
+	return v.Value.(Function)
+}
+
 // IsFloat checks if the value contains a floating-point number.
 func (v Value) IsFloat() bool {
 	_, ok := v.Value.(float64)
@@ -124,6 +140,12 @@ func (v Value) IsString() bool {
 	return ok
 }
 
+// IsFunction checks if the value contains a function value.
+func (v Value) IsFunction() bool {
+	_, ok := v.Value.(Function)
+	return ok
+}
+
 // String converts the value to a string.
 func (v Value) String() string {
 	switch vv := v.Value.(type) {
@@ -135,6 +157,10 @@ func (v Value) String() string {
 		return fmt.Sprintf("%v", vv)
 	case string:
 		return fmt.Sprintf("%v", vv)
+	case Function:
+		// TODO: Would be nice to include the function name if we had the debug
+		// information around. Hard to access this info from here, though.
+		return fmt.Sprintf("<function %p>", vv)
 	default:
 		return fmt.Sprintf("<Unexpected type %T>", vv)
 	}
@@ -155,6 +181,11 @@ func ValuesEqual(a, b Value) bool {
 		return va == b.Value.(int64)
 	case string:
 		return va == b.Value.(string)
+	case Function:
+		// TODO: Not sure if makes sense, but for now let's consider that two
+		// functions are the same if they have the same bytecode.
+		return va.Chunk == b.Value.(Function).Chunk
+
 	default:
 		panic(fmt.Sprintf("Unexpected Value type: %T", va))
 	}
