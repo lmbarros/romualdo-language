@@ -1,7 +1,7 @@
 /******************************************************************************\
 * The Romualdo Language                                                        *
 *                                                                              *
-* Copyright 2020-2021 Leandro Motta Barros                                     *
+* Copyright 2020-2022 Leandro Motta Barros                                     *
 * Licensed under the MIT license (see LICENSE.txt for details)                 *
 \******************************************************************************/
 
