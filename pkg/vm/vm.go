@@ -35,7 +35,7 @@ type VM struct {
 	ip int
 
 	// stack is the VM stack, used for storing values during interpretation.
-	stack []bytecode.Value
+	stack *Stack
 
 	// strings is the store of interned strings used by the VM. All strings are
 	// added here.
@@ -45,6 +45,7 @@ type VM struct {
 // New returns a new Virtual Machine.
 func New() *VM {
 	return &VM{
+		stack:   &Stack{},
 		strings: bytecode.NewStringInterner(),
 	}
 }
@@ -72,8 +73,8 @@ func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo
 	vm.debugInfo = di
 	vm.strings = csw.Chunks[0].Strings // TODO: temporary; Strings will move to csw
 	r := vm.run()
-	if len(vm.stack) != 0 {
-		panic(fmt.Sprintf("Stack size should be zero after execution, was %v.", len(vm.stack)))
+	if vm.stack.size() != 0 {
+		panic(fmt.Sprintf("Stack size should be zero after execution, was %v.", vm.stack.size()))
 	}
 	return r
 }
@@ -96,7 +97,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 		if vm.DebugTraceExecution {
 			fmt.Print("          ")
 
-			for _, v := range vm.stack {
+			for _, v := range vm.stack.data {
 				fmt.Printf("[ %v ]", v)
 			}
 
@@ -447,7 +448,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.push(value)
 
 		case bytecode.OpReadLocal:
-			value := vm.stack[vm.currentChunk().Code[vm.ip]]
+			value := vm.stack.at(int(vm.currentChunk().Code[vm.ip]))
 			vm.ip++
 			vm.push(value)
 
@@ -459,7 +460,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			value := vm.top()
 			index := vm.currentChunk().Code[vm.ip]
 			vm.ip++
-			vm.stack[index] = value
+			vm.stack.setAt(int(index), value)
 
 		default:
 			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))
@@ -505,27 +506,25 @@ func (vm *VM) writeGlobal(value bytecode.Value) {
 
 // push pushes a value into the VM stack.
 func (vm *VM) push(value bytecode.Value) {
-	vm.stack = append(vm.stack, value)
+	vm.stack.push(value)
 }
 
 // top returns the value on the top of the VM stack (without removing it).
 // Panics on underflow.
 func (vm *VM) top() bytecode.Value {
-	return vm.stack[len(vm.stack)-1]
+	return vm.stack.top()
 }
 
 // pop pops a value from the VM stack and returns it. Panics on underflow.
 func (vm *VM) pop() bytecode.Value {
-	top := vm.top()
-	vm.stack = vm.stack[:len(vm.stack)-1]
-	return top
+	return vm.stack.pop()
 }
 
 // peek returns a value on the stack that is a given distance from the top.
 // Passing 0 means "give me the value on the top of the stack". The stack is not
 // changed at all.
 func (vm *VM) peek(distance int) bytecode.Value {
-	return vm.stack[len(vm.stack)-1-distance]
+	return vm.stack.peek(distance)
 }
 
 // runtimeError stops the execution and reports a runtime error with a given
