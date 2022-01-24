@@ -54,6 +54,10 @@ type CompiledStoryworld struct {
 	// data. There is one Chunk for each
 	Chunks []*Chunk
 
+	// FirstChunk indexes the element in Chunks from where the Storyworld
+	// execution starts. In other words, it points to the "main" chunk.
+	FirstChunk int
+
 	// Globals contains all the global variables.
 	Globals []GlobalVar
 }

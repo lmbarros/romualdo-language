@@ -30,16 +30,19 @@ type VM struct {
 	// etc.
 	debugInfo *bytecode.DebugInfo
 
-	// ip is the instruction pointer, which points to the next instruction to be
-	// executed (it's an index into chunk.Code).
-	ip int
-
 	// stack is the VM stack, used for storing values during interpretation.
 	stack *Stack
 
 	// strings is the store of interned strings used by the VM. All strings are
 	// added here.
 	strings *bytecode.StringInterner
+
+	// frames is the stack of call frames. It has one entry for every function
+	// that has started running bit hasn't returned yet.
+	frames []*callFrame
+
+	// The current call frame (the one on top of VM.frames).
+	frame *callFrame
 }
 
 // New returns a new Virtual Machine.
@@ -52,7 +55,7 @@ func New() *VM {
 
 // currentChunk returns the chunk currently being executed.
 func (vm *VM) currentChunk() *bytecode.Chunk {
-	return vm.csw.Chunks[0] // TODO: hardcoded for now.
+	return vm.frame.function.Chunk
 }
 
 // currentLines returns the map from instruction to source code lines for the
@@ -64,14 +67,28 @@ func (vm *VM) currentLines() []int {
 	return vm.debugInfo.ChunksLines[0] // TODO: hardcoded for now.
 }
 
+// readByte reads a byte from the current Chunk.
+func (vm *VM) readByte() byte {
+	index := vm.frame.ip
+	vm.frame.ip++
+	return vm.frame.function.Chunk.Code[index]
+}
+
 // Interpret interprets a given compiled Storyworld.
-// TODO: Start from a Passage with a certain name, or the one whose index is
-// stored somewhere in the csw itself.
 // TODO: DebugInfo should be optional.
 func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo) bool {
 	vm.csw = csw
 	vm.debugInfo = di
 	vm.strings = csw.Chunks[0].Strings // TODO: temporary; Strings will move to csw
+
+	// TODO: Eventually, we'll start from a Passage, not a function.
+	f := bytecode.Function{Chunk: vm.csw.Chunks[csw.FirstChunk]}
+	vm.frames = append(vm.frames, &callFrame{
+		function: f,
+		stack:    vm.stack.createView(),
+	})
+	vm.frame = vm.frames[0]
+
 	r := vm.run()
 	if vm.stack.size() != 0 {
 		panic(fmt.Sprintf("Stack size should be zero after execution, was %v.", vm.stack.size()))
@@ -103,11 +120,11 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 
 			fmt.Print("\n")
 
-			vm.csw.DisassembleInstruction(vm.currentChunk(), os.Stdout, vm.ip, vm.currentLines())
+			vm.csw.DisassembleInstruction(vm.currentChunk(), os.Stdout, vm.frame.ip, vm.currentLines())
 		}
 
-		instruction := vm.currentChunk().Code[vm.ip]
-		vm.ip++
+		instruction := vm.currentChunk().Code[vm.frame.ip]
+		vm.frame.ip++
 
 		switch instruction {
 		case bytecode.OpNop:
@@ -264,55 +281,52 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.push(bytecode.NewValueFloat(result))
 
 		case bytecode.OpJump:
-			jumpOffset := int8(vm.currentChunk().Code[vm.ip])
-			vm.ip += int(jumpOffset + 1)
+			jumpOffset := int8(vm.readByte())
+			vm.frame.ip += int(jumpOffset)
 
 		case bytecode.OpJumpLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.ip:])
-			vm.ip += jumpOffset + 4
+			jumpOffset := bytecode.DecodeSInt32(vm.frame.function.Chunk.Code[vm.frame.ip:])
+			vm.frame.ip += jumpOffset + 4
 
 		case bytecode.OpJumpIfFalse:
-			jumpOffset := vm.currentChunk().Code[vm.ip]
-			vm.ip++
+			jumpOffset := int8(vm.readByte())
 			cond := vm.pop()
 			if cond.IsBool() && !cond.AsBool() {
-				vm.ip += int(jumpOffset)
+				vm.frame.ip += int(jumpOffset)
 			}
 
 		case bytecode.OpJumpIfFalseNoPop:
-			jumpOffset := vm.currentChunk().Code[vm.ip]
-			vm.ip++
+			jumpOffset := int8(vm.readByte())
 			if vm.peek(0).IsBool() && !vm.peek(0).AsBool() {
-				vm.ip += int(jumpOffset)
+				vm.frame.ip += int(jumpOffset)
 			}
 
 		case bytecode.OpJumpIfFalseLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.ip:])
-			vm.ip += 4
+			jumpOffset := bytecode.DecodeSInt32(vm.frame.function.Chunk.Code[vm.frame.ip:])
+			vm.frame.ip += 4
 			cond := vm.pop()
 			if cond.IsBool() && !cond.AsBool() {
-				vm.ip += jumpOffset
+				vm.frame.ip += jumpOffset
 			}
 
 		case bytecode.OpJumpIfFalseNoPopLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.ip:])
-			vm.ip += 4
+			jumpOffset := bytecode.DecodeSInt32(vm.frame.function.Chunk.Code[vm.frame.ip:])
+			vm.frame.ip += 4
 			if vm.peek(0).IsBool() && !vm.peek(0).AsBool() {
-				vm.ip += jumpOffset
+				vm.frame.ip += jumpOffset
 			}
 
 		case bytecode.OpJumpIfTrueNoPop:
-			jumpOffset := vm.currentChunk().Code[vm.ip]
-			vm.ip++
+			jumpOffset := vm.readByte()
 			if vm.peek(0).IsBool() && vm.peek(0).AsBool() {
-				vm.ip += int(jumpOffset)
+				vm.frame.ip += int(jumpOffset)
 			}
 
 		case bytecode.OpJumpIfTrueNoPopLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.ip:])
-			vm.ip += 4
+			jumpOffset := bytecode.DecodeSInt32(vm.frame.function.Chunk.Code[vm.frame.ip:])
+			vm.frame.ip += 4
 			if vm.peek(0).IsBool() && vm.peek(0).AsBool() {
-				vm.ip += jumpOffset
+				vm.frame.ip += jumpOffset
 			}
 
 		case bytecode.OpNot:
@@ -448,8 +462,8 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.push(value)
 
 		case bytecode.OpReadLocal:
-			value := vm.stack.at(int(vm.currentChunk().Code[vm.ip]))
-			vm.ip++
+			index := vm.readByte()
+			value := vm.frame.stack.at(int(index))
 			vm.push(value)
 
 		case bytecode.OpWriteGlobal:
@@ -458,9 +472,8 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 
 		case bytecode.OpWriteLocal:
 			value := vm.top()
-			index := vm.currentChunk().Code[vm.ip]
-			vm.ip++
-			vm.stack.setAt(int(index), value)
+			index := vm.readByte()
+			vm.frame.stack.setAt(int(index), value)
 
 		default:
 			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))
@@ -472,9 +485,8 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 // returns the corresponding constant value.
 func (vm *VM) readConstant() bytecode.Value {
 	chunk := vm.currentChunk()
-	constant := chunk.Constants[chunk.Code[vm.ip]]
-	vm.ip++
-
+	index := vm.readByte()
+	constant := chunk.Constants[index]
 	return constant
 }
 
@@ -482,17 +494,17 @@ func (vm *VM) readConstant() bytecode.Value {
 // returns the corresponding constant value.
 func (vm *VM) readLongConstant() bytecode.Value {
 	chunk := vm.currentChunk()
-	index := bytecode.DecodeUInt31(chunk.Code[vm.ip:])
+	index := bytecode.DecodeUInt31(chunk.Code[vm.frame.ip:])
 	constant := chunk.Constants[index]
-	vm.ip += 4
+	vm.frame.ip += 4
 	return constant
 }
 
 // readGlobal reads a single-byte global index from the chunk bytecode and
 // returns the corresponding global variable value.
 func (vm *VM) readGlobal() bytecode.Value {
-	value := vm.csw.Globals[vm.currentChunk().Code[vm.ip]]
-	vm.ip++
+	value := vm.csw.Globals[vm.currentChunk().Code[vm.frame.ip]]
+	vm.frame.ip++
 	return value.Value
 }
 
@@ -500,8 +512,8 @@ func (vm *VM) readGlobal() bytecode.Value {
 // reads a single-byte from the chunk bytecode and uses it as the index into the
 // globals table.
 func (vm *VM) writeGlobal(value bytecode.Value) {
-	vm.csw.Globals[vm.currentChunk().Code[vm.ip]].Value = value
-	vm.ip++
+	vm.csw.Globals[vm.currentChunk().Code[vm.frame.ip]].Value = value
+	vm.frame.ip++
 }
 
 // push pushes a value into the VM stack.
@@ -531,7 +543,7 @@ func (vm *VM) peek(distance int) bytecode.Value {
 // message and fmt.Printf-like arguments.
 func (vm *VM) runtimeError(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format+"\n", a...)
-	line := vm.currentLines()[vm.ip-1]
+	line := vm.currentLines()[vm.frame.ip-1]
 	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
 }
 
@@ -637,4 +649,21 @@ func boundedInverseTransform(boundedNumber float64) float64 {
 		return (1 / (1 - boundedNumber)) - 1
 	}
 	return 1 - (1 / (1 + boundedNumber))
+}
+
+// callFrame contains the information needed at runtime about an ongoing
+// function call.
+type callFrame struct {
+	// function is the function running.
+	// TODO: Smells like this could be a Chunk. (Would be better for when
+	// implementing Passages)
+	function bytecode.Function
+
+	// ip is the instruction pointer, which points to the next instruction to be
+	// executed (it's an index into function's chunk).
+	ip int
+
+	// stack is the first index into the VM stack that this function can
+	// use.
+	stack *StackView
 }

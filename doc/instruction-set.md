@@ -335,7 +335,8 @@ of the globals pool.
 
 **Purpose:** Reads the value of a local variable.  
 **Immediate Operands:** One byte *A*, interpreted as the index into the stack
-where the desired variable is stored.  
+where the desired variable is stored. This index is counted not from the bottom
+of the whole stack, but from the base of the currently running function.  
 **Pops:** Nothing.  
 **Pushes:** One value, the value of the local variable taken at the index *A*
 of the stack.
@@ -423,7 +424,9 @@ index *A* will be set to.
 ### `WRITE_LOCAL`
 
 **Purpose:** Writes the value of a local variable.  
-**Immediate Operands:** One byte *A*, interpreted as an index into the stack
-where the variable to be written is located at.  
+**Immediate Operands:** One byte *A*, interpreted as the index into the stack
+where the variable to be written is located at. This index is counted not from
+the bottom of the whole stack, but from the base of the currently running
+function.  
 **Pops:** One value, the new value the local variable.  
 **Pushes:** One value, the same that was popped.
