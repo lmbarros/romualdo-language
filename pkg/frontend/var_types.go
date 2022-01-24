@@ -18,8 +18,8 @@ import (
 //
 // We need to do this on a separate step because the globals block can appear
 // after the code that uses it.
-func extractGlobalTypes(sw *ast.Storyworld) map[string]ast.Type {
-	types := map[string]ast.Type{}
+func extractGlobalTypes(sw *ast.Storyworld) map[string]*ast.Type {
+	types := map[string]*ast.Type{}
 	for _, decl := range sw.Declarations {
 		if globals, ok := decl.(*ast.GlobalsBlock); ok {
 			for _, v := range globals.Vars {
@@ -39,7 +39,7 @@ type local struct {
 	depth int
 
 	// varType is the type of the local variable.
-	varType ast.Type
+	varType *ast.Type
 }
 
 // variableTypeSetter is a node visitor that sets the type of all VarRef nodes.
@@ -53,7 +53,7 @@ type variableTypeSetter struct {
 
 	// GlobalTypes maps global variables by names to their types. Must be set
 	// before using the visitor.
-	GlobalTypes map[string]ast.Type
+	GlobalTypes map[string]*ast.Type
 
 	// localTypes contains all local variables currently in scope. The visitor
 	// keepts this up-to-date as it traverses the parse tree.

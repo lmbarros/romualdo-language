@@ -238,7 +238,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 					"duplicate definition of global variable '%v' on code generation",
 					n.Name)
 			}
-			// Pop the global value that now is stored in cg.chunk.Globals:
+			// Pop the global value that now is stored with the globals
 			cg.emitBytes(bytecode.OpPop)
 		} else {
 			// Local variable

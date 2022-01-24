@@ -26,8 +26,8 @@ type Storyworld struct {
 	Declarations []Node
 }
 
-func (n *Storyworld) Type() Type {
-	return Type{Tag: TypeVoid}
+func (n *Storyworld) Type() *Type {
+	return TheTypeVoid
 }
 
 func (n *Storyworld) Walk(v Visitor) {
@@ -46,8 +46,8 @@ type FloatLiteral struct {
 	Value float64
 }
 
-func (n *FloatLiteral) Type() Type {
-	return Type{Tag: TypeFloat}
+func (n *FloatLiteral) Type() *Type {
+	return TheTypeFloat
 }
 
 func (n *FloatLiteral) Walk(v Visitor) {
@@ -63,8 +63,8 @@ type IntLiteral struct {
 	Value int64
 }
 
-func (n *IntLiteral) Type() Type {
-	return Type{Tag: TypeInt}
+func (n *IntLiteral) Type() *Type {
+	return TheTypeInt
 }
 
 func (n *IntLiteral) Walk(v Visitor) {
@@ -80,8 +80,8 @@ type BNumLiteral struct {
 	Value float64
 }
 
-func (n *BNumLiteral) Type() Type {
-	return Type{Tag: TypeBNum}
+func (n *BNumLiteral) Type() *Type {
+	return TheTypeBNum
 }
 
 func (n *BNumLiteral) Walk(v Visitor) {
@@ -97,8 +97,8 @@ type BoolLiteral struct {
 	Value bool
 }
 
-func (n *BoolLiteral) Type() Type {
-	return Type{Tag: TypeBool}
+func (n *BoolLiteral) Type() *Type {
+	return TheTypeBool
 }
 
 func (n *BoolLiteral) Walk(v Visitor) {
@@ -114,8 +114,8 @@ type StringLiteral struct {
 	Value string
 }
 
-func (n *StringLiteral) Type() Type {
-	return Type{Tag: TypeString}
+func (n *StringLiteral) Type() *Type {
+	return TheTypeString
 }
 
 func (n *StringLiteral) Walk(v Visitor) {
@@ -137,12 +137,12 @@ type Unary struct {
 	cachedType *Type
 }
 
-func (n *Unary) Type() Type {
+func (n *Unary) Type() *Type {
 	if n.cachedType == nil {
 		t := n.Operand.Type()
-		n.cachedType = &t
+		n.cachedType = t
 	}
-	return *n.cachedType
+	return n.cachedType
 }
 
 func (n *Unary) Walk(v Visitor) {
@@ -168,28 +168,28 @@ type Binary struct {
 	cachedType *Type
 }
 
-func (n *Binary) Type() Type { // nolint: gocognit
+func (n *Binary) Type() *Type { // nolint: gocognit
 
 	if n.cachedType == nil {
 		switch n.Operator {
 		case "==", "!=", "<", "<=", ">", ">=":
-			n.cachedType = &Type{Tag: TypeBool}
+			n.cachedType = TheTypeBool
 		case "+", "-", "*":
 			if n.LHS.Type().Tag == TypeString || n.LHS.Type().Tag == TypeBNum {
 				t := n.LHS.Type()
-				n.cachedType = &t
+				n.cachedType = t
 			} else if n.LHS.Type().Tag == TypeInt && n.RHS.Type().Tag == TypeInt {
 				t := n.LHS.Type()
-				n.cachedType = &t
+				n.cachedType = t
 			} else {
-				n.cachedType = &Type{Tag: TypeFloat}
+				n.cachedType = TheTypeFloat
 			}
 		default:
-			n.cachedType = &Type{Tag: TypeFloat}
+			n.cachedType = TheTypeFloat
 		}
 	}
 
-	return *n.cachedType
+	return n.cachedType
 }
 
 func (n *Binary) Walk(v Visitor) {
@@ -213,8 +213,8 @@ type Blend struct {
 	Weight Node
 }
 
-func (n *Blend) Type() Type {
-	return Type{Tag: TypeBNum}
+func (n *Blend) Type() *Type {
+	return TheTypeBNum
 }
 
 func (n *Blend) Walk(v Visitor) {
@@ -241,18 +241,18 @@ type TypeConversion struct {
 	Default Node
 }
 
-func (n *TypeConversion) Type() Type {
+func (n *TypeConversion) Type() *Type {
 	switch n.Operator {
 	case "int":
-		return Type{Tag: TypeInt}
+		return TheTypeInt
 	case "float":
-		return Type{Tag: TypeFloat}
+		return TheTypeFloat
 	case "bnum":
-		return Type{Tag: TypeBNum}
+		return TheTypeBNum
 	case "string":
-		return Type{Tag: TypeString}
+		return TheTypeString
 	default:
-		return Type{Tag: TypeInvalid}
+		return TheTypeInvalid
 	}
 }
 
@@ -276,12 +276,12 @@ type BuiltInFunction struct {
 	Args []Node
 }
 
-func (n *BuiltInFunction) Type() Type {
+func (n *BuiltInFunction) Type() *Type {
 	switch n.Function {
 	case "print":
-		return Type{Tag: TypeVoid}
+		return TheTypeVoid
 	default:
-		return Type{Tag: TypeInvalid}
+		return TheTypeInvalid
 	}
 }
 
@@ -301,8 +301,8 @@ type GlobalsBlock struct {
 	Vars []*VarDecl
 }
 
-func (n *GlobalsBlock) Type() Type {
-	return Type{Tag: TypeVoid}
+func (n *GlobalsBlock) Type() *Type {
+	return TheTypeVoid
 }
 
 func (n *GlobalsBlock) Walk(v Visitor) {
@@ -319,7 +319,7 @@ type Parameter struct {
 	Name string
 
 	// Type is the parameter type.
-	Type Type
+	Type *Type
 }
 
 // FunctionDecl is an AST node representing a function declaration.
@@ -333,13 +333,13 @@ type FunctionDecl struct {
 	Parameters []Parameter
 
 	// ReturnType is the function's return type.
-	ReturnType Type
+	ReturnType *Type
 
 	// The statements comprising the function body.
 	Body Block
 }
 
-func (n *FunctionDecl) Type() Type {
+func (n *FunctionDecl) Type() *Type {
 	return n.ReturnType
 }
 
@@ -360,11 +360,11 @@ type VarDecl struct {
 	Initializer Node
 
 	// varType is the variable type. Use Type() to get it.
-	varType Type
+	varType *Type
 }
 
 // NewVarDecl creates a new VarDecl, with the given name, type and initializer.
-func NewVarDecl(baseNode BaseNode, name string, varType Type, initializer Node) *VarDecl {
+func NewVarDecl(baseNode BaseNode, name string, varType *Type, initializer Node) *VarDecl {
 	return &VarDecl{
 		BaseNode:    baseNode,
 		Name:        name,
@@ -373,7 +373,7 @@ func NewVarDecl(baseNode BaseNode, name string, varType Type, initializer Node) 
 	}
 }
 
-func (n *VarDecl) Type() Type {
+func (n *VarDecl) Type() *Type {
 	return n.varType
 }
 
@@ -392,10 +392,10 @@ type VarRef struct {
 	Name string
 
 	// VarType is the variable type.
-	VarType Type
+	VarType *Type
 }
 
-func (n *VarRef) Type() Type {
+func (n *VarRef) Type() *Type {
 	return n.VarType
 }
 
@@ -417,7 +417,7 @@ type Assignment struct {
 	Value Node
 }
 
-func (n *Assignment) Type() Type {
+func (n *Assignment) Type() *Type {
 	return n.Value.Type()
 }
 
@@ -437,8 +437,8 @@ type ExpressionStmt struct {
 	Expr Node
 }
 
-func (n *ExpressionStmt) Type() Type {
-	return Type{Tag: TypeVoid}
+func (n *ExpressionStmt) Type() *Type {
+	return TheTypeVoid
 }
 
 func (n *ExpressionStmt) Walk(v Visitor) {
@@ -455,8 +455,8 @@ type Block struct {
 	Statements []Node
 }
 
-func (n *Block) Type() Type {
-	return Type{Tag: TypeVoid}
+func (n *Block) Type() *Type {
+	return TheTypeVoid
 }
 
 func (n *Block) Walk(v Visitor) {
@@ -494,8 +494,8 @@ type IfStmt struct {
 	ElseJumpAddress int
 }
 
-func (n *IfStmt) Type() Type {
-	return Type{Tag: TypeVoid}
+func (n *IfStmt) Type() *Type {
+	return TheTypeVoid
 }
 
 func (n *IfStmt) Walk(v Visitor) {
@@ -535,8 +535,8 @@ type WhileStmt struct {
 	ConditionAddress int
 }
 
-func (n *WhileStmt) Type() Type {
-	return Type{Tag: TypeVoid}
+func (n *WhileStmt) Type() *Type {
+	return TheTypeVoid
 }
 
 func (n *WhileStmt) Walk(v Visitor) {
@@ -566,8 +566,8 @@ type And struct {
 	JumpAddress int
 }
 
-func (n *And) Type() Type {
-	return Type{Tag: TypeBool}
+func (n *And) Type() *Type {
+	return TheTypeBool
 }
 
 func (n *And) Walk(v Visitor) {
@@ -597,8 +597,8 @@ type Or struct {
 	JumpAddress int
 }
 
-func (n *Or) Type() Type {
-	return Type{Tag: TypeBool}
+func (n *Or) Type() *Type {
+	return TheTypeBool
 }
 
 func (n *Or) Walk(v Visitor) {

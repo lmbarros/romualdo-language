@@ -10,7 +10,7 @@ package ast
 // A Node is a node in Romualdo's AST (Abstract Syntax Tree).
 type Node interface {
 	// Type returns the type of Node.
-	Type() Type
+	Type() *Type
 
 	// Line returns the line of code that produced this node.
 	Line() int

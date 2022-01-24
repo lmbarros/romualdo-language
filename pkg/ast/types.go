@@ -42,6 +42,19 @@ const (
 	TypeFunction
 )
 
+// Global instances of simple types, for which only one instance is ever
+// necessary. Better use these instead of creating an instance on the stop when
+// needed.
+var (
+	TheTypeInvalid = &Type{Tag: TypeInvalid}
+	TheTypeVoid    = &Type{Tag: TypeVoid}
+	TheTypeInt     = &Type{Tag: TypeInt}
+	TheTypeFloat   = &Type{Tag: TypeFloat}
+	TheTypeBNum    = &Type{Tag: TypeBNum}
+	TheTypeBool    = &Type{Tag: TypeBool}
+	TheTypeString  = &Type{Tag: TypeString}
+)
+
 // Type describes a type. It includes a type tag and all the additional
 // information needed to discern between different types that happen to share
 // the same type tag (for example, two functions may have the same type tag, but

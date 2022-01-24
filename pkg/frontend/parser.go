@@ -284,6 +284,26 @@ func (p *parser) globalsDeclaration() ast.Node {
 	return globals
 }
 
+// parseType parses a type. The first token of the type is supposed to have been
+// just consumed.
+func (p *parser) parseType() *ast.Type {
+	switch p.previousToken.kind {
+	case tokenKindInt:
+		return ast.TheTypeInt
+	case tokenKindFloat:
+		return ast.TheTypeFloat
+	case tokenKindBNum:
+		return ast.TheTypeBNum
+	case tokenKindString:
+		return ast.TheTypeString
+	case tokenKindBool:
+		return ast.TheTypeBool
+	default:
+		p.errorAtCurrent("Expect variable type.")
+	}
+	return ast.TheTypeInvalid
+}
+
 // varDeclaration parses a variable declaration. The next token is supposed to
 // be the variable name.
 func (p *parser) varDeclaration() *ast.VarDecl {
@@ -297,23 +317,8 @@ func (p *parser) varDeclaration() *ast.VarDecl {
 	// TODO: Make type optional if initializer is present.
 	p.consume(tokenKindColon, "Expect ':' after variable name.")
 
-	varType := ast.Type{Tag: ast.TypeInvalid}
-	switch p.currentToken.kind {
-	case tokenKindInt:
-		varType.Tag = ast.TypeInt
-	case tokenKindFloat:
-		varType.Tag = ast.TypeFloat
-	case tokenKindBNum:
-		varType.Tag = ast.TypeBNum
-	case tokenKindString:
-		varType.Tag = ast.TypeString
-	case tokenKindBool:
-		varType.Tag = ast.TypeBool
-	default:
-		p.errorAtCurrent("Expect variable type.")
-	}
-
 	p.advance()
+	varType := p.parseType()
 
 	// TODO: Make initializer optional (use default value if not provided).
 	p.consume(tokenKindEqual, "Expect '=' after variable type.")
@@ -495,7 +500,7 @@ func (p *parser) variable(canAssign bool) ast.Node {
 			LineNumber: p.previousToken.line,
 		},
 		Name:    varName,
-		VarType: ast.Type{Tag: ast.TypeInvalid}, // Filled in a later pass
+		VarType: ast.TheTypeInvalid, // Filled in a later pass
 	}
 }
 
