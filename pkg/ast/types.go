@@ -92,7 +92,7 @@ func (t Type) String() string {
 	case TypeFunction:
 		paramTypes := []string{}
 		for _, paramType := range t.ParameterTypes {
-			paramTypes = append(paramTypes, paramType.ReturnType.String())
+			paramTypes = append(paramTypes, paramType.String())
 		}
 		return "function(" + strings.Join(paramTypes, ",") + "):" + t.ReturnType.String()
 	default:

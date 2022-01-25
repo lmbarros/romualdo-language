@@ -237,6 +237,10 @@ func (tc *typeChecker) checkTypeConversion(node *ast.TypeConversion) {
 
 // checkVarType type checks a variable declaration.
 func (tc *typeChecker) checkVarType(node *ast.VarDecl) {
+	if node.Type().Tag == ast.TypeVoid {
+		tc.error("Cannot create a variable of type 'void'.")
+		return
+	}
 	if node.Type().Tag != node.Initializer.Type().Tag {
 		tc.error("Cannot initialize variable of type '%v' with a value of type '%v'.",
 			node.Type(),

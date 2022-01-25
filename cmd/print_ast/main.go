@@ -101,6 +101,12 @@ func (ap *ASTPrinter) Enter(node ast.Node) {
 		ap.builder.WriteString("Or\n")
 	case *ast.TypeConversion:
 		ap.builder.WriteString(fmt.Sprintf("TypeConversion [%v]\n", n.Type()))
+	case *ast.Assignment:
+		ap.builder.WriteString(fmt.Sprintf("Assignment [%v]\n", n.VarName))
+	case *ast.WhileStmt:
+		ap.builder.WriteString("WhileStmt")
+	case *ast.FunctionDecl:
+		ap.builder.WriteString(fmt.Sprintf("FunctionDecl [%v(%v):%v]\n", n.Name, n.Parameters, n.ReturnType))
 	default:
 		panic(fmt.Sprintf("Unexpected node type: %T", n))
 	}

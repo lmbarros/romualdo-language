@@ -146,6 +146,8 @@ func (p *parser) declaration() ast.Node {
 		n = p.globalsDeclaration()
 	case p.match(tokenKindVar):
 		n = p.varDeclaration()
+	case p.match(tokenKindFunction):
+		n = p.functionDeclaration()
 	default:
 		n = p.statement()
 	}
@@ -298,10 +300,76 @@ func (p *parser) parseType() *ast.Type {
 		return ast.TheTypeString
 	case tokenKindBool:
 		return ast.TheTypeBool
+	case tokenKindVoid:
+		return ast.TheTypeVoid
+	case tokenKindFunction:
+		p.consume(tokenKindLeftParen, "Expect '('")
+		paramTypes := p.parseTypeList()
+		p.consume(tokenKindColon, "Expect ':'")
+		p.advance()
+		retType := p.parseType()
+		return &ast.Type{
+			Tag:            ast.TypeFunction,
+			ParameterTypes: paramTypes,
+			ReturnType:     retType,
+		}
 	default:
-		p.errorAtCurrent("Expect variable type.")
+		p.errorAtCurrent("Expect type.")
 	}
 	return ast.TheTypeInvalid
+}
+
+// parseParameterList parses a list of parameters. The left paretheses is
+// supposed to have just been consumed.
+func (p *parser) parseParameterList() []ast.Parameter {
+	params := []ast.Parameter{}
+	if p.check(tokenKindRightParen) {
+		p.advance()
+		return params
+	}
+
+	p.consume(tokenKindIdentifier, "Expect identifier (the parameter name) or a right parenthesis")
+	n := p.previousToken.lexeme
+	p.consume(tokenKindColon, "Expect ':' after parameter name")
+	p.advance()
+	t := p.parseType()
+	params = append(params, ast.Parameter{Name: n, Type: t})
+
+	for !p.check(tokenKindRightParen) && !p.check(tokenKindEOF) {
+		p.consume(tokenKindComma, "Expect ',' before next parameter in the list")
+		p.consume(tokenKindIdentifier, "Expect identifier (the parameter name) or a right parenthesis")
+		n := p.previousToken.lexeme
+		p.consume(tokenKindColon, "Expect ':' after parameter name")
+		p.advance()
+		t := p.parseType()
+		params = append(params, ast.Parameter{Name: n, Type: t})
+	}
+
+	p.consume(tokenKindRightParen, "Expect ')' to close parameter list")
+
+	return params
+}
+
+// parseTypeList parses a list of types. The left paretheses is supposed to have
+// just been consumed.
+func (p *parser) parseTypeList() []*ast.Type {
+	types := []*ast.Type{}
+	if p.check(tokenKindRightParen) {
+		p.advance()
+		return types
+	}
+	p.advance()
+	types = append(types, p.parseType())
+
+	for !p.check(tokenKindRightParen) && !p.check(tokenKindEOF) {
+		p.consume(tokenKindComma, "Expect ',' before next type in the list")
+		p.advance()
+		types = append(types, p.parseType())
+	}
+
+	p.consume(tokenKindRightParen, "Expect ')' to close parameter list")
+
+	return types
 }
 
 // varDeclaration parses a variable declaration. The next token is supposed to
@@ -331,6 +399,32 @@ func (p *parser) varDeclaration() *ast.VarDecl {
 	}
 
 	return v
+}
+
+// functionDeclaration parses a function declaration. The function keyword is
+// expected to have just been consumed.
+func (p *parser) functionDeclaration() *ast.FunctionDecl {
+	p.consume(tokenKindIdentifier, "Expect identifier (the function name).")
+	name := p.previousToken.lexeme
+
+	p.consume(tokenKindLeftParen, "Expect '(' after function name.")
+	params := p.parseParameterList()
+
+	p.consume(tokenKindColon, "Expect ':' after parameter list.")
+	p.advance()
+	retType := p.parseType()
+
+	block := p.block()
+
+	return &ast.FunctionDecl{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+		Name:       name,
+		Parameters: params,
+		ReturnType: retType,
+		Body:       block,
+	}
 }
 
 // ifStatement parses an if statement. The if keyword is expected to have just

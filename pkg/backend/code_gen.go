@@ -299,6 +299,9 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	case *ast.Block:
 		cg.endScope()
 
+	case *ast.FunctionDecl:
+		// TODO: Implement me!
+
 	default:
 		cg.ice("unknown node type: %T", n)
 	}
