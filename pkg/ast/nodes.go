@@ -336,7 +336,7 @@ type FunctionDecl struct {
 	ReturnType *Type
 
 	// The statements comprising the function body.
-	Body Block
+	Body *Block
 }
 
 func (n *FunctionDecl) Type() *Type {
@@ -475,7 +475,7 @@ type IfStmt struct {
 	Condition Node
 
 	// Then is the block of code executed if the condition is true.
-	Then Block
+	Then *Block
 
 	// Else is the code executed if the condition is false. Can be either a
 	// proper block or an `if` statement (in the case of an `elseif`). Might
@@ -520,7 +520,7 @@ type WhileStmt struct {
 	Condition Node
 
 	// Body is the while statement body.
-	Body Block
+	Body *Block
 
 	//
 	// Fields used for code generation

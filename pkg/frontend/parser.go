@@ -250,7 +250,7 @@ func (p *parser) expression() ast.Node {
 
 // block parses a block, as in "block of code". What other block could it be?!
 // This is a compiler! (My comments are usually more polite than this.)
-func (p *parser) block() ast.Node {
+func (p *parser) block() *ast.Block {
 	block := &ast.Block{
 		BaseNode: ast.BaseNode{
 			LineNumber: p.previousToken.line,
@@ -261,7 +261,7 @@ func (p *parser) block() ast.Node {
 		stmt := p.statement()
 		block.Statements = append(block.Statements, stmt)
 	}
-	p.consume(tokenKindEnd, "Expect 'end' after block.")
+	p.consume(tokenKindEnd, fmt.Sprintf("Expect 'end' to block started at line %v.", block.LineNumber))
 	return block
 }
 
@@ -355,7 +355,7 @@ func (p *parser) ifStatement() ast.Node {
 		stmt := p.statement()
 		thenBlock.Statements = append(thenBlock.Statements, stmt)
 	}
-	n.Then = *thenBlock
+	n.Then = thenBlock
 
 	switch {
 	case p.match(tokenKindEnd):
@@ -395,18 +395,7 @@ func (p *parser) whileStatement() ast.Node {
 	n.Condition = p.expression()
 	p.consume(tokenKindDo, fmt.Sprintf("Expect: 'do' after 'while' condition ar line %v'.", n.LineNumber))
 
-	whileBlock := &ast.Block{
-		BaseNode: ast.BaseNode{
-			LineNumber: p.previousToken.line,
-		},
-	}
-
-	for !p.check(tokenKindEnd) && !p.check(tokenKindEOF) {
-		stmt := p.statement()
-		whileBlock.Statements = append(whileBlock.Statements, stmt)
-	}
-	p.consume(tokenKindEnd, fmt.Sprintf("Expect: 'end' to close 'while' statement started at line %v'.", n.LineNumber))
-	n.Body = *whileBlock
+	n.Body = p.block()
 
 	return n
 }
