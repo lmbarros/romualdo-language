@@ -404,27 +404,25 @@ func (p *parser) varDeclaration() *ast.VarDecl {
 // functionDeclaration parses a function declaration. The function keyword is
 // expected to have just been consumed.
 func (p *parser) functionDeclaration() *ast.FunctionDecl {
-	p.consume(tokenKindIdentifier, "Expect identifier (the function name).")
-	name := p.previousToken.lexeme
-
-	p.consume(tokenKindLeftParen, "Expect '(' after function name.")
-	params := p.parseParameterList()
-
-	p.consume(tokenKindColon, "Expect ':' after parameter list.")
-	p.advance()
-	retType := p.parseType()
-
-	block := p.block()
-
-	return &ast.FunctionDecl{
+	f := &ast.FunctionDecl{
 		BaseNode: ast.BaseNode{
 			LineNumber: p.previousToken.line,
 		},
-		Name:       name,
-		Parameters: params,
-		ReturnType: retType,
-		Body:       block,
 	}
+
+	p.consume(tokenKindIdentifier, "Expect identifier (the function name).")
+	f.Name = p.previousToken.lexeme
+
+	p.consume(tokenKindLeftParen, "Expect '(' after function name.")
+	f.Parameters = p.parseParameterList()
+
+	p.consume(tokenKindColon, "Expect ':' after parameter list.")
+	p.advance()
+	f.ReturnType = p.parseType()
+
+	f.Body = p.block()
+
+	return f
 }
 
 // ifStatement parses an if statement. The if keyword is expected to have just
