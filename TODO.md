@@ -86,6 +86,10 @@
     * Print AST should be an option to it.
     * Disassemble the code (either from a binary or the just compiled code),
       too.
+* Idea: a compiler flag that allows to ignore (or include) Passages with a
+  certain metadata value. I guess this would be useful for implementing demos
+  that contain only a subset of the complete Storyworld, plus maybe some
+  additional or modified Passages (alternative implementations for the demo).
 
 ## Things to benchmark
 
