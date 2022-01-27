@@ -72,45 +72,12 @@ const (
 type Chunk struct {
 	// The code itself.
 	Code []uint8
-
-	// The constant values used in Code.
-	Constants []Value
-
-	// Strings contains all the strings used in this Chunk.
-	Strings *StringInterner
-}
-
-// NewChunk creates and returns a new Chunk.
-func NewChunk() *Chunk {
-	return &Chunk{
-		Strings: NewStringInterner(),
-	}
 }
 
 // Write writes a byte to the chunk. line is the source code line number that
 // generated this byte.
 func (c *Chunk) Write(b uint8) {
 	c.Code = append(c.Code, b)
-}
-
-// AddConstant adds a constant to the chunk and returns the index of the new
-// constant into c.Constants.
-func (c *Chunk) AddConstant(value Value) int {
-	c.Constants = append(c.Constants, value)
-	return len(c.Constants) - 1
-}
-
-// SearchConstant searches the constant pool for a constant with the given
-// value. If found, it returns the index of this constant into c.Constants. If
-// not found, it returns a negative value.
-func (c *Chunk) SearchConstant(value Value) int {
-	for i, v := range c.Constants {
-		if ValuesEqual(value, v) {
-			return i
-		}
-	}
-
-	return -1
 }
 
 // Decodes the first four bytes in bytecode into an unsigned 31-bit integer.

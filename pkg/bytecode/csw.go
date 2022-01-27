@@ -60,6 +60,39 @@ type CompiledStoryworld struct {
 
 	// Globals contains all the global variables.
 	Globals []GlobalVar
+
+	// The constant values used in all Chunks.
+	Constants []Value
+
+	// Strings contains all the strings used in all Chunks.
+	Strings *StringInterner
+}
+
+// NewCompiledStoryworld creates a new CompiledStoryworld. Goes without saying.
+func NewCompiledStoryworld() *CompiledStoryworld {
+	return &CompiledStoryworld{
+		Strings: NewStringInterner(),
+	}
+}
+
+// AddConstant adds a constant to the CompiledStoryworld and returns the index
+// of the new constant into csw.Constants.
+func (csw *CompiledStoryworld) AddConstant(value Value) int {
+	csw.Constants = append(csw.Constants, value)
+	return len(csw.Constants) - 1
+}
+
+// SearchConstant searches the constant pool for a constant with the given
+// value. If found, it returns the index of this constant into csw.Constants. If
+// not found, it returns a negative value.
+func (csw *CompiledStoryworld) SearchConstant(value Value) int {
+	for i, v := range csw.Constants {
+		if ValuesEqual(value, v) {
+			return i
+		}
+	}
+
+	return -1
 }
 
 // ReadCompiledStoryworld deserializes a CompiledStoryworld, reading the binary
@@ -277,7 +310,7 @@ func (csw *CompiledStoryworld) disassembleSimpleInstruction(out io.Writer, name 
 // Returns the offset to the next instruction.
 func (csw *CompiledStoryworld) disassembleConstantInstruction(chunk *Chunk, out io.Writer, name string, offset int) int {
 	index := chunk.Code[offset+1]
-	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, chunk.Constants[index])
+	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, csw.Constants[index])
 
 	return offset + 2
 }
@@ -287,7 +320,7 @@ func (csw *CompiledStoryworld) disassembleConstantInstruction(chunk *Chunk, out 
 // out. Returns the offset to the next instruction.
 func (csw *CompiledStoryworld) disassembleConstantLongInstruction(chunk *Chunk, out io.Writer, name string, offset int) int {
 	index := DecodeUInt31(chunk.Code[offset+1:])
-	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, chunk.Constants[index])
+	fmt.Fprintf(out, "%-16s %4d '%v'\n", name, index, csw.Constants[index])
 	return offset + 5
 }
 

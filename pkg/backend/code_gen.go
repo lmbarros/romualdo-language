@@ -22,7 +22,7 @@ func GenerateCode(root ast.Node) (
 	err error) {
 
 	cg := &codeGenerator{
-		csw:       &bytecode.CompiledStoryworld{},
+		csw:       bytecode.NewCompiledStoryworld(),
 		debugInfo: &bytecode.DebugInfo{},
 		nodeStack: make([]ast.Node, 0, 64),
 	}
@@ -422,11 +422,11 @@ func (cg *codeGenerator) emitConstant(value bytecode.Value) {
 // is returned (hey, we don't need duplicate constants, right? They are
 // constant, after all!)
 func (cg *codeGenerator) makeConstant(value bytecode.Value) int {
-	if i := cg.currentChunk().SearchConstant(value); i >= 0 {
+	if i := cg.csw.SearchConstant(value); i >= 0 {
 		return i
 	}
 
-	constantIndex := cg.currentChunk().AddConstant(value)
+	constantIndex := cg.csw.AddConstant(value)
 	if constantIndex >= bytecode.MaxConstantsPerChunk {
 		cg.error("Too many constants in one chunk.")
 		return 0
@@ -469,7 +469,7 @@ func (cg *codeGenerator) ice(format string, a ...interface{}) {
 // value v. Emphasis on "interned": if there is already some other string value
 // equal to v on this VM, we'll reuse that same memory in the returned value.
 func (cg *codeGenerator) newInternedValueString(v string) bytecode.Value {
-	s := cg.currentChunk().Strings.Intern(v)
+	s := cg.csw.Strings.Intern(v)
 	return bytecode.NewValueString(s)
 }
 

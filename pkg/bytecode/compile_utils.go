@@ -10,7 +10,7 @@ package bytecode
 // AddChunk adds a new Chunk to csw and the corresponding debug information to
 // di. Returns the new Chunk.
 func AddChunk(csw *CompiledStoryworld, di *DebugInfo, name string) *Chunk {
-	newChunk := NewChunk()
+	newChunk := &Chunk{}
 	csw.Chunks = append(csw.Chunks, newChunk)
 	di.ChunksNames = append(di.ChunksNames, name)
 	di.ChunksLines = append(di.ChunksLines, []int{})

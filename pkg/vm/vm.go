@@ -33,10 +33,6 @@ type VM struct {
 	// stack is the VM stack, used for storing values during interpretation.
 	stack *Stack
 
-	// strings is the store of interned strings used by the VM. All strings are
-	// added here.
-	strings *bytecode.StringInterner
-
 	// frames is the stack of call frames. It has one entry for every function
 	// that has started running bit hasn't returned yet.
 	frames []*callFrame
@@ -48,8 +44,7 @@ type VM struct {
 // New returns a new Virtual Machine.
 func New() *VM {
 	return &VM{
-		stack:   &Stack{},
-		strings: bytecode.NewStringInterner(),
+		stack: &Stack{},
 	}
 }
 
@@ -79,7 +74,6 @@ func (vm *VM) readByte() byte {
 func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo) bool {
 	vm.csw = csw
 	vm.debugInfo = di
-	vm.strings = csw.Chunks[0].Strings // TODO: temporary; Strings will move to csw
 
 	// TODO: Eventually, we'll start from a Passage, not a function.
 	f := bytecode.Function{Chunk: vm.csw.Chunks[csw.FirstChunk]}
@@ -104,7 +98,7 @@ func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo
 // this call to intern() and see if the performance/memory difference is
 // significant in typical usage.
 func (vm *VM) NewInternedValueString(v string) bytecode.Value {
-	s := vm.strings.Intern(v)
+	s := vm.csw.Strings.Intern(v)
 	return bytecode.NewValueString(s)
 }
 
@@ -484,9 +478,8 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 // readConstant reads a single-byte constant index from the chunk bytecode and
 // returns the corresponding constant value.
 func (vm *VM) readConstant() bytecode.Value {
-	chunk := vm.currentChunk()
 	index := vm.readByte()
-	constant := chunk.Constants[index]
+	constant := vm.csw.Constants[index]
 	return constant
 }
 
@@ -495,7 +488,7 @@ func (vm *VM) readConstant() bytecode.Value {
 func (vm *VM) readLongConstant() bytecode.Value {
 	chunk := vm.currentChunk()
 	index := bytecode.DecodeUInt31(chunk.Code[vm.frame.ip:])
-	constant := chunk.Constants[index]
+	constant := vm.csw.Constants[index]
 	vm.frame.ip += 4
 	return constant
 }
