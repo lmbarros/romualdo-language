@@ -327,6 +327,9 @@ func (p *parser) parseParameterList() []ast.Parameter {
 		p.consume(tokenKindColon, "Expect ':' after parameter name")
 		p.advance()
 		t := p.parseType()
+		if t.Tag == ast.TypeVoid {
+			p.errorAt(p.previousToken, "Cannot use 'void' as a parameter type")
+		}
 		params = append(params, ast.Parameter{Name: n, Type: t})
 	}
 
@@ -346,7 +349,11 @@ func (p *parser) parseTypeList() []*ast.Type {
 
 	for ok := true; ok; ok = p.match(tokenKindComma) {
 		p.advance()
-		types = append(types, p.parseType())
+		t := p.parseType()
+		if t.Tag == ast.TypeVoid {
+			p.errorAt(p.previousToken, "Cannot use 'void' as a parameter type")
+		}
+		types = append(types, t)
 	}
 
 	p.consume(tokenKindRightParen, "Expect ')' to close parameter list")
