@@ -78,7 +78,7 @@ func (ap *ASTPrinter) Enter(node ast.Node) {
 	case *ast.VarDecl:
 		ap.builder.WriteString(fmt.Sprintf("VarDecl [%v: %v]\n", n.Name, n.Type()))
 	case *ast.BuiltInFunction:
-		ap.builder.WriteString(fmt.Sprintf("BuildInFunction [%v]\n", n.Function))
+		ap.builder.WriteString(fmt.Sprintf("BuiltInFunction [%v]\n", n.Function))
 	case *ast.VarRef:
 		ap.builder.WriteString(fmt.Sprintf("VarRef [%v: %v]\n", n.Name, n.Type()))
 	case *ast.FloatLiteral:
