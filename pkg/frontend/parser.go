@@ -321,15 +321,7 @@ func (p *parser) parseParameterList() []ast.Parameter {
 		return params
 	}
 
-	p.consume(tokenKindIdentifier, "Expect identifier (the parameter name) or a right parenthesis")
-	n := p.previousToken.lexeme
-	p.consume(tokenKindColon, "Expect ':' after parameter name")
-	p.advance()
-	t := p.parseType()
-	params = append(params, ast.Parameter{Name: n, Type: t})
-
-	for !p.check(tokenKindRightParen) && !p.check(tokenKindEOF) {
-		p.consume(tokenKindComma, "Expect ',' before next parameter in the list")
+	for ok := true; ok; ok = p.match(tokenKindComma) {
 		p.consume(tokenKindIdentifier, "Expect identifier (the parameter name) or a right parenthesis")
 		n := p.previousToken.lexeme
 		p.consume(tokenKindColon, "Expect ':' after parameter name")
@@ -351,11 +343,8 @@ func (p *parser) parseTypeList() []*ast.Type {
 		p.advance()
 		return types
 	}
-	p.advance()
-	types = append(types, p.parseType())
 
-	for !p.check(tokenKindRightParen) && !p.check(tokenKindEOF) {
-		p.consume(tokenKindComma, "Expect ',' before next type in the list")
+	for ok := true; ok; ok = p.match(tokenKindComma) {
 		p.advance()
 		types = append(types, p.parseType())
 	}
