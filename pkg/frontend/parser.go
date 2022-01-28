@@ -133,23 +133,16 @@ func (p *parser) parsePrecedence(prec precedence) ast.Node {
 var rules []parseRule
 
 // declaration parses a declaration.
-//
-// TODO: This does not match the Romualdo grammar! For instance, Romualdo does
-// not support statements or variable declarations at the top level of a
-// file/module (which is what we are effectively parsing here). We need to leave
-// it as is for now, at least until we have functions.
 func (p *parser) declaration() ast.Node {
 	var n ast.Node
 
 	switch {
 	case p.match(tokenKindGlobals):
 		n = p.globalsDeclaration()
-	case p.match(tokenKindVar):
-		n = p.varDeclaration()
 	case p.match(tokenKindFunction):
 		n = p.functionDeclaration()
 	default:
-		n = p.statement()
+		p.errorAtCurrent("Expect a declaration")
 	}
 
 	if p.panicMode {

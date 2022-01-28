@@ -27,8 +27,6 @@ func GenerateCode(root ast.Node) (
 		nodeStack: make([]ast.Node, 0, 64),
 	}
 
-	bytecode.AddChunk(cg.csw, cg.debugInfo, "<body>")
-
 	defer func() {
 		if r := recover(); r != nil {
 			chunk = nil
@@ -91,6 +89,10 @@ func (cg *codeGenerator) Enter(node ast.Node) {
 
 	case *ast.WhileStmt:
 		n.ConditionAddress = len(cg.currentChunk().Code)
+
+	case *ast.FunctionDecl:
+		// Just add a new Chunk. All new bytecode generated will be added to it.
+		bytecode.AddChunk(cg.csw, cg.debugInfo, n.Name)
 
 	default:
 		// nothing
@@ -238,8 +240,6 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 					"duplicate definition of global variable '%v' on code generation",
 					n.Name)
 			}
-			// Pop the global value that now is stored with the globals
-			cg.emitBytes(bytecode.OpPop)
 		} else {
 			// Local variable
 			if len(cg.locals) == 256 {
@@ -300,7 +300,30 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		cg.endScope()
 
 	case *ast.FunctionDecl:
-		// TODO: Implement me!
+		// Here just create a function object referring to the Chunk of compiled
+		// bytecode we just generated and store it in a global variable with the
+		// function name.
+		//
+		// TODO: Eventually we'll support nested functions -- then this will
+		// change.
+		currentChunkIndex := len(cg.csw.Chunks) - 1
+		f := bytecode.Value{
+			Value: bytecode.Function{
+				ChunkIndex: currentChunkIndex,
+			},
+		}
+		cg.csw.SetGlobal(n.Name, f)
+
+		// TODO: For now, we add an implicit return at the end of the function.
+		// Later on we'll want to do that only if the function doesn't already
+		// have a return statement at the end.
+		cg.emitBytes(bytecode.OpReturn)
+
+		// No need to worry about duplicate `main`s: the semantic checker
+		// already verified this.
+		if n.Name == "main" {
+			cg.csw.FirstChunk = currentChunkIndex
+		}
 
 	default:
 		cg.ice("unknown node type: %T", n)
@@ -388,12 +411,20 @@ func (cg *codeGenerator) currentLine() int {
 
 // currentChunk returns the current chunk we are compiling into.
 func (cg *codeGenerator) currentChunk() *bytecode.Chunk {
-	return cg.csw.Chunks[0]
+	// For now we don't support nested functions, so the current function is
+	// always the last one in the list of chunks, because we deal with them
+	// one-by-one: add the new chunk, compile to it, and go to the next
+	// function.
+	return cg.csw.Chunks[len(cg.csw.Chunks)-1]
 }
 
-// currentLines returns the current array mapping instructions to source code lines.
-func (cg *codeGenerator) currentLines() []int {
-	return cg.debugInfo.ChunksLines[0]
+// currentLines returns the current array mapping instructions to source code
+// lines.
+//
+// TODO: Returning a pointer to a slice is ugly as hell, and leads to even
+// uglier client code.
+func (cg *codeGenerator) currentLines() *[]int {
+	return &cg.debugInfo.ChunksLines[len(cg.debugInfo.ChunksLines)-1]
 }
 
 // emitBytes writes one or more bytes to the bytecode chunk being generated.
@@ -401,12 +432,18 @@ func (cg *codeGenerator) emitBytes(bytes ...byte) {
 	for _, b := range bytes {
 		cg.currentChunk().Write(b)
 		lines := cg.currentLines()
-		lines = append(lines, cg.currentLine())
+		*lines = append(*lines, cg.currentLine())
 	}
 }
 
 // emitConstant emits the bytecode for a constant having a given value.
 func (cg *codeGenerator) emitConstant(value bytecode.Value) {
+	if cg.isInsideGlobalsBlock() {
+		// Globals are initialized directly from the initializer value from the
+		// AST. No need to push the initializer value to the stack.
+		return
+	}
+
 	constantIndex := cg.makeConstant(value)
 	if constantIndex <= math.MaxUint8 {
 		cg.emitBytes(bytecode.OpConstant, byte(constantIndex))
@@ -549,8 +586,8 @@ func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
 		cg.currentChunk().Code = append(cg.currentChunk().Code, 0x00, 0x00, 0x00)
 		copy(cg.currentChunk().Code[addressToPatch+4:], cg.currentChunk().Code[addressToPatch+1:end])
 		lines := cg.currentLines()
-		lines = append(lines, 0x00, 0x00, 0x00)
-		copy(lines[addressToPatch+4:], lines[addressToPatch+1:end])
+		*lines = append(*lines, 0x00, 0x00, 0x00)
+		copy((*lines)[addressToPatch+4:], (*lines)[addressToPatch+1:end])
 
 		// Don't return yet, we'll patch the jump offset right after this if
 		// block.

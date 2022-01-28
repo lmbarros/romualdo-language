@@ -29,6 +29,10 @@ type semanticChecker struct {
 	// globalVariables maps the global variable names already declared to the
 	// line where they were declared. Used to detect duplicates.
 	globalVariables map[string]int
+
+	// mainFunctionLine contains the line number where the main function was
+	// found. A value of 0 means that main wasn't found yet.
+	mainFunctionLine int
 }
 
 //
@@ -54,11 +58,28 @@ func (sc *semanticChecker) Enter(node ast.Node) {
 		if sc.isInsideGlobalsBlock() {
 			sc.checkDuplicateGlobalVariable(n)
 		}
+
+	case *ast.FunctionDecl:
+		if n.Name != "main" {
+			break
+		}
+		if sc.mainFunctionLine != 0 {
+			sc.error("Duplicate function main at line %v. The first one was at line %v.",
+				n.LineNumber, sc.mainFunctionLine)
+			break
+		}
+		sc.mainFunctionLine = n.LineNumber
 	}
 }
 
-func (sc *semanticChecker) Leave(ast.Node) {
+func (sc *semanticChecker) Leave(n ast.Node) {
 	sc.nodeStack = sc.nodeStack[:len(sc.nodeStack)-1]
+
+	if _, ok := n.(*ast.Storyworld); ok {
+		if sc.mainFunctionLine == 0 {
+			sc.error("Function 'main' not found.")
+		}
+	}
 }
 
 func (sc *semanticChecker) Event(node ast.Node, event int) {

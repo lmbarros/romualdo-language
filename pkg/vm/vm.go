@@ -50,7 +50,7 @@ func New() *VM {
 
 // currentChunk returns the chunk currently being executed.
 func (vm *VM) currentChunk() *bytecode.Chunk {
-	return vm.frame.function.Chunk
+	return vm.csw.Chunks[vm.frame.function.ChunkIndex]
 }
 
 // currentLines returns the map from instruction to source code lines for the
@@ -59,14 +59,14 @@ func (vm *VM) currentLines() []int {
 	if vm.debugInfo == nil {
 		return nil
 	}
-	return vm.debugInfo.ChunksLines[0] // TODO: hardcoded for now.
+	return vm.debugInfo.ChunksLines[vm.frame.function.ChunkIndex]
 }
 
 // readByte reads a byte from the current Chunk.
 func (vm *VM) readByte() byte {
 	index := vm.frame.ip
 	vm.frame.ip++
-	return vm.frame.function.Chunk.Code[index]
+	return vm.currentChunk().Code[index]
 }
 
 // Interpret interprets a given compiled Storyworld.
@@ -76,7 +76,7 @@ func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo
 	vm.debugInfo = di
 
 	// TODO: Eventually, we'll start from a Passage, not a function.
-	f := bytecode.Function{Chunk: vm.csw.Chunks[csw.FirstChunk]}
+	f := bytecode.Function{ChunkIndex: csw.FirstChunk}
 	vm.frames = append(vm.frames, &callFrame{
 		function: f,
 		stack:    vm.stack.createView(),
@@ -279,7 +279,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.frame.ip += int(jumpOffset)
 
 		case bytecode.OpJumpLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.frame.function.Chunk.Code[vm.frame.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.frame.ip:])
 			vm.frame.ip += jumpOffset + 4
 
 		case bytecode.OpJumpIfFalse:
@@ -296,7 +296,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpJumpIfFalseLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.frame.function.Chunk.Code[vm.frame.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.frame.ip:])
 			vm.frame.ip += 4
 			cond := vm.pop()
 			if cond.IsBool() && !cond.AsBool() {
@@ -304,7 +304,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpJumpIfFalseNoPopLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.frame.function.Chunk.Code[vm.frame.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.frame.ip:])
 			vm.frame.ip += 4
 			if vm.peek(0).IsBool() && !vm.peek(0).AsBool() {
 				vm.frame.ip += jumpOffset
@@ -317,7 +317,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			}
 
 		case bytecode.OpJumpIfTrueNoPopLong:
-			jumpOffset := bytecode.DecodeSInt32(vm.frame.function.Chunk.Code[vm.frame.ip:])
+			jumpOffset := bytecode.DecodeSInt32(vm.currentChunk().Code[vm.frame.ip:])
 			vm.frame.ip += 4
 			if vm.peek(0).IsBool() && vm.peek(0).AsBool() {
 				vm.frame.ip += jumpOffset

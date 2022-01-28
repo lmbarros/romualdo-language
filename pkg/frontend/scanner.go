@@ -135,7 +135,7 @@ func (s *scanner) makeToken(kind tokenKind) *token {
 }
 
 // errorToken returns a new token of kind TokenError containing a given error
-// message.s
+// message.
 func (s *scanner) errorToken(message string) *token {
 	return &token{
 		kind:   tokenKindError,

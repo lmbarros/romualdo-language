@@ -48,8 +48,9 @@ const (
 // sort of information about return and parameter types because type-checking is
 // all done statically at compile-time.
 type Function struct {
-	// chunk is the Chunk of bytecode with the body of this function.
-	Chunk *Chunk
+	// ChunkIndex points to the Chunk that contains this function's bytecode.
+	// It's an index into the global slice of Chunks.
+	ChunkIndex int
 }
 
 // Value is a Romualdo language value.
@@ -184,7 +185,7 @@ func ValuesEqual(a, b Value) bool {
 	case Function:
 		// TODO: Not sure if makes sense, but for now let's consider that two
 		// functions are the same if they have the same bytecode.
-		return va.Chunk == b.Value.(Function).Chunk
+		return va.ChunkIndex == b.Value.(Function).ChunkIndex
 
 	default:
 		panic(fmt.Sprintf("Unexpected Value type: %T", va))
