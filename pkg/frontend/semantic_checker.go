@@ -56,10 +56,12 @@ func (sc *semanticChecker) Enter(node ast.Node) {
 		sc.checkVarInitializer(n)
 
 		if sc.isInsideGlobalsBlock() {
-			sc.checkDuplicateGlobalVariable(n)
+			sc.checkDuplicateGlobalName(n.Name, n.BaseNode)
 		}
 
 	case *ast.FunctionDecl:
+		sc.checkDuplicateGlobalName(n.Name, n.BaseNode)
+
 		if n.Name != "main" {
 			break
 		}
@@ -113,17 +115,17 @@ func (sc *semanticChecker) checkVarInitializer(node *ast.VarDecl) {
 	}
 }
 
-// checkDuplicateGlobalVariable checks if another global variable with the same
-// name was already declared.
-func (sc *semanticChecker) checkDuplicateGlobalVariable(node *ast.VarDecl) {
-	line, found := sc.globalVariables[node.Name]
+// checkDuplicateGlobalName checks if something with the same name was already
+// declared at the global scope. If this is a new globa, it also adds the name
+// to the list of known globals, taking the corresponding line number from node.
+func (sc *semanticChecker) checkDuplicateGlobalName(name string, node ast.BaseNode) {
+	line, found := sc.globalVariables[name]
 	if found {
-		sc.error("There is already a global variable named '%v' declared at line %v.",
-			node.Name, line)
+		sc.error("The name '%v' was already globally declared at at line %v.", name, line)
 		return
 	}
 
-	sc.globalVariables[node.Name] = node.LineNumber
+	sc.globalVariables[name] = node.LineNumber
 }
 
 // error reports an error.

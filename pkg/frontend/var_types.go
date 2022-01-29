@@ -21,10 +21,14 @@ import (
 func extractGlobalTypes(sw *ast.Storyworld) map[string]*ast.Type {
 	types := map[string]*ast.Type{}
 	for _, decl := range sw.Declarations {
-		if globals, ok := decl.(*ast.GlobalsBlock); ok {
-			for _, v := range globals.Vars {
+		switch n := decl.(type) {
+		case *ast.GlobalsBlock:
+			for _, v := range n.Vars {
 				types[v.Name] = v.Type()
 			}
+
+		case *ast.FunctionDecl:
+			types[n.Name] = n.Type()
 		}
 	}
 	return types
