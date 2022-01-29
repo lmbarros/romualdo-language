@@ -73,6 +73,7 @@ type variableTypeSetter struct {
 //
 // The Visitor interface
 //
+
 func (ts *variableTypeSetter) Enter(node ast.Node) {
 	ts.nodeStack = append(ts.nodeStack, node)
 

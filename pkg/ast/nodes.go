@@ -448,6 +448,7 @@ func (n *ExpressionStmt) Walk(v Visitor) {
 }
 
 // Block is an AST node representing a block (specificilly, a block of code).
+// Importantly, a block defines a scope.
 type Block struct {
 	BaseNode
 
