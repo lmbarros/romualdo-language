@@ -54,7 +54,6 @@ func GenerateCode(root ast.Node) (
 		},
 	}
 	root.Walk(passTwo)
-	passTwo.emitBytes(bytecode.OpReturn)
 	return passTwo.codeGenerator.csw, passTwo.codeGenerator.debugInfo, nil
 }
 
@@ -147,9 +146,6 @@ func (cg *codeGenerator) valueFromNode(node ast.Node) bytecode.Value {
 // currentLine returns the source code line corresponding to whatever we are
 // currently compiling.
 func (cg *codeGenerator) currentLine() int {
-	if len(cg.nodeStack) == 0 {
-		return -1 // TODO: Hack for that forced RETURN we generate out of no real node.
-	}
 	return cg.nodeStack[len(cg.nodeStack)-1].Line()
 }
 

@@ -257,8 +257,5 @@ func (tc *typeChecker) error(format string, a ...interface{}) {
 // currentLine returns the source code line corresponding to whatever we are
 // currently analyzing.
 func (tc *typeChecker) currentLine() int {
-	if len(tc.nodeStack) == 0 {
-		return -1 // TODO: Hack for that forced RETURN we generate out of no real node.
-	}
 	return tc.nodeStack[len(tc.nodeStack)-1].Line()
 }
