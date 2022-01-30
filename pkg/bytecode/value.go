@@ -92,6 +92,15 @@ func NewValueString(v string) Value {
 	}
 }
 
+// NewValueFunction creates a new Value of type Function, that will run the code at the given Chunk index.
+func NewValueFunction(index int) Value {
+	return Value{
+		Value: Function{
+			ChunkIndex: index,
+		},
+	}
+}
+
 // AsFloat returns this Value's value, assuming it is a floating-point number.
 func (v Value) AsFloat() float64 {
 	return v.Value.(float64)

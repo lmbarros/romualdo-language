@@ -337,6 +337,14 @@ type FunctionDecl struct {
 
 	// The statements comprising the function body.
 	Body *Block
+
+	//
+	// Fields used for code generation
+	//
+
+	// ChunkIndex is the index into the array of Chunks where the bytecode for
+	// this function is stored.
+	ChunkIndex int
 }
 
 func (n *FunctionDecl) Type() *Type {

@@ -8,98 +8,43 @@
 package backend
 
 import (
-	"fmt"
 	"math"
 
 	"gitlab.com/stackedboxes/romulang/pkg/ast"
 	"gitlab.com/stackedboxes/romulang/pkg/bytecode"
 )
 
-// GenerateCode generates the bytecode for a given AST.
-func GenerateCode(root ast.Node) (
-	chunk *bytecode.CompiledStoryworld,
-	debugInfo *bytecode.DebugInfo,
-	err error) {
-
-	cg := &codeGenerator{
-		csw:       bytecode.NewCompiledStoryworld(),
-		debugInfo: &bytecode.DebugInfo{},
-		nodeStack: make([]ast.Node, 0, 64),
-	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			chunk = nil
-			if e, ok := r.(*codeGeneratorError); ok {
-				err = e
-				return
-			}
-			panic(fmt.Sprintf("Unexpected error type: %T", r))
-		}
-	}()
-
-	root.Walk(cg)
-	cg.emitBytes(bytecode.OpReturn)
-	return cg.csw, cg.debugInfo, nil
-}
-
-// codeGeneratorError is a type used in panics to report an error in code
-// generation.
-type codeGeneratorError struct {
-	msg string
-}
-
-func (e *codeGeneratorError) Error() string {
-	return e.msg
-}
-
-// codeGenerator is a visitor that generates a compiled Chunk from an AST.
-type codeGenerator struct {
-	// csw is the CompiledStoryworld being generated.
-	csw *bytecode.CompiledStoryworld
-
-	// debugInfo is the DebugInfo corresponding to the CompiledStoryworld being
-	// generated.
-	debugInfo *bytecode.DebugInfo
-
-	// nodeStack is used to keep track of the nodes being processed. The current
-	// on is on the top.
-	nodeStack []ast.Node
+// codeGeneratorPassTwo does the actual bytecode generation. It fills in the
+// Chunks with bytecode.
+//
+// This implements the ast.Visitor interface.
+type codeGeneratorPassTwo struct {
+	codeGenerator *codeGenerator
 
 	// locals holds the local variables currently in scope.
 	locals []local
-
-	// scopeDepth keeps track of the current scope depth we are in.
-	//
-	// TODO: How to interpret it? What is level zero? Global? Right at the start
-	// of  a function declaration, is it at level one then?
-	scopeDepth int
 }
 
 //
 // The ast.Visitor interface
 //
 
-func (cg *codeGenerator) Enter(node ast.Node) {
-	cg.nodeStack = append(cg.nodeStack, node)
+func (cg *codeGeneratorPassTwo) Enter(node ast.Node) {
+	cg.codeGenerator.pushIntoNodeStack(node)
 
 	switch n := node.(type) {
 	case *ast.Block:
-		cg.beginScope()
+		cg.codeGenerator.beginScope()
 
 	case *ast.WhileStmt:
 		n.ConditionAddress = len(cg.currentChunk().Code)
-
-	case *ast.FunctionDecl:
-		// Just add a new Chunk. All new bytecode generated will be added to it.
-		bytecode.AddChunk(cg.csw, cg.debugInfo, n.Name)
 
 	default:
 		// nothing
 	}
 }
 
-func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
+func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	switch n := node.(type) {
 	case *ast.Storyworld:
 		break
@@ -133,7 +78,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		case "not":
 			cg.emitBytes(bytecode.OpNot)
 		default:
-			cg.ice("unknown unary operator: %v", n.Operator)
+			cg.codeGenerator.ice("unknown unary operator: %v", n.Operator)
 		}
 
 	case *ast.Binary:
@@ -171,7 +116,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		case "^":
 			cg.emitBytes(bytecode.OpPower)
 		default:
-			cg.ice("unknown binary operator: %v", n.Operator)
+			cg.codeGenerator.ice("unknown binary operator: %v", n.Operator)
 		}
 
 	case *ast.And:
@@ -198,7 +143,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		case "string":
 			cg.emitBytes(bytecode.OpToString)
 		default:
-			cg.ice("unknown type conversion operator: %v", n.Operator)
+			cg.codeGenerator.ice("unknown type conversion operator: %v", n.Operator)
 		}
 
 	case *ast.IfStmt:
@@ -224,7 +169,7 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 
 	case *ast.BuiltInFunction:
 		if n.Function != "print" {
-			cg.ice("only %q is supported, got %q", "print", n.Function)
+			cg.codeGenerator.ice("only %q is supported, got %q", "print", n.Function)
 		}
 		cg.emitBytes(bytecode.OpPrint)
 
@@ -232,41 +177,36 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		break
 
 	case *ast.VarDecl:
-		if cg.isInsideGlobalsBlock() {
-			// Global variable
-			created := cg.csw.SetGlobal(n.Name, cg.valueFromNode(n.Initializer))
-			if !created {
-				cg.ice(
-					"duplicate definition of global variable '%v' on code generation",
-					n.Name)
-			}
-		} else {
-			// Local variable
-			if len(cg.locals) == 256 {
-				cg.error("Currently only up to 255 global variables are supported.")
-			}
-
-			for _, local := range cg.locals {
-				if local.name == n.Name {
-					cg.error("Local variable %q already defined. Shadowing not allowed.", n.Name)
-				}
-			}
-
-			cg.locals = append(cg.locals, local{name: n.Name, depth: cg.scopeDepth})
+		if cg.codeGenerator.isInsideGlobalsBlock() {
+			// Globals were already handled by the globalsExtractor.
+			break
 		}
+
+		// Local variable
+		if len(cg.locals) == 256 {
+			cg.codeGenerator.error("Currently only up to 255 global variables are supported.")
+		}
+
+		for _, local := range cg.locals {
+			if local.name == n.Name {
+				cg.codeGenerator.error("Local variable %q already defined. Shadowing not allowed.", n.Name)
+			}
+		}
+
+		cg.locals = append(cg.locals, local{name: n.Name, depth: cg.codeGenerator.scopeDepth})
 
 	case *ast.VarRef:
 		localIndex := cg.resolveLocal(n.Name)
 		if localIndex < 0 {
 			// It's a global
-			i := cg.csw.GetGlobalIndex(n.Name)
+			i := cg.codeGenerator.csw.GetGlobalIndex(n.Name)
 			if i < 0 {
-				cg.ice("global variable '%v' not found in the globals pool", n.Name)
+				cg.codeGenerator.ice("global variable '%v' not found in the globals pool", n.Name)
 			}
 			if i > 255 {
 				// TODO: Can this even happen? I guess GetGlobalIndex will never return
 				// anything over 255.
-				cg.error("Currently only up to 255 global variables are supported.")
+				cg.codeGenerator.error("Currently only up to 255 global variables are supported.")
 			}
 			cg.emitBytes(bytecode.OpReadGlobal, byte(i))
 		} else {
@@ -278,14 +218,14 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		localIndex := cg.resolveLocal(n.VarName)
 		if localIndex < 0 {
 			// It's a global
-			i := cg.csw.GetGlobalIndex(n.VarName)
+			i := cg.codeGenerator.csw.GetGlobalIndex(n.VarName)
 			if i < 0 {
-				cg.error("Global variable '%v' not declared.", n.VarName)
+				cg.codeGenerator.error("Global variable '%v' not declared.", n.VarName)
 			}
 			if i > 255 {
 				// TODO: Can this even happen? I guess GetGlobalIndex will never return
 				// anything over 255.
-				cg.error("Currently only up to 255 global variables are supported.")
+				cg.codeGenerator.error("Currently only up to 255 global variables are supported.")
 			}
 			cg.emitBytes(bytecode.OpWriteGlobal, byte(i))
 		} else {
@@ -297,22 +237,26 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		cg.emitBytes(bytecode.OpPop)
 
 	case *ast.Block:
-		cg.endScope()
+		cg.codeGenerator.endScope()
+		cg.popDescopedLocals()
 
 	case *ast.FunctionDecl:
+		// Nothing to do here. Functions were already handled by
+		// globalsExtractor.
+
 		// Here just create a function object referring to the Chunk of compiled
 		// bytecode we just generated and store it in a global variable with the
 		// function name.
 		//
 		// TODO: Eventually we'll support nested functions -- then this will
 		// change.
-		currentChunkIndex := len(cg.csw.Chunks) - 1
+		currentChunkIndex := len(cg.codeGenerator.csw.Chunks) - 1
 		f := bytecode.Value{
 			Value: bytecode.Function{
 				ChunkIndex: currentChunkIndex,
 			},
 		}
-		cg.csw.SetGlobal(n.Name, f)
+		cg.codeGenerator.csw.SetGlobal(n.Name, f)
 
 		// TODO: For now, we add an implicit return at the end of the function.
 		// Later on we'll want to do that only if the function doesn't already
@@ -322,17 +266,17 @@ func (cg *codeGenerator) Leave(node ast.Node) { // nolint: funlen, gocyclo
 		// No need to worry about duplicate `main`s: the semantic checker
 		// already verified this.
 		if n.Name == "main" {
-			cg.csw.FirstChunk = currentChunkIndex
+			cg.codeGenerator.csw.FirstChunk = currentChunkIndex
 		}
 
 	default:
-		cg.ice("unknown node type: %T", n)
+		cg.codeGenerator.ice("unknown node type: %T", n)
 	}
 
-	cg.nodeStack = cg.nodeStack[:len(cg.nodeStack)-1]
+	cg.codeGenerator.popFromNodeStack()
 }
 
-func (cg *codeGenerator) Event(node ast.Node, event int) {
+func (cg *codeGeneratorPassTwo) Event(node ast.Node, event int) {
 	switch n := node.(type) {
 	case *ast.IfStmt:
 		// We initially emit a short jump with placeholder jump offsets. We
@@ -368,19 +312,19 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 			cg.patchJump(addressToPatch, jumpOffset)
 
 		default:
-			cg.ice("Unexpected event while generating code for 'if' statement: %v", event)
+			cg.codeGenerator.ice("Unexpected event while generating code for 'if' statement: %v", event)
 		}
 
 	case *ast.WhileStmt:
 		if event != ast.EventAfterWhileCondition {
-			cg.ice("Unexpected event while generating code for 'while' statement: %v", event)
+			cg.codeGenerator.ice("Unexpected event while generating code for 'while' statement: %v", event)
 		}
 		n.SkipJumpAddress = len(cg.currentChunk().Code)
 		cg.emitBytes(bytecode.OpJumpIfFalse, 0x00)
 
 	case *ast.And:
 		if event != ast.EventAfterLogicalBinaryOp {
-			cg.ice("Unexpected event while generating code for 'and' expression: %v", event)
+			cg.codeGenerator.ice("Unexpected event while generating code for 'and' expression: %v", event)
 		}
 		n.JumpAddress = len(cg.currentChunk().Code)
 		cg.emitBytes(bytecode.OpJumpIfFalseNoPop, 0x00)
@@ -388,7 +332,7 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 
 	case *ast.Or:
 		if event != ast.EventAfterLogicalBinaryOp {
-			cg.ice("Unexpected event while generating code for 'or' expression: %v", event)
+			cg.codeGenerator.ice("Unexpected event while generating code for 'or' expression: %v", event)
 		}
 		n.JumpAddress = len(cg.currentChunk().Code)
 		cg.emitBytes(bytecode.OpJumpIfTrueNoPop, 0x00)
@@ -400,22 +344,13 @@ func (cg *codeGenerator) Event(node ast.Node, event int) {
 // Actual code generation
 //
 
-// currentLine returns the source code line corresponding to whatever we are
-// currently compiling.
-func (cg *codeGenerator) currentLine() int {
-	if len(cg.nodeStack) == 0 {
-		return -1 // TODO: Hack for that forced RETURN we generate out of no real node.
-	}
-	return cg.nodeStack[len(cg.nodeStack)-1].Line()
-}
-
 // currentChunk returns the current chunk we are compiling into.
-func (cg *codeGenerator) currentChunk() *bytecode.Chunk {
+func (cg *codeGeneratorPassTwo) currentChunk() *bytecode.Chunk {
 	// For now we don't support nested functions, so the current function is
 	// always the last one in the list of chunks, because we deal with them
 	// one-by-one: add the new chunk, compile to it, and go to the next
 	// function.
-	return cg.csw.Chunks[len(cg.csw.Chunks)-1]
+	return cg.codeGenerator.csw.Chunks[len(cg.codeGenerator.csw.Chunks)-1]
 }
 
 // currentLines returns the current array mapping instructions to source code
@@ -423,22 +358,22 @@ func (cg *codeGenerator) currentChunk() *bytecode.Chunk {
 //
 // TODO: Returning a pointer to a slice is ugly as hell, and leads to even
 // uglier client code.
-func (cg *codeGenerator) currentLines() *[]int {
-	return &cg.debugInfo.ChunksLines[len(cg.debugInfo.ChunksLines)-1]
+func (cg *codeGeneratorPassTwo) currentLines() *[]int {
+	return &cg.codeGenerator.debugInfo.ChunksLines[len(cg.codeGenerator.debugInfo.ChunksLines)-1]
 }
 
 // emitBytes writes one or more bytes to the bytecode chunk being generated.
-func (cg *codeGenerator) emitBytes(bytes ...byte) {
+func (cg *codeGeneratorPassTwo) emitBytes(bytes ...byte) {
 	for _, b := range bytes {
 		cg.currentChunk().Write(b)
 		lines := cg.currentLines()
-		*lines = append(*lines, cg.currentLine())
+		*lines = append(*lines, cg.codeGenerator.currentLine())
 	}
 }
 
 // emitConstant emits the bytecode for a constant having a given value.
-func (cg *codeGenerator) emitConstant(value bytecode.Value) {
-	if cg.isInsideGlobalsBlock() {
+func (cg *codeGeneratorPassTwo) emitConstant(value bytecode.Value) {
+	if cg.codeGenerator.isInsideGlobalsBlock() {
 		// Globals are initialized directly from the initializer value from the
 		// AST. No need to push the initializer value to the stack.
 		return
@@ -458,90 +393,40 @@ func (cg *codeGenerator) emitConstant(value bytecode.Value) {
 // which it was added. If there is already a constant with this value, its index
 // is returned (hey, we don't need duplicate constants, right? They are
 // constant, after all!)
-func (cg *codeGenerator) makeConstant(value bytecode.Value) int {
-	if i := cg.csw.SearchConstant(value); i >= 0 {
+func (cg *codeGeneratorPassTwo) makeConstant(value bytecode.Value) int {
+	if i := cg.codeGenerator.csw.SearchConstant(value); i >= 0 {
 		return i
 	}
 
-	constantIndex := cg.csw.AddConstant(value)
+	constantIndex := cg.codeGenerator.csw.AddConstant(value)
 	if constantIndex >= bytecode.MaxConstantsPerChunk {
-		cg.error("Too many constants in one chunk.")
+		cg.codeGenerator.error("Too many constants in one chunk.")
 		return 0
 	}
 
 	return constantIndex
 }
 
-// beginScope gets called when we enter into a new scope.
-func (cg *codeGenerator) beginScope() {
-	cg.scopeDepth++
-}
-
-// endScope gets called when we leave a scope.
-func (cg *codeGenerator) endScope() {
-	cg.scopeDepth--
-
-	for len(cg.locals) > 0 && cg.locals[len(cg.locals)-1].depth > cg.scopeDepth {
+// popDescopedLocals pops all local variables declared on scopes deeper than the
+// current scope depth.
+func (cg *codeGeneratorPassTwo) popDescopedLocals() {
+	for len(cg.locals) > 0 && cg.locals[len(cg.locals)-1].depth > cg.codeGenerator.scopeDepth {
 		cg.emitBytes(bytecode.OpPop)
 		cg.locals = cg.locals[:len(cg.locals)-1]
 	}
 }
 
-// error panics, reporting an error on the current node with a given error
-// message.
-func (cg *codeGenerator) error(format string, a ...interface{}) {
-	e := &codeGeneratorError{
-		msg: fmt.Sprintf("[line %v]: %v", cg.currentLine(),
-			fmt.Sprintf(format, a...)),
-	}
-	panic(e)
-}
-
-// ice reports an internal compiler error.
-func (cg *codeGenerator) ice(format string, a ...interface{}) {
-	cg.error(fmt.Sprintf("Internal compiler error: %v", fmt.Sprintf(format, a...)))
-}
-
 // newInternedValueString creates a new Value initialized to the interned string
 // value v. Emphasis on "interned": if there is already some other string value
 // equal to v on this VM, we'll reuse that same memory in the returned value.
-func (cg *codeGenerator) newInternedValueString(v string) bytecode.Value {
-	s := cg.csw.Strings.Intern(v)
+func (cg *codeGeneratorPassTwo) newInternedValueString(v string) bytecode.Value {
+	s := cg.codeGenerator.csw.Strings.Intern(v)
 	return bytecode.NewValueString(s)
-}
-
-func (cg *codeGenerator) valueFromNode(node ast.Node) bytecode.Value {
-	switch n := node.(type) {
-	case *ast.StringLiteral:
-		return bytecode.Value{Value: n.Value}
-	case *ast.BoolLiteral:
-		return bytecode.Value{Value: n.Value}
-	case *ast.IntLiteral:
-		return bytecode.Value{Value: n.Value}
-	case *ast.FloatLiteral:
-		return bytecode.Value{Value: n.Value}
-	case *ast.BNumLiteral:
-		return bytecode.Value{Value: n.Value}
-	default:
-		cg.ice("Unexpected node of type %T", node)
-	}
-	return bytecode.Value{}
-}
-
-// isInsideGlobalsBlock checks if we are currently inside a globals block.
-func (cg *codeGenerator) isInsideGlobalsBlock() bool {
-	for _, node := range cg.nodeStack {
-		_, ok := node.(*ast.GlobalsBlock)
-		if ok {
-			return true
-		}
-	}
-	return false
 }
 
 // resolveLocal finds the index into the locals array of the local variable
 // named name.
-func (cg *codeGenerator) resolveLocal(name string) int {
+func (cg *codeGeneratorPassTwo) resolveLocal(name string) int {
 	for i, local := range cg.locals {
 		if local.name == name {
 			return i
@@ -563,9 +448,9 @@ func (cg *codeGenerator) resolveLocal(name string) int {
 // all jump offsets are relative, and the language doesn't support arbitrary
 // jumps that could be broken when parts of the bytecode shift to give space for
 // longer jump offsets.
-func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
+func (cg *codeGeneratorPassTwo) patchJump(addressToPatch, jumpOffset int) {
 	if jumpOffset > math.MaxInt32 || jumpOffset < math.MinInt32 {
-		cg.error("Jump offset of %v is larger than supported.", jumpOffset)
+		cg.codeGenerator.error("Jump offset of %v is larger than supported.", jumpOffset)
 	}
 
 	if cg.isShortJumpOpcode(cg.currentChunk().Code[addressToPatch]) {
@@ -599,7 +484,7 @@ func (cg *codeGenerator) patchJump(addressToPatch, jumpOffset int) {
 
 // Checks if opcode is one the jump instruction variations that use a single
 // signed byte to represent the jump offset.
-func (cg *codeGenerator) isShortJumpOpcode(opcode uint8) bool {
+func (cg *codeGeneratorPassTwo) isShortJumpOpcode(opcode uint8) bool {
 	return opcode == bytecode.OpJump ||
 		opcode == bytecode.OpJumpIfFalse ||
 		opcode == bytecode.OpJumpIfFalseNoPop ||
