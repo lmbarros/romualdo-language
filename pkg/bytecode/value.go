@@ -170,7 +170,7 @@ func (v Value) String() string {
 	case Function:
 		// TODO: Would be nice to include the function name if we had the debug
 		// information around. Hard to access this info from here, though.
-		return fmt.Sprintf("<function %p>", vv)
+		return fmt.Sprintf("<function %d>", vv.ChunkIndex)
 	default:
 		return fmt.Sprintf("<Unexpected type %T>", vv)
 	}
