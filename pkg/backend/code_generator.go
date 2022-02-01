@@ -126,15 +126,16 @@ func (cg *codeGenerator) popFromNodeStack() {
 func (cg *codeGenerator) valueFromNode(node ast.Node) bytecode.Value {
 	switch n := node.(type) {
 	case *ast.StringLiteral:
-		return bytecode.Value{Value: n.Value}
+		return bytecode.NewValueString(n.Value)
 	case *ast.BoolLiteral:
-		return bytecode.Value{Value: n.Value}
+		return bytecode.NewValueBool(n.Value)
 	case *ast.IntLiteral:
-		return bytecode.Value{Value: n.Value}
+		return bytecode.NewValueInt(n.Value)
 	case *ast.FloatLiteral:
-		return bytecode.Value{Value: n.Value}
+		return bytecode.NewValueFloat(n.Value)
 	case *ast.BNumLiteral:
-		return bytecode.Value{Value: n.Value}
+		// BNums are internally represented as floats.
+		return bytecode.NewValueFloat(n.Value)
 	case *ast.FunctionDecl:
 		return bytecode.NewValueFunction(n.ChunkIndex)
 	default:
