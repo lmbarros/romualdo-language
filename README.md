@@ -19,17 +19,11 @@ looking at this code, here are some common steps to make a language change:
 * Maybe add some new type checks at `pkg/frontend/type_checker.go`.
 * If a new opcode is needed:
     * Document it at `doc/instruction-set.md`.
-    * Add it at `pkg/bytecode/chunk.go`.
+    * Add the opcode constant to `pkg/bytecode/chunk.go`.
     * Emit this new opcode somewhere in `pkg/backend/code_gen.go`.
     * Add code to interpret it at `pkg/vm/vm.go`.
+    * Add code to disassemble it in `pkg/bytecode/chunk.go`.
 * Add the new AST node to the AST printer.
-
-And to add a new opcode:
-
-* Document the new opcode in `doc/instruction-set.md`.
-* Add the opcode constant to `pkg/bytecode/chunk.go`
-* Implement the opcode runtime behavior in `pkg/vm/vm.go`.
-* Implement the disassembling of the opcode in `pkg/bytecode/chunk.go`.
 
 ## Credits
 
