@@ -15,10 +15,9 @@ declaration = metaBlock
             | globalsBlock
             | aliasDecl
             | enumDecl
-            | structDecl ;
+            | structDecl
             | functionDecl
-            | passageDecl
-            ;
+            | passageDecl ;
 ```
 
 ### Metadata block
