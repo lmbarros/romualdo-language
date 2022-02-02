@@ -74,6 +74,7 @@ func (tc *typeChecker) checkAssignment(node *ast.Assignment) {
 func (tc *typeChecker) checkBinary(node *ast.Binary) {
 	switch node.Operator {
 	case "<", "<=", ">", ">=":
+		// TODO: Why only unbounded? We should be able to compare BNums, right?
 		if !node.LHS.Type().IsUnboundedNumeric() {
 			tc.error("Operator %v expects numeric operands; got a %v on the left-hand side",
 				node.Operator, node.LHS.Type())
