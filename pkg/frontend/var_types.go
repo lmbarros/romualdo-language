@@ -46,7 +46,8 @@ type local struct {
 	varType *ast.Type
 }
 
-// variableTypeSetter is a node visitor that sets the type of all VarRef nodes.
+// variableTypeSetter is a node visitor that sets the type of all nodes of types
+// VarRef, FunctionCall and Assignment.
 type variableTypeSetter struct {
 	// errors collects all type errors detected.
 	errors []string
@@ -79,17 +80,13 @@ func (ts *variableTypeSetter) Enter(node ast.Node) {
 
 	switch n := node.(type) {
 	case *ast.VarRef:
-		localIndex := ts.resolveLocal(n.Name)
-		if localIndex < 0 {
-			t, ok := ts.GlobalTypes[n.Name]
-			if !ok {
-				ts.error("Undeclared global name '%v'.", n.Name)
-			}
-			n.VarType = t
-		} else {
-			t := ts.localTypes[localIndex].varType
-			n.VarType = t
-		}
+		n.VarType = ts.resolveType(n.Name)
+
+	case *ast.FunctionCall:
+		n.FunctionType = ts.GlobalTypes[n.Function.Name]
+
+	case *ast.Assignment:
+		n.VarType = ts.resolveType(n.VarName)
 
 	case *ast.Block:
 		ts.scopeDepth++
@@ -147,4 +144,21 @@ func (ts *variableTypeSetter) resolveLocal(name string) int {
 		}
 	}
 	return -1
+}
+
+// resolveType returns the type associated with name in the current scope. If not
+// found, returns nil.
+func (ts *variableTypeSetter) resolveType(name string) *ast.Type {
+	localIndex := ts.resolveLocal(name)
+	if localIndex < 0 {
+		t, ok := ts.GlobalTypes[name]
+		if !ok {
+			ts.error("Undeclared name '%v'.", name)
+			return nil
+		}
+		return t
+	} else {
+		t := ts.localTypes[localIndex].varType
+		return t
+	}
 }

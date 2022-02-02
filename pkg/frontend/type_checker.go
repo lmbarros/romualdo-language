@@ -30,6 +30,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 	tc.nodeStack = append(tc.nodeStack, node)
 
 	switch n := node.(type) {
+	case *ast.Assignment:
+		tc.checkAssignment(n)
 	case *ast.Binary:
 		tc.checkBinary(n)
 	case *ast.Unary:
@@ -60,6 +62,13 @@ func (tc *typeChecker) Event(node ast.Node, event int) {
 //
 // Type checking
 //
+
+// checkAssignment type checks an assignment operator.
+func (tc *typeChecker) checkAssignment(node *ast.Assignment) {
+	if node.VarType != node.Value.Type() {
+		tc.error("Variable '%v' is of type %v, cannot assign a %v value to it.", node.VarName, node.VarType, node.Value.Type())
+	}
+}
 
 // checkBinary type checks a binary operator.
 func (tc *typeChecker) checkBinary(node *ast.Binary) {

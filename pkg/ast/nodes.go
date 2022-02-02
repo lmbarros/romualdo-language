@@ -447,6 +447,9 @@ type Assignment struct {
 	// variable we are assigning to.
 	VarName string
 
+	// VarType us the type of the variable receiving the assignment.
+	VarType *Type
+
 	// Value is the right-hand side of the assignment. Contains the value we are
 	// assigning to the variable.
 	Value Node
