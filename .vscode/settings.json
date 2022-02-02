@@ -1,17 +1,19 @@
 {
     "cSpell.words": [
-        "Interner",
-        "Motta",
-        "Romualdo",
-        "Romulang",
-        "Storyworld",
-        "Storyworlds",
+        "arity",
         "bnum",
+        "BNums",
         "ebnf",
         "gocognit",
         "gocyclo",
         "gosub",
+        "interner",
+        "Motta",
         "nolint",
+        "Romualdo",
+        "romulang",
+        "Storyworld",
+        "Storyworlds",
         "struct"
     ]
 }
