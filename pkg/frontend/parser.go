@@ -35,8 +35,8 @@ const (
 )
 
 // prefixParseFn is a function used to parse code for a certain kind of prefix
-// expression. canAssign tells if the expression we parsing accepts to be the
-// target of an assignment.
+// expression. canAssign tells if the expression we are parsing accepts to be
+// the target of an assignment.
 type prefixParseFn = func(c *parser, canAssign bool) ast.Node
 
 // infixParseFn is a function used to parse code for a certain kind of infix
@@ -99,8 +99,8 @@ func (p *parser) parse() *ast.Storyworld {
 	return &sw
 }
 
-// parsePrecedence parses and generates code for expressions with a precedence
-// level equal to or greater than p.
+// parsePrecedence parses and generates the AST for expressions with a
+// precedence level equal to or greater than prec.
 func (p *parser) parsePrecedence(prec precedence) ast.Node {
 	p.advance()
 	prefixRule := rules[p.previousToken.kind].prefix
