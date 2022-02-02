@@ -60,7 +60,7 @@ type variableTypeSetter struct {
 	GlobalTypes map[string]*ast.Type
 
 	// localTypes contains all local variables currently in scope. The visitor
-	// keepts this up-to-date as it traverses the parse tree.
+	// keeps this up-to-date as it traverses the parse tree.
 	localTypes []local
 
 	// inGlobals tells if we are we inside a globals block.
@@ -83,7 +83,7 @@ func (ts *variableTypeSetter) Enter(node ast.Node) {
 		if localIndex < 0 {
 			t, ok := ts.GlobalTypes[n.Name]
 			if !ok {
-				ts.error("Undeclared global variable '%v'.", n.Name)
+				ts.error("Undeclared global name '%v'.", n.Name)
 			}
 			n.VarType = t
 		} else {

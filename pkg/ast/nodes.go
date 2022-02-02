@@ -357,6 +357,33 @@ func (n *FunctionDecl) Walk(v Visitor) {
 	v.Leave(n)
 }
 
+// FunctionCall is an AST node representing a function call.
+type FunctionCall struct {
+	BaseNode
+
+	// Function contains the function being called.
+	Function *VarRef
+
+	// Arguments are the function arguments.
+	Arguments []Node
+
+	// FunctionType is the type of the function being called.
+	FunctionType *Type
+}
+
+func (n *FunctionCall) Type() *Type {
+	return n.FunctionType
+}
+
+func (n *FunctionCall) Walk(v Visitor) {
+	v.Enter(n)
+	n.Function.Walk(v)
+	for _, arg := range n.Arguments {
+		arg.Walk(v)
+	}
+	v.Leave(n)
+}
+
 // VarDecl is an AST node representing a single variable declaration.
 type VarDecl struct {
 	BaseNode

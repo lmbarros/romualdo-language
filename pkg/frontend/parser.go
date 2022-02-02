@@ -634,6 +634,52 @@ func (p *parser) binary(lhs ast.Node, canAssign bool) ast.Node {
 	}
 }
 
+// parseArgumentList parses a list of arguments.
+func (p *parser) parseArgumentList() []ast.Node {
+	args := []ast.Node{}
+	if p.match(tokenKindRightParen) {
+		return args
+	}
+
+	for ok := true; ok; ok = p.match(tokenKindComma) {
+		arg := p.expression()
+		args = append(args, arg)
+		if len(args) > 255 {
+			p.errorAtCurrent("Can't have more than 255 arguments.")
+		}
+	}
+
+	p.consume(tokenKindRightParen, "Expect ')' after arguments.")
+
+	return args
+}
+
+// call parses a call expression. Like function calls. We implement calls as an
+// infix "(" operator. The left-hand side (the callable thing) and the left
+// parenthesis are expected to have been just consumed.
+func (p *parser) call(lhs ast.Node, canAssign bool) ast.Node {
+	n := &ast.FunctionCall{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+	}
+
+	functionVar, ok := lhs.(*ast.VarRef)
+	if !ok {
+		// TODO: Something fishy on this check. What I really need to find out
+		// if lhs evaluates to a callable thing. Also: the error message should
+		// point to the token before the previous token, right? Or, really, to
+		// the whole expression before it.
+		p.errorAt(p.previousToken, "This doesn't look like a callable thing.")
+		return n
+	}
+
+	n.Function = functionVar
+	n.Arguments = p.parseArgumentList()
+
+	return n
+}
+
 // and parses an "and" expression. The left-hand-side argument and the "and"
 // operator are expected to have been just consumed.
 func (p *parser) and(lhs ast.Node, canAssign bool) ast.Node {
@@ -845,7 +891,7 @@ func initRules() { // nolint:funlen
 
 	//                                     prefix                                      infix                          precedence
 	//                                    ---------------------------------------     --------------------------     --------------
-	rules[tokenKindLeftParen] = /*     */ parseRule{(*parser).grouping /*         */, nil /*                     */, precNone}
+	rules[tokenKindLeftParen] = /*     */ parseRule{(*parser).grouping /*         */, (*parser).call /*          */, precCall}
 	rules[tokenKindRightParen] = /*    */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindLeftBrace] = /*     */ parseRule{nil /*                        */, nil /*                     */, precNone}
 	rules[tokenKindRightBrace] = /*    */ parseRule{nil /*                        */, nil /*                     */, precNone}
