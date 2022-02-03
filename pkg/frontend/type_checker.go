@@ -38,6 +38,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkUnary(n)
 	case *ast.Blend:
 		tc.checkBlend(n)
+	case *ast.FunctionCall:
+		tc.checkFunctionCall(n)
 	case *ast.TypeConversion:
 		tc.checkTypeConversion(n)
 	case *ast.VarDecl:
@@ -203,6 +205,27 @@ func (tc *typeChecker) checkBlend(node *ast.Blend) {
 	if node.Weight.Type().Tag != ast.TypeBNum {
 		tc.error("The blend Operator expects bnum operands; got a %v as the third one",
 			node.Weight.Type())
+	}
+}
+
+// checkFunctionCall type checks a function call. As a bonus, it also checks the
+// arity.
+func (tc *typeChecker) checkFunctionCall(node *ast.FunctionCall) {
+	numArgs := len(node.Arguments)
+	numParams := len(node.FunctionType.ParameterTypes)
+	if numArgs != numParams {
+		tc.error("Function '%v' expects %v arguments, but got %v.", node.Function.Name, numParams, numArgs)
+		return
+	}
+
+	for i, paramType := range node.FunctionType.ParameterTypes {
+		// TODO: Will fail with function types. Need to implement a
+		// `TypesEqual()` function.
+		argType := node.Arguments[i].Type()
+		if paramType != argType {
+			tc.error("Function '%v' expects a %v as argument %v, but got a %v.",
+				node.Function.Name, paramType, i+1, argType)
+		}
 	}
 }
 

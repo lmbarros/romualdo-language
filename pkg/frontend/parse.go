@@ -34,6 +34,7 @@ func Parse(source string) ast.Node {
 	}
 
 	// Look for undeclared variables, set types of global variables references
+	// (including function calls!)
 	globalTypes := extractGlobalTypes(root)
 	vts := &variableTypeSetter{
 		GlobalTypes: globalTypes,

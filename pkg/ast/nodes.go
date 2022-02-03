@@ -348,7 +348,7 @@ type FunctionDecl struct {
 }
 
 func (n *FunctionDecl) Type() *Type {
-	return n.ReturnType
+	return TheTypeVoid
 }
 
 func (n *FunctionDecl) Walk(v Visitor) {
@@ -367,12 +367,13 @@ type FunctionCall struct {
 	// Arguments are the function arguments.
 	Arguments []Node
 
-	// FunctionType is the type of the function being called.
+	// FunctionType is the type of the function being called. This is the type
+	// of the function itself, including the return type and parameter types.
 	FunctionType *Type
 }
 
 func (n *FunctionCall) Type() *Type {
-	return n.FunctionType
+	return n.FunctionType.ReturnType
 }
 
 func (n *FunctionCall) Walk(v Visitor) {

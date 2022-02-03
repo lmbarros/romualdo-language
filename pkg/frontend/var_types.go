@@ -28,7 +28,15 @@ func extractGlobalTypes(sw *ast.Storyworld) map[string]*ast.Type {
 			}
 
 		case *ast.FunctionDecl:
-			types[n.Name] = n.Type()
+			paramTypes := []*ast.Type{}
+			for _, t := range n.Parameters {
+				paramTypes = append(paramTypes, t.Type)
+			}
+			types[n.Name] = &ast.Type{
+				Tag:            ast.TypeFunction,
+				ReturnType:     n.ReturnType,
+				ParameterTypes: paramTypes,
+			}
 		}
 	}
 	return types
