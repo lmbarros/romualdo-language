@@ -118,5 +118,5 @@ func (s *StackView) at(index int) bytecode.Value {
 // setAt sets the value at a given index of the stack view. In other words,
 // accesses the stack view as an array.
 func (s *StackView) setAt(index int, value bytecode.Value) {
-	s.setAt(s.base+index, value)
+	s.stack.setAt(s.base+index, value)
 }
