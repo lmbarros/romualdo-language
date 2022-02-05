@@ -37,7 +37,7 @@ func Parse(source string) ast.Node {
 	// (including function calls!)
 	globalTypes := extractGlobalTypes(root)
 	vts := &variableTypeSetter{
-		GlobalTypes: globalTypes,
+		globalTypes: globalTypes,
 	}
 	root.Walk(vts)
 	if len(vts.errors) > 0 {

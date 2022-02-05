@@ -64,9 +64,9 @@ type variableTypeSetter struct {
 	// one is on the top.
 	nodeStack []ast.Node
 
-	// GlobalTypes maps global variables by names to their types. Must be set
+	// globalTypes maps global variables names to their types. Must be set
 	// before using the visitor.
-	GlobalTypes map[string]*ast.Type
+	globalTypes map[string]*ast.Type
 
 	// localTypes contains all local variables currently in scope. The visitor
 	// keeps this up-to-date as it traverses the parse tree.
@@ -91,7 +91,14 @@ func (ts *variableTypeSetter) Enter(node ast.Node) {
 		n.VarType = ts.resolveType(n.Name)
 
 	case *ast.FunctionCall:
-		n.FunctionType = ts.GlobalTypes[n.Function.Name]
+		// FIXME: Using n.Function.Name for the function name is wrong: what if
+		// we assign the function to a variable with a different name?
+		n.FunctionType = ts.globalTypes[n.Function.Name]
+
+	case *ast.FunctionDecl:
+		for _, param := range n.Parameters {
+			ts.localTypes = append(ts.localTypes, local{name: param.Name, depth: ts.scopeDepth, varType: param.Type})
+		}
 
 	case *ast.Assignment:
 		n.VarType = ts.resolveType(n.VarName)
@@ -159,7 +166,7 @@ func (ts *variableTypeSetter) resolveLocal(name string) int {
 func (ts *variableTypeSetter) resolveType(name string) *ast.Type {
 	localIndex := ts.resolveLocal(name)
 	if localIndex < 0 {
-		t, ok := ts.GlobalTypes[name]
+		t, ok := ts.globalTypes[name]
 		if !ok {
 			ts.error("Undeclared name '%v'.", name)
 			return nil

@@ -39,9 +39,42 @@ func (cg *codeGeneratorPassTwo) Enter(node ast.Node) {
 	case *ast.WhileStmt:
 		n.ConditionAddress = len(cg.currentChunk().Code)
 
+	case *ast.FunctionDecl:
+		// Even though the function body is already a Block that does the
+		// scoping little dance, we do it also for function declarations -- here
+		// and on Leave(), where we pop the descoped arguments. Not sure this is
+		// the most elegant way to do it.
+		cg.codeGenerator.beginScope()
+
+		for _, param := range n.Parameters {
+			if !cg.defineLocalVariable(param.Name) {
+				break
+			}
+		}
+
 	default:
 		// nothing
 	}
+}
+
+// defineLocalVariable creates a new local variable called name (in other words,
+// this appends a proper entry to cg.locals). Assumes the corresponding value is
+// on the stack already. Returns true on success. On error, emits a compilation
+// error and returns false.
+func (cg *codeGeneratorPassTwo) defineLocalVariable(name string) bool {
+	if len(cg.locals) == 256 {
+		cg.codeGenerator.error("Currently only up to 255 global variables are supported.")
+		return false
+	}
+
+	for _, local := range cg.locals {
+		if local.name == name {
+			cg.codeGenerator.error("Local variable %q already defined. Shadowing not allowed.", name)
+		}
+	}
+
+	cg.locals = append(cg.locals, local{name: name, depth: cg.codeGenerator.scopeDepth})
+	return true
 }
 
 func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocyclo
@@ -181,19 +214,7 @@ func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocycl
 			// Globals were already handled by the globalsExtractor.
 			break
 		}
-
-		// Local variable
-		if len(cg.locals) == 256 {
-			cg.codeGenerator.error("Currently only up to 255 global variables are supported.")
-		}
-
-		for _, local := range cg.locals {
-			if local.name == n.Name {
-				cg.codeGenerator.error("Local variable %q already defined. Shadowing not allowed.", n.Name)
-			}
-		}
-
-		cg.locals = append(cg.locals, local{name: n.Name, depth: cg.codeGenerator.scopeDepth})
+		cg.defineLocalVariable(n.Name)
 
 	case *ast.VarRef:
 		localIndex := cg.resolveLocal(n.Name)
@@ -268,6 +289,9 @@ func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocycl
 		if n.Name == "main" {
 			cg.codeGenerator.csw.FirstChunk = currentChunkIndex
 		}
+
+		cg.codeGenerator.endScope()
+		cg.popDescopedLocals()
 
 	default:
 		cg.codeGenerator.ice("unknown node type: %T", n)

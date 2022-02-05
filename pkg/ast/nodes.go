@@ -364,7 +364,7 @@ type FunctionCall struct {
 	// Function contains the function being called.
 	Function *VarRef
 
-	// Arguments are the function arguments.
+	// Arguments are the arguments passed to the function.
 	Arguments []Node
 
 	// FunctionType is the type of the function being called. This is the type
