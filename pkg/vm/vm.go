@@ -444,7 +444,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				r := strconv.FormatBool(v.AsBool())
 				vm.push(vm.NewInternedValueString(r))
 			default:
-				vm.runtimeError("Unexpected type on conversion to float: %T", v)
+				vm.runtimeError("Unexpected type on conversion to string: %T", v)
 			}
 
 		case bytecode.OpPrint:
