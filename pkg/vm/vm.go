@@ -431,21 +431,8 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 
 		case bytecode.OpToString:
 			v := vm.pop()
-			switch {
-			case v.IsString():
-				vm.push(v)
-			case v.IsFloat():
-				r := strconv.FormatFloat(v.AsFloat(), 'f', -1, 64)
-				vm.push(vm.NewInternedValueString(r))
-			case v.IsInt():
-				r := strconv.FormatInt(v.AsInt(), 10)
-				vm.push(vm.NewInternedValueString(r))
-			case v.IsBool():
-				r := strconv.FormatBool(v.AsBool())
-				vm.push(vm.NewInternedValueString(r))
-			default:
-				vm.runtimeError("Unexpected type on conversion to string: %T", v.Value)
-			}
+			s := v.String()
+			vm.push(vm.NewInternedValueString(s))
 
 		case bytecode.OpPrint:
 			v := vm.pop()

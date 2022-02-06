@@ -166,7 +166,7 @@ func (v Value) String() string {
 	case bool:
 		return fmt.Sprintf("%v", vv)
 	case string:
-		return fmt.Sprintf("%v", vv)
+		return vv
 	case Function:
 		// TODO: Would be nice to include the function name if we had the debug
 		// information around. Hard to access this info from here, though.
