@@ -372,7 +372,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				}
 				vm.push(bytecode.NewValueInt(r))
 			default:
-				vm.runtimeError("Unexpected type on conversion to int: %T", v)
+				vm.runtimeError("Unexpected type on conversion to int: %T", v.Value)
 			}
 
 		case bytecode.OpToFloat:
@@ -401,7 +401,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				}
 				vm.push(bytecode.NewValueFloat(r))
 			default:
-				vm.runtimeError("Unexpected type on conversion to float: %T", v)
+				vm.runtimeError("Unexpected type on conversion to float: %T", v.Value)
 			}
 
 		case bytecode.OpToBNum:
@@ -426,7 +426,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				}
 				vm.push(bytecode.NewValueFloat(r))
 			default:
-				vm.runtimeError("Unexpected type on conversion to bnum: %T", v)
+				vm.runtimeError("Unexpected type on conversion to bnum: %T", v.Value)
 			}
 
 		case bytecode.OpToString:
@@ -444,7 +444,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				r := strconv.FormatBool(v.AsBool())
 				vm.push(vm.NewInternedValueString(r))
 			default:
-				vm.runtimeError("Unexpected type on conversion to string: %T", v)
+				vm.runtimeError("Unexpected type on conversion to string: %T", v.Value)
 			}
 
 		case bytecode.OpPrint:
