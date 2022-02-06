@@ -57,26 +57,6 @@ func (cg *codeGeneratorPassTwo) Enter(node ast.Node) {
 	}
 }
 
-// defineLocalVariable creates a new local variable called name (in other words,
-// this appends a proper entry to cg.locals). Assumes the corresponding value is
-// on the stack already. Returns true on success. On error, emits a compilation
-// error and returns false.
-func (cg *codeGeneratorPassTwo) defineLocalVariable(name string) bool {
-	if len(cg.locals) == 256 {
-		cg.codeGenerator.error("Currently only up to 255 global variables are supported.")
-		return false
-	}
-
-	for _, local := range cg.locals {
-		if local.name == name {
-			cg.codeGenerator.error("Local variable %q already defined. Shadowing not allowed.", name)
-		}
-	}
-
-	cg.locals = append(cg.locals, local{name: name, depth: cg.codeGenerator.scopeDepth})
-	return true
-}
-
 func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocyclo
 	switch n := node.(type) {
 	case *ast.Storyworld:
@@ -429,6 +409,26 @@ func (cg *codeGeneratorPassTwo) makeConstant(value bytecode.Value) int {
 	}
 
 	return constantIndex
+}
+
+// defineLocalVariable creates a new local variable called name (in other words,
+// this appends a proper entry to cg.locals). Assumes the corresponding value is
+// on the stack already. Returns true on success. On error, emits a compilation
+// error and returns false.
+func (cg *codeGeneratorPassTwo) defineLocalVariable(name string) bool {
+	if len(cg.locals) == 256 {
+		cg.codeGenerator.error("Currently only up to 255 global variables are supported.")
+		return false
+	}
+
+	for _, local := range cg.locals {
+		if local.name == name {
+			cg.codeGenerator.error("Local variable %q already defined. Shadowing not allowed.", name)
+		}
+	}
+
+	cg.locals = append(cg.locals, local{name: name, depth: cg.codeGenerator.scopeDepth})
+	return true
 }
 
 // popDescopedLocals pops all local variables declared on scopes deeper than the
