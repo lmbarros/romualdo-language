@@ -85,7 +85,7 @@ func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo
 
 	r := vm.run()
 	if vm.stack.size() != 0 {
-		panic(fmt.Sprintf("Stack size should be zero after execution, was %v.", vm.stack.size()))
+		vm.runtimeError("Stack size should be zero after execution, was %v.", vm.stack.size())
 	}
 	return r
 }
@@ -372,7 +372,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				}
 				vm.push(bytecode.NewValueInt(r))
 			default:
-				panic(fmt.Sprintf("Unexpected type on conversion to int: %T", v))
+				vm.runtimeError("Unexpected type on conversion to int: %T", v)
 			}
 
 		case bytecode.OpToFloat:
@@ -401,7 +401,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				}
 				vm.push(bytecode.NewValueFloat(r))
 			default:
-				panic(fmt.Sprintf("Unexpected type on conversion to float: %T", v))
+				vm.runtimeError("Unexpected type on conversion to float: %T", v)
 			}
 
 		case bytecode.OpToBNum:
@@ -426,7 +426,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				}
 				vm.push(bytecode.NewValueFloat(r))
 			default:
-				panic(fmt.Sprintf("Unexpected type on conversion to bnum: %T", v))
+				vm.runtimeError("Unexpected type on conversion to bnum: %T", v)
 			}
 
 		case bytecode.OpToString:
@@ -444,7 +444,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				r := strconv.FormatBool(v.AsBool())
 				vm.push(vm.NewInternedValueString(r))
 			default:
-				panic(fmt.Sprintf("Unexpected type on conversion to float: %T", v))
+				vm.runtimeError("Unexpected type on conversion to float: %T", v)
 			}
 
 		case bytecode.OpPrint:
@@ -470,7 +470,7 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.frame.stack.setAt(int(index), value)
 
 		default:
-			panic(fmt.Sprintf("Unexpected instruction: %v", instruction))
+			vm.runtimeError("Unexpected instruction: %v", instruction)
 		}
 	}
 }
@@ -534,10 +534,14 @@ func (vm *VM) peek(distance int) bytecode.Value {
 
 // runtimeError stops the execution and reports a runtime error with a given
 // message and fmt.Printf-like arguments.
+//
+// TODO: I need to think better about error handling in Romualdo. Especially
+// those runtime errors that should be (an AFAIK are) caught in compile-time.
 func (vm *VM) runtimeError(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format+"\n", a...)
 	line := vm.currentLines()[vm.frame.ip-1]
 	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
+	panic("runtimeError() called")
 }
 
 // popTwoIntOperands pops and returns two values from the stack, assumed to be
