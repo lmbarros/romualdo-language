@@ -52,6 +52,7 @@ func GenerateCode(root ast.Node) (
 			debugInfo: passOne.codeGenerator.debugInfo,
 			nodeStack: passOne.codeGenerator.nodeStack,
 		},
+		currentChunkIndex: -1, // start with an invalid value, for easier debugging
 	}
 	root.Walk(passTwo)
 	return passTwo.codeGenerator.csw, passTwo.codeGenerator.debugInfo, nil

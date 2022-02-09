@@ -23,6 +23,10 @@ type codeGeneratorPassTwo struct {
 
 	// locals holds the local variables currently in scope.
 	locals []local
+
+	// currentChunkIndex contains the index of the chunk we are currently
+	// generating code for.
+	currentChunkIndex int
 }
 
 //
@@ -46,12 +50,21 @@ func (cg *codeGeneratorPassTwo) Enter(node ast.Node) {
 		// the most elegant way to do it.
 		cg.codeGenerator.beginScope()
 
+		// According to our calling convention, the callable thing is passed as
+		// the zeroth argument in a function call. It will always be on the
+		// stack in calls. So, here we define a pseudo, nameless local variable
+		// to take the corresponding spot on our list of local variables.
+		if !cg.defineLocalVariable("") {
+			break
+		}
+
 		for _, param := range n.Parameters {
 			if !cg.defineLocalVariable(param.Name) {
 				break
 			}
 		}
 
+		cg.currentChunkIndex = n.ChunkIndex
 	default:
 		// nothing
 	}
@@ -235,7 +248,12 @@ func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocycl
 		}
 
 	case *ast.ExpressionStmt:
-		cg.emitBytes(bytecode.OpPop)
+		// A call to a void function is still an expression statement for
+		// grammar purposes -- but one that does not push anything into the
+		// stack. Don't try to pop what isn't there.
+		if node.Type().Tag != ast.TypeVoid {
+			cg.emitBytes(bytecode.OpPop)
+		}
 
 	case *ast.Block:
 		cg.codeGenerator.endScope()
@@ -248,30 +266,38 @@ func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocycl
 		// Here just create a function object referring to the Chunk of compiled
 		// bytecode we just generated and store it in a global variable with the
 		// function name.
-		//
-		// TODO: Eventually we'll support nested functions -- then this will
-		// change.
-		currentChunkIndex := len(cg.codeGenerator.csw.Chunks) - 1
 		f := bytecode.Value{
 			Value: bytecode.Function{
-				ChunkIndex: currentChunkIndex,
+				ChunkIndex: cg.currentChunkIndex,
 			},
 		}
 		cg.codeGenerator.csw.SetGlobal(n.Name, f)
+
+		// No need to worry about duplicate `main`s: the semantic checker
+		// already verified this.
+		if n.Name == "main" {
+			cg.codeGenerator.csw.FirstChunk = cg.currentChunkIndex
+		}
+
+		cg.codeGenerator.endScope()
+		cg.popDescopedLocals()
 
 		// TODO: For now, we add an implicit return at the end of the function.
 		// Later on we'll want to do that only if the function doesn't already
 		// have a return statement at the end.
 		cg.emitBytes(bytecode.OpReturn)
 
-		// No need to worry about duplicate `main`s: the semantic checker
-		// already verified this.
-		if n.Name == "main" {
-			cg.codeGenerator.csw.FirstChunk = currentChunkIndex
-		}
+		// Leave the current chunk index invalid, as we are outside of any function.
+		cg.currentChunkIndex = -1
 
-		cg.codeGenerator.endScope()
-		cg.popDescopedLocals()
+	case *ast.FunctionCall:
+		argCount := len(n.Arguments)
+		maxArgs := math.MaxUint8
+		if argCount > maxArgs {
+			cg.codeGenerator.error("Found function call with %v arguments, max supported is %v.",
+				argCount, maxArgs)
+		}
+		cg.emitBytes(bytecode.OpCall, uint8(argCount))
 
 	default:
 		cg.codeGenerator.ice("unknown node type: %T", n)
@@ -350,11 +376,7 @@ func (cg *codeGeneratorPassTwo) Event(node ast.Node, event int) {
 
 // currentChunk returns the current chunk we are compiling into.
 func (cg *codeGeneratorPassTwo) currentChunk() *bytecode.Chunk {
-	// For now we don't support nested functions, so the current function is
-	// always the last one in the list of chunks, because we deal with them
-	// one-by-one: add the new chunk, compile to it, and go to the next
-	// function.
-	return cg.codeGenerator.csw.Chunks[len(cg.codeGenerator.csw.Chunks)-1]
+	return cg.codeGenerator.csw.Chunks[cg.currentChunkIndex]
 }
 
 // currentLines returns the current array mapping instructions to source code
@@ -363,13 +385,14 @@ func (cg *codeGeneratorPassTwo) currentChunk() *bytecode.Chunk {
 // TODO: Returning a pointer to a slice is ugly as hell, and leads to even
 // uglier client code.
 func (cg *codeGeneratorPassTwo) currentLines() *[]int {
-	return &cg.codeGenerator.debugInfo.ChunksLines[len(cg.codeGenerator.debugInfo.ChunksLines)-1]
+	return &cg.codeGenerator.debugInfo.ChunksLines[cg.currentChunkIndex]
 }
 
 // emitBytes writes one or more bytes to the bytecode chunk being generated.
 func (cg *codeGeneratorPassTwo) emitBytes(bytes ...byte) {
 	for _, b := range bytes {
-		cg.currentChunk().Write(b)
+		chunk := cg.currentChunk()
+		chunk.Code = append(chunk.Code, b)
 		lines := cg.currentLines()
 		*lines = append(*lines, cg.codeGenerator.currentLine())
 	}

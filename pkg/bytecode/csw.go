@@ -258,6 +258,9 @@ func (csw *CompiledStoryworld) DisassembleInstruction(chunk *Chunk, out io.Write
 	case OpJumpIfFalseLong:
 		return csw.disassembleSIntInstruction(chunk, out, "JUMP_IF_FALSE_LONG", offset)
 
+	case OpCall:
+		return csw.disassembleUByteInstruction(chunk, out, "CALL", offset)
+
 	case OpReturn:
 		return csw.disassembleSimpleInstruction(out, "RETURN", offset)
 

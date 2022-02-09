@@ -43,6 +43,7 @@ const (
 	OpJumpIfFalseNoPopLong // Must be right after OpJumpIfFalseNoPop
 	OpJumpIfTrueNoPop
 	OpJumpIfTrueNoPopLong // Must be right after OpJumpIfTrueNoPop
+	OpCall
 	OpReturn
 	OpToInt
 	OpToFloat
@@ -72,12 +73,6 @@ const (
 type Chunk struct {
 	// The code itself.
 	Code []uint8
-}
-
-// Write writes a byte to the chunk. line is the source code line number that
-// generated this byte.
-func (c *Chunk) Write(b uint8) {
-	c.Code = append(c.Code, b)
 }
 
 // Decodes the first four bytes in bytecode into an unsigned 31-bit integer.

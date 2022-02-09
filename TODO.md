@@ -79,6 +79,18 @@
   `CONSTANT`. They are both doing kind of the same thing, but only one has the
   `READ` prefix. (On the other hand, I guess there will never be an opcode to
   write a constant, so this is not really wrong.)
+* We currently do not detect infinite recursion. Given that Romualdo is meant to
+  be embedded into other programs, a Storyworld should not be able to crash the
+  host by pushing infinite call frames into call stack and exhausting all
+  memory. But how to deal with this? Add a configurable limit to the stack size?
+  Fine, but then, what can the host do?
+    * For reference: `vm.VM.callValue()` or `vm.VM.callFunction()` would be
+      natural places to add any check of this kind.
+    * In the longer term, I am looking for better error handling in general.
+      Ideally, somehow, the story should always be able to go on (if not very
+      consistently), regardless of any bug in the Storyworld. Under this
+      perspective, an overflowing call stack may be just another error to be
+      handled.
 * Should accept bnums for comparison operators
 * Move the common visitor stuff (like keeping the current node) to some reusable
   `struct`.

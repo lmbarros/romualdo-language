@@ -76,11 +76,14 @@ func (vm *VM) Interpret(csw *bytecode.CompiledStoryworld, di *bytecode.DebugInfo
 	vm.debugInfo = di
 
 	// TODO: Eventually, we'll start from a Passage, not a function.
+
+	// Function calls push the callable thing. Here we have an implicit call to
+	// the initial function, so we push the initial function. This keeps this
+	// implicit call consistent with calls made by the user, and avoid having to
+	// treat it as a special case elsewhere.
+	vm.push(bytecode.NewValueFunction(csw.FirstChunk))
 	f := bytecode.Function{ChunkIndex: csw.FirstChunk}
-	vm.frames = append(vm.frames, &callFrame{
-		function: f,
-		stack:    vm.stack.createView(),
-	})
+	vm.callFunction(f, 0)
 	vm.frame = vm.frames[0]
 
 	r := vm.run()
@@ -117,7 +120,8 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.csw.DisassembleInstruction(vm.currentChunk(), os.Stdout, vm.frame.ip, vm.currentLines())
 		}
 
-		instruction := vm.currentChunk().Code[vm.frame.ip]
+		currentChunk := vm.currentChunk()
+		instruction := currentChunk.Code[vm.frame.ip]
 		vm.frame.ip++
 
 		switch instruction {
@@ -343,8 +347,19 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 				return false
 			}
 
+		case bytecode.OpCall:
+			argCount := int(vm.readByte())
+			vm.callValue(vm.peek(argCount), argCount)
+			vm.frame = vm.frames[len(vm.frames)-1]
+
 		case bytecode.OpReturn:
-			return true
+			// TODO: Implement return values, current we assume functions always
+			// return void.
+			vm.frames = vm.frames[:len(vm.frames)-1]
+			if len(vm.frames) == 0 {
+				return true
+			}
+			vm.frame = vm.frames[len(vm.frames)-1]
 
 		case bytecode.OpToInt:
 			if !vm.peek(0).IsInt() {
@@ -519,6 +534,30 @@ func (vm *VM) peek(distance int) bytecode.Value {
 	return vm.stack.peek(distance)
 }
 
+// callValue calls the given value callee, which is assumed to be callable.
+// Assumes that the callable thing and its arguments were pushed into the stack.
+// Pushes a new frame into vm.frames.
+func (vm *VM) callValue(callee bytecode.Value, argCount int) {
+	f, ok := callee.Value.(bytecode.Function)
+	if !ok {
+		vm.runtimeError("Trying to call a non-callable value: %v", callee)
+	}
+
+	// TODO: This would be a good place to impose a limit to the call stack
+	//       size. See discussion in TODO.md.
+
+	vm.callFunction(f, argCount)
+}
+
+// callFunction calls function f. Assumes that the function and its arguments
+// were pushed into the stack. Pushes a new frame into vm.frames.
+func (vm *VM) callFunction(f bytecode.Function, argCount int) {
+	vm.frames = append(vm.frames, &callFrame{
+		function: f,
+		stack:    vm.stack.createView(argCount + 1), // "+1" is the callee, which is on the stack
+	})
+}
+
 // runtimeError stops the execution and reports a runtime error with a given
 // message and fmt.Printf-like arguments.
 //
@@ -526,9 +565,19 @@ func (vm *VM) peek(distance int) bytecode.Value {
 // those runtime errors that should be (an AFAIK are) caught in compile-time.
 func (vm *VM) runtimeError(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format+"\n", a...)
-	line := vm.currentLines()[vm.frame.ip-1]
-	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
-	panic("runtimeError() called")
+
+	for i := len(vm.frames) - 1; i >= 0; i-- {
+		frame := vm.frames[i]
+		function := frame.function
+		instructionOffset := frame.ip - 1
+		chunkIndex := function.ChunkIndex
+		lineNumber := vm.debugInfo.ChunksLines[chunkIndex][instructionOffset]
+		functionName := vm.debugInfo.ChunksNames[chunkIndex]
+		fmt.Fprintf(os.Stderr, "[line %v] in %v\n", lineNumber, functionName)
+	}
+
+	fmt.Fprint(os.Stderr, "\n")
+	panic("runtimeError() called, aborting execution")
 }
 
 // popTwoIntOperands pops and returns two values from the stack, assumed to be

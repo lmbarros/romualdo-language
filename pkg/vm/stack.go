@@ -59,13 +59,17 @@ func (s *Stack) setAt(index int, value bytecode.Value) {
 	s.data[index] = value
 }
 
-// createView creates a read-write view into the Stack, setting its base as the
-// current stack size (so that the view looks like a new stack on top of the
-// backing stack).
-func (s *Stack) createView() *StackView {
+// createView creates a read-write view into the Stack, so that the view looks
+// like a new stack on top of the backing stack. The view stack will share
+// offset elements with the backing stack. For example, passing 0 as the offset
+// means that the view will be like a new, empty stack on top of the backing
+// stack, without sharing any elements. Passing 1 means that the view will start
+// with one single element (namely, the one that was on top of the backing
+// stack).
+func (s *Stack) createView(offset int) *StackView {
 	return &StackView{
 		stack: s,
-		base:  s.size(),
+		base:  s.size() - offset,
 	}
 }
 

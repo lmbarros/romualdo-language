@@ -46,6 +46,37 @@ of these interpretations it uses.
 * **Signed 32-bit integer.** The operand is a 32-bit signed integer, stored in
   little-endian byte order, encoded in two's complement.
 
+### Calling convention
+
+When a function (the caller) calls another function (the callee), what happens
+is the following.
+
+1. The caller pushes into the stack the function object representing the callee.
+2. The caller pushes into the stack any arguments required by the callee. The
+   arguments are pushed in the same order they appear in the callee function
+   declaration. (In other words, push the first argument first, then the second
+   one, and so on.) If the callee doesn't take any arguments, this step is a
+   no-op.
+3. The caller executes the `CALL` instruction. This passes the control to the
+   callee.
+4. The callee does it's stuff. The VM will set the callee's stack such that
+   index 0 will contain the function object representing the callee, index 1
+   will contain the first argument, index 2 the second argument and so on.
+5. Before returning, the callee pops all arguments and the function object
+   representing itself from the stack.
+6. The callee executes the `RETURN` instruction. This passes the control back to
+   the caller.
+
+This not something enforced by the virtual machine (VM) itself but rather, as
+the name implies, a convention. I'd say that it's generally a good idea to
+follow it, though. Don't try to outsmart the VM.
+
+TODO: What about return values?
+
+TODO: Eventually this will also be used to call Passages, which is the same as a
+function from the perspective of the VM. Maybe here I should call them something
+more generic, like "procedure"?
+
 ## The Instructions
 
 Instructions are listed in alphabetical order.
@@ -75,6 +106,19 @@ the implementation is free to leave the stack untouched.
 **Immediate Operands:** None.  
 **Pops:** Three bounded numbers, *C*, *B* and *A*.  
 **Pushes:** One value, the result of blending *A* and *B* with the weight *C*.
+
+### `CALL`
+
+**Purpose:** Calls a function.  
+**Immediate Operands:** One byte *A*, interpreted as the number of arguments the
+function takes. This refers to the actual number of arguments, not counting the
+object representing the callee that is pushed as a sort of zeroth argument (see
+"calling convention" above).  
+**Pops:** Nothing, but see the section above about the calling convention.  
+**Pushes:** Nothing, but see the section above about the calling convention.  
+**Other Effects:** Pushes the called function into the call stack, making it the
+new function being executed. (Notice this is talking about the call stack, which
+is separate from the "normal", values stack.)
 
 ### `CONSTANT`
 
@@ -343,7 +387,13 @@ of the stack.
 
 ### `RETURN`
 
-TODO
+**Purpose:** Returns from a function call.  
+**Immediate Operands:** None.  
+**Pops:** Nothing, but see the section above about the calling convention.  
+**Pushes:** Nothing, but see the section above about the calling convention.  
+**Other Effects:** Pops the called function from the call stack, passing the
+control back to the caller. (Notice this is talking about the call stack, which
+is separate from the "normal", values stack.)
 
 ### `SUBTRACT`
 
