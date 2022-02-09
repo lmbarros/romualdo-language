@@ -251,7 +251,7 @@ func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocycl
 		// A call to a void function is still an expression statement for
 		// grammar purposes -- but one that does not push anything into the
 		// stack. Don't try to pop what isn't there.
-		if node.Type().Tag != ast.TypeVoid {
+		if n.Expr.Type().Tag != ast.TypeVoid {
 			cg.emitBytes(bytecode.OpPop)
 		}
 
