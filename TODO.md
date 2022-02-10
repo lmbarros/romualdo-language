@@ -33,6 +33,8 @@
     * It would require parentheses for blend within blend.
     * Must also think about its precedence. I just used anything that didn't
       felt too wrong.
+    * Idea for syntax: `{a,b,c}`. Nests nicely, curly braces are available and
+      also look a bit "blendy" with all this curlyness.
 * For completeness, we should have the `JUMP_IF_TRUE` and `JUMP_IF_TRUE_LONG`
   instructions. (We currently have only the `NO_POP` versions of them).
 * Right now, `Chunk.SetGlobal()` and `Chunk.GetGlobalIndex()` look linearly into
@@ -102,6 +104,27 @@
   certain metadata value. I guess this would be useful for implementing demos
   that contain only a subset of the complete Storyworld, plus maybe some
   additional or modified Passages (alternative implementations for the demo).
+
+## Ideas
+
+### Cleaner syntax for `say`
+
+Imagine something like this:
+
+```text
+passage p(): void
+    `Once upon a time
+    `a knight with shining armor
+    `left his castle in search of adventure.
+end
+```
+
+The block prefixed with backtick characters is converted to a string. Then it is
+filtered trough a certain function that converts from a string to a map. Then
+this map is `say`d. In other words, that's a shortcut for a `say` statement.
+
+Said filtering function could be user-provided (or a default is used). The
+standard library could provide a number of useful ones.
 
 ## Things to benchmark
 
