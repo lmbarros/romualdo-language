@@ -43,7 +43,7 @@ func (cg *codeGeneratorPassOne) Enter(node ast.Node) {
 		}
 
 	case *ast.FunctionDecl:
-		// Add a new Chunk for this function.
+		// Add a new Chunk for this function, create global representing it.
 		bytecode.AddChunk(cg.codeGenerator.csw, cg.codeGenerator.debugInfo, n)
 		created := cg.codeGenerator.csw.SetGlobal(n.Name, cg.codeGenerator.valueFromNode(n))
 		if !created {
