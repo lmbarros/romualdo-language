@@ -2,9 +2,9 @@
 
 ## Plan
 
-* Follow the book to:
-    * Add passages, maybe functions.
-    * Implement `say`, `listen`, `goto` and `gosub`.
+* Implement:
+    * Passages.
+    * `say`, `listen`, `goto`, and `gosub`.
 * Leave the book aside for a while and focus on tooling as I envision it:
     * Separate compilation and execution.
     * Split debugging information to a separate file.
@@ -34,7 +34,7 @@
     * Must also think about its precedence. I just used anything that didn't
       felt too wrong.
     * Idea for syntax: `{a,b,c}`. Nests nicely, curly braces are available and
-      also look a bit "blendy" with all this curlyness.
+      also look a bit "blendy" with all this curliness.
 * For completeness, we should have the `JUMP_IF_TRUE` and `JUMP_IF_TRUE_LONG`
   instructions. (We currently have only the `NO_POP` versions of them).
 * Right now, `Chunk.SetGlobal()` and `Chunk.GetGlobalIndex()` look linearly into
