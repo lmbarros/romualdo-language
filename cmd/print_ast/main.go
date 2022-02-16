@@ -109,6 +109,8 @@ func (ap *ASTPrinter) Enter(node ast.Node) {
 		ap.builder.WriteString(fmt.Sprintf("FunctionDecl [%v(%v):%v]\n", n.Name, n.Parameters, n.ReturnType))
 	case *ast.FunctionCall:
 		ap.builder.WriteString(fmt.Sprintf("FunctionCall [%v]\n", n.Function.Name))
+	case *ast.ReturnStmt:
+		ap.builder.WriteString("ReturnStmt\n")
 	default:
 		panic(fmt.Sprintf("Unexpected node type: %T", n))
 	}

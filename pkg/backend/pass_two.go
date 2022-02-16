@@ -260,12 +260,9 @@ func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocycl
 		cg.popDescopedLocals()
 
 	case *ast.FunctionDecl:
-		// Nothing to do here. Functions were already handled by
-		// globalsExtractor.
-
-		// Here just create a function object referring to the Chunk of compiled
-		// bytecode we just generated and store it in a global variable with the
-		// function name.
+		// Create a function object referring to the Chunk of compiled bytecode
+		// we just generated and store it in a global variable with the function
+		// name.
 		f := bytecode.Value{
 			Value: bytecode.Function{
 				ChunkIndex: cg.currentChunkIndex,
@@ -282,10 +279,12 @@ func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocycl
 		cg.codeGenerator.endScope()
 		cg.popDescopedLocals()
 
-		// TODO: For now, we add an implicit return at the end of the function.
-		// Later on we'll want to do that only if the function doesn't already
-		// have a return statement at the end.
-		cg.emitBytes(bytecode.OpReturn)
+		// TODO: For now, we add an implicit return at the end of all void
+		// functions. Later on we'll want to do that only if the function
+		// doesn't already have a return statement at the end.
+		if n.ReturnType.Tag == ast.TypeVoid {
+			cg.emitBytes(bytecode.OpReturnVoid)
+		}
 
 		// Leave the current chunk index invalid, as we are outside of any function.
 		cg.currentChunkIndex = -1
@@ -298,6 +297,14 @@ func (cg *codeGeneratorPassTwo) Leave(node ast.Node) { // nolint: funlen, gocycl
 				argCount, maxArgs)
 		}
 		cg.emitBytes(bytecode.OpCall, uint8(argCount))
+
+	case *ast.ReturnStmt:
+		if n.ReturnValue == nil {
+			cg.emitBytes(bytecode.OpReturnVoid)
+		} else {
+			// The value to be returned, shall be already on the stack.
+			cg.emitBytes(bytecode.OpReturnValue)
+		}
 
 	default:
 		cg.codeGenerator.ice("unknown node type: %T", n)
@@ -458,6 +465,12 @@ func (cg *codeGeneratorPassTwo) defineLocalVariable(name string) bool {
 // current scope depth.
 func (cg *codeGeneratorPassTwo) popDescopedLocals() {
 	for len(cg.locals) > 0 && cg.locals[len(cg.locals)-1].depth > cg.codeGenerator.scopeDepth {
+		// TODO: I think we need these pops when leaving a "normal" block, but
+		// not when leaving a function, because the RETURN_* opcodes will do the
+		// popping. But I think we do emit these pops even when leaving a
+		// "function body block". This is wasteful but not a bug: these pops
+		// here will be unreachable code, because the RETURN_* will make us
+		// leave the function before we reach them.
 		cg.emitBytes(bytecode.OpPop)
 		cg.locals = cg.locals[:len(cg.locals)-1]
 	}

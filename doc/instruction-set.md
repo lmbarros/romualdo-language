@@ -62,16 +62,17 @@ is the following.
 4. The callee does it's stuff. The VM will set the callee's stack such that
    index 0 will contain the function object representing the callee, index 1
    will contain the first argument, index 2 the second argument and so on.
-5. Before returning, the callee pops all arguments and the function object
-   representing itself from the stack.
-6. The callee executes the `RETURN` instruction. This passes the control back to
-   the caller.
+5. If the callee returns a non-void value, it pushes the return value into the
+   stack and calls `RETURN_VALUE`. If the called returns void, it calls
+   `RETURN_VOID` (without pushing anything).
+6. In either case, the execution of the `RETURN_*` opcode will pop all its
+   locals and arguments (but will keep the return value on the top of the stack,
+   if there is a return value).
+7. The control passes back to the caller.
 
 This not something enforced by the virtual machine (VM) itself but rather, as
 the name implies, a convention. I'd say that it's generally a good idea to
 follow it, though. Don't try to outsmart the VM.
-
-TODO: What about return values?
 
 TODO: Eventually this will also be used to call Passages, which is the same as a
 function from the perspective of the VM. Maybe here I should call them something
@@ -385,12 +386,23 @@ of the whole stack, but from the base of the currently running function.
 **Pushes:** One value, the value of the local variable taken at the index *A*
 of the stack.
 
-### `RETURN`
+### `RETURN_VALUE`
 
-**Purpose:** Returns from a function call.  
+**Purpose:** Returns from a function call that returns a (non-`void`) value.  
 **Immediate Operands:** None.  
-**Pops:** Nothing, but see the section above about the calling convention.  
-**Pushes:** Nothing, but see the section above about the calling convention.  
+**Pops:** All arguments and local variables used by the current function, and
+its the return value.  
+**Pushes:** The return value of the function.  
+**Other Effects:** Pops the called function from the call stack, passing the
+control back to the caller. (Notice this is talking about the call stack, which
+is separate from the "normal", values stack.)
+
+### `RETURN_VOID`
+
+**Purpose:** Returns from a function call that returns `void`.  
+**Immediate Operands:** None.  
+**Pops:** All arguments and local variables used by the current function.  
+**Pushes:** Nothing.  
 **Other Effects:** Pops the called function from the call stack, passing the
 control back to the caller. (Notice this is talking about the call stack, which
 is separate from the "normal", values stack.)

@@ -352,14 +352,17 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.callValue(vm.peek(argCount), argCount)
 			vm.frame = vm.frames[len(vm.frames)-1]
 
-		case bytecode.OpReturn:
-			// TODO: Implement return values, current we assume functions always
-			// return void.
-			vm.frames = vm.frames[:len(vm.frames)-1]
-			if len(vm.frames) == 0 {
+		case bytecode.OpReturnValue:
+			retVal := vm.stack.pop()
+			if vm.executeReturnOp() {
 				return true
 			}
-			vm.frame = vm.frames[len(vm.frames)-1]
+			vm.stack.push(retVal)
+
+		case bytecode.OpReturnVoid:
+			if vm.executeReturnOp() {
+				return true
+			}
 
 		case bytecode.OpToInt:
 			if !vm.peek(0).IsInt() {
@@ -475,6 +478,25 @@ func (vm *VM) run() bool { // nolint: funlen, gocyclo, gocognit
 			vm.runtimeError("Unexpected instruction: %v", instruction)
 		}
 	}
+}
+
+// executeReturnOp executes the code that is common among the OpReturn*
+// intructions: pops everything from the stack that belongs to the current call
+// frame, and pops the call frame from the call stack. Returns a value telling
+// if we are returning from the last function on the call stack.
+func (vm *VM) executeReturnOp() bool {
+	// Pop the arguments and locals
+	vm.stack.popN(vm.stack.size() - vm.frame.stack.base)
+
+	// Pop the call frame, return if this was the last function on the call stack
+	vm.frames = vm.frames[:len(vm.frames)-1]
+	if len(vm.frames) == 0 {
+		return true
+	}
+	vm.frame = vm.frames[len(vm.frames)-1]
+
+	// Voilà
+	return false
 }
 
 // readConstant reads a single-byte constant index from the chunk bytecode and

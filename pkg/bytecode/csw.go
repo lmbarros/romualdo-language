@@ -261,8 +261,11 @@ func (csw *CompiledStoryworld) DisassembleInstruction(chunk *Chunk, out io.Write
 	case OpCall:
 		return csw.disassembleUByteInstruction(chunk, out, "CALL", offset)
 
-	case OpReturn:
-		return csw.disassembleSimpleInstruction(out, "RETURN", offset)
+	case OpReturnValue:
+		return csw.disassembleSimpleInstruction(out, "RETURN_VALUE", offset)
+
+	case OpReturnVoid:
+		return csw.disassembleSimpleInstruction(out, "RETURN_VOID", offset)
 
 	case OpToInt:
 		return csw.disassembleSimpleInstruction(out, "TO_INT", offset)

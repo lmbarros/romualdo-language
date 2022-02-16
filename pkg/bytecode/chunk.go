@@ -44,7 +44,8 @@ const (
 	OpJumpIfTrueNoPop
 	OpJumpIfTrueNoPopLong // Must be right after OpJumpIfTrueNoPop
 	OpCall
-	OpReturn
+	OpReturnValue
+	OpReturnVoid
 	OpToInt
 	OpToFloat
 	OpToBNum

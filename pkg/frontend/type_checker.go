@@ -40,6 +40,8 @@ func (tc *typeChecker) Enter(node ast.Node) {
 		tc.checkBlend(n)
 	case *ast.FunctionCall:
 		tc.checkFunctionCall(n)
+	case *ast.ReturnStmt:
+		tc.checkReturnStmt(n)
 	case *ast.TypeConversion:
 		tc.checkTypeConversion(n)
 	case *ast.VarDecl:
@@ -229,6 +231,27 @@ func (tc *typeChecker) checkFunctionCall(node *ast.FunctionCall) {
 	}
 }
 
+// checkReturnStmt type checks a return statement.
+func (tc *typeChecker) checkReturnStmt(node *ast.ReturnStmt) {
+	thisFunc := tc.innermostFunctionDecl()
+	funcName := thisFunc.Name
+	funcType := thisFunc.ReturnType
+
+	if node.ReturnValue == nil {
+		if thisFunc.ReturnType.Tag != ast.TypeVoid {
+			tc.error("Function '%v' expects a return value of type  %v.", funcName, funcType)
+		}
+		return
+	}
+
+	returnType := node.ReturnValue.Type()
+
+	if returnType != funcType {
+		tc.error("Function '%v' expects a return value of type %v, got a %v.",
+			funcName, funcType, returnType)
+	}
+}
+
 // checkTypeConversion type checks type conversion operator.
 func (tc *typeChecker) checkTypeConversion(node *ast.TypeConversion) {
 	switch node.Operator {
@@ -279,6 +302,17 @@ func (tc *typeChecker) checkVarType(node *ast.VarDecl) {
 			node.Type(),
 			node.Initializer.Type())
 	}
+}
+
+// innermostFunctionDecl returns the innermost function declaration we are
+// currently in.
+func (tc *typeChecker) innermostFunctionDecl() *ast.FunctionDecl {
+	for i := len(tc.nodeStack) - 1; i >= 0; i-- {
+		if functionDecl, ok := tc.nodeStack[i].(*ast.FunctionDecl); ok {
+			return functionDecl
+		}
+	}
+	return nil // Can't happen
 }
 
 // error reports an error.

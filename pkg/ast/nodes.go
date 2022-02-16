@@ -385,6 +385,27 @@ func (n *FunctionCall) Walk(v Visitor) {
 	v.Leave(n)
 }
 
+// ReturnStmt is an AST node representing a return statement.
+type ReturnStmt struct {
+	BaseNode
+
+	// ReturnValue is the value (an expression) returned by the return
+	// statement. Will be nil when used in void functions.
+	ReturnValue Node
+}
+
+func (n *ReturnStmt) Type() *Type {
+	return TheTypeVoid
+}
+
+func (n *ReturnStmt) Walk(v Visitor) {
+	v.Enter(n)
+	if n.ReturnValue != nil {
+		n.ReturnValue.Walk(v)
+	}
+	v.Leave(n)
+}
+
 // VarDecl is an AST node representing a single variable declaration.
 type VarDecl struct {
 	BaseNode

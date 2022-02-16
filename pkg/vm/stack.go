@@ -38,6 +38,12 @@ func (s *Stack) pop() bytecode.Value {
 	return top
 }
 
+// popN pops n values from the top of the stack and discards them. Panics on
+// underflow.
+func (s *Stack) popN(n int) {
+	s.data = s.data[:len(s.data)-n]
+}
+
 // peek returns a value on the stack that is a given distance from the top.
 // Passing 0 means "give me the value on the top of the stack". The stack is not
 // changed at all. Panics if trying to get a value beyond the bottom of the

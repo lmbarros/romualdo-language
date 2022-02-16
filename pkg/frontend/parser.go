@@ -69,8 +69,13 @@ type parser struct {
 	// find a "synchronization point", we leave panicmode.
 	panicMode bool
 
-	// The scanner from where we get our tokens.
+	// scanner is the scanner from where we get our tokens.
 	scanner *scanner
+
+	// functions is a stack with the function declarations being parsed. The
+	// current code being parsed is part of the function at the top of this
+	// stack.
+	functions []*ast.FunctionDecl
 }
 
 // newParser returns a new parser that will parse source.
@@ -166,6 +171,9 @@ func (p *parser) statement() ast.Node {
 
 	case p.match(tokenKindIf):
 		return p.ifStatement()
+
+	case p.match(tokenKindReturn):
+		return p.returnStatement()
 
 	case p.match(tokenKindWhile):
 		return p.whileStatement()
@@ -409,7 +417,9 @@ func (p *parser) functionDeclaration() *ast.FunctionDecl {
 	p.advance()
 	f.ReturnType = p.parseType()
 
+	p.functions = append(p.functions, f)
 	f.Body = p.block()
+	p.functions = p.functions[:len(p.functions)-1]
 
 	return f
 }
@@ -461,6 +471,27 @@ func (p *parser) ifStatement() ast.Node {
 	default:
 		p.error(fmt.Sprintf("Unterminated 'if' statement at line %v.", n.LineNumber))
 	}
+	return n
+}
+
+// returnStatement parses a return statement. The return keyword is expected to
+// have just been consumed.
+func (p *parser) returnStatement() ast.Node {
+	n := &ast.ReturnStmt{
+		BaseNode: ast.BaseNode{
+			LineNumber: p.previousToken.line,
+		},
+	}
+
+	currentFunction := p.functions[len(p.functions)-1]
+	if currentFunction.ReturnType.Tag == ast.TypeVoid {
+		// We are inside a void function, don't need to parse the return value.
+		return n
+	}
+
+	// Not inside a void function, parse the expression required as the return
+	// value.
+	n.ReturnValue = p.expression()
 	return n
 }
 
