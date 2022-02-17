@@ -270,6 +270,15 @@ Some notes about the statements:
   harmful](https://homepages.cwi.nl/~storm/teaching/reader/Dijkstra68.pdf)! Our
   `goto`s are used to stop the execution of the current passage and move the
   control to another passage.
+    * TODO: OK, but how does this work, really? If there is a `gosub` underneath
+      the caller, it is expecting a return value of a certain type. So a `goto`
+      can never go to a passage with a different return type. I ask myself: is
+      `goto` any good? Why not using always `gosub` followed by a `return`? The
+      call stack would remain more informative -- we'd know for sure how we got
+      to that point.
+        * TODO: But then, do I even need `gosub`? I mean, just call the passage
+          like a function and be happy. I can introduce special syntax later if
+          I want.
 * The `say` statement is used to send information to the driver program that is
   running the storyworld. Typically, it is used to describe events that happened
   in the story and need to be somehow shown to the player (the *how* in the
